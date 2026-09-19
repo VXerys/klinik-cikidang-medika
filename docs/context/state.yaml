@@ -22,9 +22,9 @@ features:
   - id: F-002
     name: Rekam Medis Ringkas Dokter
     track: engineering
-    status: in_progress
+    status: completed
     spec_path: docs/specs/F-002-rekam-medis-dokter
-    active_phase: implementation
+    active_phase: completed
   - id: F-003
     name: Buku Kas Operasional dan Kapitasi BPJS
     track: engineering
@@ -52,8 +52,8 @@ features:
 
 active:
   feature_id: "F-002"
-  task_id: "TASK-001"
-  branch: "main"
+  task_id: "TASK-007"
+  branch: "staging"
 
 blockers: []
 risks: []
