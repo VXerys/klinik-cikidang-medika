@@ -58,3 +58,24 @@ export const MONTH_NAMES_ID = [
   'November',
   'Desember',
 ] as const;
+
+export const CASH_FLOW_CATEGORIES = {
+  masuk: [
+    'Kapitasi BPJS',
+    'Setor Tunai',
+    'Pendapatan Lain',
+    'Rujukan USG / Lab',
+  ],
+  keluar: [
+    'Pengeluaran Obat / Operasional',
+    'Pengeluaran Non Klinik',
+    'Operasional & Listrik/Air',
+    'Honor & Transport',
+    'Perlengkapan Medis',
+    'Setor ke Rekening Pemilik',
+  ],
+} as const;
+
+export type CashFlowCategoryMasuk = typeof CASH_FLOW_CATEGORIES.masuk[number];
+export type CashFlowCategoryKeluar = typeof CASH_FLOW_CATEGORIES.keluar[number];
+export type CashFlowCategory = CashFlowCategoryMasuk | CashFlowCategoryKeluar;

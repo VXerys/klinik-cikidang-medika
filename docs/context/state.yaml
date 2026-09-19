@@ -28,9 +28,9 @@ features:
   - id: F-003
     name: Buku Kas Operasional dan Kapitasi BPJS
     track: engineering
-    status: in_progress
+    status: completed
     spec_path: docs/specs/F-003-buku-kas-operasional
-    active_phase: implementation
+    active_phase: completed
   - id: F-004
     name: Dashboard Eksekutif dan Ekspor Excel
     track: engineering
@@ -52,7 +52,7 @@ features:
 
 active:
   feature_id: "F-003"
-  task_id: "TASK-001"
+  task_id: "TASK-007"
   branch: "staging"
 
 blockers: []
