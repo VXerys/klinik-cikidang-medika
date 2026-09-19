@@ -51,8 +51,8 @@ features:
     active_phase: requirements
 
 active:
-  feature_id: "F-002"
-  task_id: "TASK-007"
+  feature_id: "F-003"
+  task_id: "TASK-001"
   branch: "staging"
 
 blockers: []

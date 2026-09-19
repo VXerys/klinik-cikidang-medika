@@ -1,0 +1,104 @@
+---
+id: F-003-REQ
+feature: F-003
+title: "Requirements: Buku Kas Operasional & Kapitasi BPJS"
+status: approved
+owner: "dr. Ovan / Developer"
+last_updated: "2026-09-19"
+last_verified_commit: unverified
+related:
+  - "design.md"
+  - "tasks.md"
+  - "docs/product/prd.md"
+---
+
+# Requirements: F-003 Buku Kas Operasional & Kapitasi BPJS
+
+## 1. Executive Summary
+
+Modul **Buku Kas Operasional & Kapitasi BPJS** (`/buku-kas`) adalah pusat pencatatan arus kas (cash flow) masuk dan keluar bagi operasional Klinik Pratama Cikidang Medika. Modul ini menghubungkan penerimaan dana kapitasi bulanan dari BPJS Kesehatan (~Rp 28.000.000/bulan), pencatatan setoran tunai loket kasir ke bank, serta seluruh pengeluaran operasional (pembelian obat/alkes, konsumsi harian dokter, listrik, dan operasional non-klinik). Sistem menyediakan kartu rekapitulasi saldo berjalan, riwayat 1.486+ transaksi mutasi kas, dan filter periode bulanan.
+
+---
+
+## 2. Actors & Permissions
+
+- **ACTOR-001: Pimpinan / Pemilik Klinik (`owner`)**: Memiliki wewenang penuh mencatat pencairan dana kapitasi BPJS, memantau total saldo kas fisik klinik, menyetujui pengeluaran obat partai besar, dan memverifikasi setoran tunai ke rekening bank pemilik.
+- **ACTOR-002: Kasir / Staf Loket (`kasir`)**: Mencatat pengeluaran kas kecil operasional (konsumsi dokter, ATK, BHP darurat) dan mencatat rekapitulasi setoran uang tunai kasir akhir hari (`Setor Tunai`).
+
+---
+
+## 3. Goals & Non-Goals
+
+### Goals
+- **G-001**: Pencatatan transaksi mutasi kas (Masuk/Keluar) dapat diselesaikan dalam tempo < 15 detik menggunakan modal form terpadu dengan formatting nominal Rupiah otomatis.
+- **G-002**: Menampilkan 4 kartu ringkasan KPI kas bulanan secara *real-time*: Total Kas Masuk, Total Kas Keluar, Saldo Bersih Bulanan, dan Akumulasi Setor Tunai.
+- **G-003**: Menyajikan tabel mutasi kas yang dapat difilter berdasarkan bulan/tahun, jenis transaksi (`Masuk` vs `Keluar`), dan pencarian teks keterangan.
+- **G-004**: Membantu rekonsiliasi antara total penerimaan tunai pasien umum di loket (`public.visits`) dengan transaksi kas keluar `"Setor Tunai"` ke bank.
+
+### Non-Goals
+- **NG-001**: Integrasi otomatis perbankan via Open Banking API / BI-Fast (pencatatan setoran transfer bersifat manual internal klinik).
+- **NG-002**: Pembuatan jurnal akuntansi ganda berstandar PSAK (SIM klinik menggunakan model *single-entry cash flow* yang praktis sesuai kebutuhan UMKM klinik pratama).
+
+---
+
+## 4. Functional Requirements (EARS & RFC 2119)
+
+### FR-001: Input Transaksi Kas Masuk (Pemasukan)
+Sistem HARUS menyediakan formulir untuk mencatat transaksi penerimaan kas.
+
+- **AC-001.1**: WHEN pengguna menekan tombol *"+ Kas Masuk"*, THEN sistem HARUS menampilkan modal form kas masuk dengan pilihan kategori:
+  1. `Kapitasi BPJS` (Pencairan dana kapitasi bulanan BPJS Kesehatan)
+  2. `Setor Tunai` (Penerimaan setoran uang tunai kasir loket)
+  3. `Pendapatan Lain` (Pendapatan non-pasien seperti parkir/sewa)
+  4. `Rujukan USG / Lab` (Bagi hasil rujukan pemeriksaan penunjang luar)
+- **AC-001.2**: Sistem HARUS memvalidasi bahwa kolom `tanggal`, `kategori`, dan `nominal` (bernilai > 0) wajib diisi sebelum data dapat disimpan.
+- **AC-001.3**: WHEN form disimpan, THEN sistem HARUS menyimpan baris baru ke tabel `public.cash_flows` dengan `jenis = 'Masuk'`, memperbarui tabel mutasi, dan memicu notifikasi sukses.
+
+### FR-002: Input Transaksi Kas Keluar (Pengeluaran)
+Sistem HARUS menyediakan formulir untuk mencatat transaksi pengeluaran kas.
+
+- **AC-002.1**: WHEN pengguna menekan tombol *"+ Kas Keluar"*, THEN sistem HARUS menampilkan modal form kas keluar dengan pilihan kategori:
+  1. `Pengeluaran Obat / Operasional` (Belanja obat, reagen lab, BHP medis)
+  2. `Pengeluaran Non Klinik` (Makan siang/malam dokter jaga, konsumsi staf, kebersihan)
+  3. `Operasional & Listrik/Air` (Tagihan listrik PLN, WiFi IndiHome, air PDAM)
+  4. `Honor & Transport` (Transport dokter tamu, honor lembur staf)
+  5. `Setor ke Rekening Pemilik` (Transfer penarikan profit/dana ke dr. Ovan)
+- **AC-002.2**: Sistem HARUS memvalidasi bahwa `nominal` bernilai positif (> 0) dan kolom `keterangan` diisi penjelasan singkat peruntukan dana.
+- **AC-002.3**: WHEN form disimpan, THEN sistem HARUS menyimpan baris baru ke tabel `public.cash_flows` dengan `jenis = 'Keluar'`.
+
+### FR-003: Kartu Ringkasan Keuangan Bulanan (KPI Cash Flow)
+Sistem HARUS menampilkan ringkasan metrik keuangan sesuai periode bulan yang dipilih.
+
+- **AC-003.1**: Sistem HARUS menghitung secara otomatis:
+  1. **Total Kas Masuk**: Jumlah seluruh nominal dengan `jenis = 'Masuk'` pada bulan bersangkutan.
+  2. **Total Kas Keluar**: Jumlah seluruh nominal dengan `jenis = 'Keluar'` pada bulan bersangkutan.
+  3. **Saldo Kas Bersih (Net Cash Flow)**: `Total Kas Masuk - Total Kas Keluar`.
+  4. **Total Setor Tunai**: Akumulasi mutasi dengan `kategori = 'Setor Tunai'`.
+- **AC-003.2**: Angka moneter HARUS disajikan dengan prefiks `Rp` dan pemisah ribuan titik standar Indonesia (misal: `Rp 28.203.000`).
+
+### FR-004: Tabel Riwayat Mutasi Kas & Filter Periode
+Sistem HARUS menyajikan daftar mutasi buku kas terurut dari transaksi terbaru.
+
+- **AC-004.1**: Sistem HARUS menyediakan filter pemilih Bulan & Tahun (default: bulan berjalan).
+- **AC-004.2**: Sistem HARUS menyediakan filter tab jenis transaksi: `Semua Mutasi`, `Hanya Pemasukan`, dan `Hanya Pengeluaran`.
+- **AC-004.3**: Sistem HARUS menyediakan kotak pencarian instan untuk menyaring keterangan atau kategori transaksi.
+- **AC-004.4**: Setiap baris mutasi HARUS menampilkan: Tanggal, Badge Kategori, Keterangan Transaksi, dan Nominal (warna hijau `+` untuk masuk, warna merah `-` untuk keluar).
+
+### FR-005: Rekonsiliasi Kasir Harian
+Sistem HARUS menyediakan ringkasan komparasi antara penerimaan kasir hari ini dengan setoran bank.
+
+- **AC-005.1**: Sistem HARUS menampilkan perbandingan antara akumulasi pembayaran `Tunai` pada tabel `public.visits` hari ini dengan catatan mutasi `Setor Tunai` hari ini untuk mendeteksi selisih kas fisik.
+
+### FR-006: Pembatalan / Hapus Transaksi Mutasi
+Sistem HARUS mengizinkan penghapusan transaksi jika terjadi kesalahan input kasir.
+
+- **AC-006.1**: WHEN pengguna mengklik tombol hapus pada baris transaksi, THEN sistem HARUS memunculkan dialog konfirmasi pencegahan ketidaksengajaan.
+- **AC-006.2**: WHEN dikonfirmasi, THEN record terkait di `public.cash_flows` dihapus dan kartu metrik langsung terhitung ulang.
+
+---
+
+## 5. Non-Functional Requirements
+
+- **Accuracy**: Nilai nominal disimpan dengan presisi tinggi menggunakan tipe `NUMERIC(15,2)` tanpa toleransi pembulatan yang salah.
+- **Mobile & Tablet Responsiveness**: Kartu metrik dan tabel mutasi kas harus responsif di smartphone staf kasir (360px+) dan tablet pemilik klinik tanpa *horizontal scroll* pada halaman utama.
+- **Performance**: Pemuatan rekapitulasi bulanan < 150ms dengan memanfaatkan indeks database `idx_cash_flows_tanggal`.
