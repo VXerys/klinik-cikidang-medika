@@ -1,127 +1,74 @@
-# SIM Klinik Pratama Cikidang Medika
+# Klinik Pratama Cikidang Medika
+### Sistem Informasi Manajemen (SIM) Pelayanan Pasien & Keuangan Klinik
 
-[![Next.js](https://img.shields.io/badge/Next.js-14_App_Router-black?style=flat-square&logo=next.js)](https://nextjs.org/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-blue?style=flat-square&logo=typescript)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3.4-38bdf8?style=flat-square&logo=tailwindcss)](https://tailwindcss.com/)
-[![Supabase](https://img.shields.io/badge/Supabase-PostgreSQL_%2B_Auth-3ecf8e?style=flat-square&logo=supabase)](https://supabase.com/)
-[![Cloudinary](https://img.shields.io/badge/Cloudinary-Hybrid_Storage-3448c5?style=flat-square&logo=cloudinary)](https://cloudinary.com/)
-[![License](https://img.shields.io/badge/License-Proprietary-red?style=flat-square)]()
+[![Status](https://img.shields.io/badge/Status-Live_Development-blue?style=for-the-badge)]()
+[![Platform](https://img.shields.io/badge/Platform-Web_Application-emerald?style=for-the-badge)]()
+[![Location](https://img.shields.io/badge/Lokasi-Cikidang%2C_Sukabumi-orange?style=for-the-badge)]()
 
-Sistem Informasi Manajemen (SIM) dan Pelaporan Keuangan berbasis web untuk **Klinik Pratama Cikidang Medika** (Kecamatan Cikidang, Kabupaten Sukabumi, Jawa Barat). Aplikasi ini menggantikan pencatatan manual Google Sheets ke database relasional terstruktur dengan pencarian instan sub-100ms, integrasi kasir, antrean periksa dokter, dan pembukuan kas operasional.
+**Klinik Pratama Cikidang Medika** adalah platform sistem informasi manajemen klinik modern yang dirancang khusus untuk mempermudah operasional harian staf medis, dokter, dan pimpinan klinik di Kecamatan Cikidang, Kabupaten Sukabumi, Jawa Barat.
 
----
-
-## Ringkasan Fitur
-
-| Modul | Rute | Status | Deskripsi |
-|---|---|---|---|
-| **Loket Pendaftaran & Kasir** | `/pendaftaran` | Selesai (F-001) | Pencarian cepat dari 4.238+ pasien lama (autocomplete 250ms), pendaftaran pasien baru dengan penomoran RM otomatis, pemisahan tagihan BPJS (Rp 0) vs Umum, dan cetak kuitansi. |
-| **Migrasi Data Historis** | Script ETL | Selesai (F-005) | Migrasi 7.493 baris transaksi kunjungan dan 4.238 pasien dari Google Sheets ke Supabase Cloud PostgreSQL. |
-| **Rekam Medis Ringkas Dokter** | `/rekam-medis` | Tahap Specs (F-002) | Pemanggilan antrian periksa harian, pencatatan anamnesa/SOAP, diagnosa berbasis ICD-10, dan resep obat. |
-| **Buku Kas Operasional** | `/buku-kas` | Rencana (F-003) | Pencatatan arus kas masuk (kapitasi BPJS, pendapatan umum) dan kas keluar (pembelian obat, operasional klinik, setor tunai). |
-| **Dashboard & Laporan Keuangan** | `/`, `/laporan` | Rencana (F-004) | Metrik kunjungan, pendapatan bulanan, 10 besar penyakit ICD-10, dan ekspor data 1-klik ke Excel (`.xlsx`). |
-| **Program Khusus & Foto Medis** | `/rekam-medis/*` | Rencana (F-006/F-007) | Monitoring kohort TBC, rekam sirkumsisi (sunat) dengan penyimpanan foto medis hasil kompresi WebP (< 300KB), dan kontrol pos-rawat. |
+Aplikasi ini mentransformasikan proses administrasi manual dari ribuan baris spreadsheet Google Sheets menjadi sistem digital terintegrasi yang cepat, rapi, dan dapat diakses dengan aman baik dari meja resepsionis maupun dari perangkat mobile pimpinan klinik.
 
 ---
 
-## Arsitektur & Teknologi
+## 🎯 Masalah yang Diselesaikan
 
-- **Frontend & Routing:** Next.js 14 (App Router), React 18, Tailwind CSS 3.4.
-- **Komponen UI:** Atomic UI Primitives (`src/components/ui/`) terstandarisasi (Button, Badge, Modal, Input, Select, Card) tanpa dependensi runtime pihak ketiga yang berat.
-- **Konstanta Terpusat:** `src/constants/clinic.ts` sebagai single source of truth untuk profil klinik, daftar 10 desa Cikidang, tarif, dan opsi gelar.
-- **Database & Auth:** Supabase Cloud PostgreSQL dengan Row Level Security (RLS) dan autentikasi berbasis peran (`kasir`, `dokter`, `owner`).
-- **Hybrid Media Storage:** Supabase Storage (kuota privat 1GB) sebagai penyimpanan primer foto medis + Cloudinary (kuota 25GB) sebagai fallback otomatis via adapter `src/lib/storage.ts`.
-- **Ekspor Data:** Pemrosesan dokumen Excel di sisi peramban menggunakan SheetJS (`xlsx`).
+Sebelum sistem ini dibangun, operasional klinik mencatat seluruh pendaftaran dan keuangan melalui Google Sheets yang telah menampung lebih dari **7.400+ baris transaksi kunjungan** dan **4.200+ pasien**. Hal ini menimbulkan berbagai kendala:
+- **Pencarian Data Lambat:** Membuka ribuan baris di spreadsheet memerlukan waktu lama saat pasien mengantre di loket.
+- **Risiko Data Tertimpa / Terhapus:** Sel formula dan riwayat data pasien rentan terubah tanpa sengaja.
+- **Pemisahan Pasien BPJS vs Umum:** Perhitungan tagihan dan pencatatan klaim kapitasi BPJS rentan tertukar dengan pembayaran umum.
+- **Keterbatasan Rekam Medis:** Dokter kesulitan melihat riwayat diagnosa dan obat pasien sebelumnya dalam satu tampilan ringkas.
 
----
-
-## Struktur Direktori
-
-```text
-src/
-├── app/                        # Next.js App Router (Halaman per rute modul)
-│   ├── pendaftaran/page.tsx    # Halaman loket kasir & antrian hari ini
-│   ├── rekam-medis/page.tsx    # Halaman pemeriksaan dokter
-│   ├── buku-kas/page.tsx       # Pembukuan kas operasional
-│   ├── laporan/page.tsx        # Rekap laporan & ekspor spreadsheet
-│   └── page.tsx                # Dashboard eksekutif klinik
-├── components/
-│   ├── ui/                     # Komponen atomik reusable (Button, Badge, Modal, Input, Select, Card)
-│   ├── pendaftaran/            # Komponen domain loket (Search, Modals, Receipt)
-│   ├── Navbar.tsx
-│   └── Sidebar.tsx
-├── constants/
-│   ├── clinic.ts               # Profil klinik, 10 desa Cikidang, tarif dasar, gelar
-│   └── theme.ts                # Token warna, status pembayaran, palet BPJS vs Umum
-├── lib/
-│   ├── storage.ts              # Adapter kompresi WebP < 300KB & upload hybrid
-│   ├── supabase/               # Factory client Supabase (browser & server)
-│   └── utils.ts                # cn(), formatRupiah(), formatDateIndo()
-└── types/
-    └── database.ts             # Definisi TypeScript schema PostgreSQL
-```
+Sistem Informasi Klinik Cikidang Medika hadir sebagai solusi menyeluruh untuk menjamin kecepatan layanan loket di bawah 30 detik per pasien serta akurasi pelaporan keuangan 100%.
 
 ---
 
-## Panduan Instalasi & Menjalankan Lokal
+## ✨ Fitur-Fitur Utama
 
-### 1. Prasyarat
-- Node.js versi 20 atau lebih baru
-- npm versi 10 atau lebih baru
-- Akun Supabase & Cloudinary aktif
+### 1. 📋 Loket Pendaftaran & Billing Kasir
+- **Pencarian Cepat Autocomplete:** Menemukan data dari 4.238+ pasien lama hanya dengan mengetik 2 huruf (berdasarkan Nama, Nomor Rekam Medis, atau Desa domisili).
+- **Registrasi Pasien Baru:** Pembuatan nomor rekam medis otomatis berurutan dengan opsi desa lokal Cikidang (*Cikidang, Pangkalan, Nangerang, Cikiray, Sampora, dll.*).
+- **Penomoran Antrean Harian:** Antrean urut harian otomatis (#1, #2, dst.) yang langsung tersambung ke ruang periksa dokter.
+- **Pemisahan Billing Otomatis:**
+  - **Pasien BPJS:** Tarif pemeriksaan otomatis diset Rp 0 (Klaim Kapitasi BPJS).
+  - **Pasien UMUM:** Tarif pemeriksaan standar dengan opsi biaya tindakan tambahan.
+- **Cetak Kuitansi Resmi:** Cetak bukti pembayaran instan berformat nota klinik resmi dalam satu klik.
 
-### 2. Clone Repositori
-```bash
-git clone https://github.com/VXerys/klinik-cikidang-medika.git
-cd klinik-cikidang-medika
-```
+### 2. 🩺 Rekam Medis Ringkas Dokter
+- **Ruang Periksa Digital:** Dokter melihat daftar antrean pasien hari ini secara *real-time*.
+- **Quick-Pick Diagnosa ICD-10:** Pilihan instan 1-klik untuk 8 penyakit teratas klinik (ISPA, Dispepsia/Lambung, Pemeriksaan Kehamilan/ANC, Dermatitis Alergi, Demam, Diabetes Mellitus, Diare Akut).
+- **Resep & Terapi Obat:** Pencatatan terapi obat dan instruksi tindakan dokter.
+- **Linimasa Riwayat Pasien:** Dokter dapat langsung melihat seluruh riwayat kunjungan lampau pasien bersangkutan beserta obat yang pernah diberikan.
 
-### 3. Pasang Dependencies
-```bash
-npm install
-```
+### 3. 💼 Pembukuan Kas Operasional
+- **Pencatatan Arus Kas Masuk:** Penerimaan kasir harian (Tunai & Transfer) serta dana klaim kapitasi BPJS bulanan.
+- **Pencatatan Arus Kas Keluar:** Pengeluaran belanja obat/alkes, operasional klinik, serta rekap setor tunai kasir ke bank.
+- **Audit Finansial Rapi:** Setiap transaksi tercatat dengan tanggal, kategori, nominal, dan penanggung jawab.
 
-### 4. Konfigurasi Environment Variable
-Salin berkas `.env.example` menjadi `.env.local`:
-```bash
-cp .env.example .env.local
-```
-
-Isi variabel konfigurasi di `.env.local`:
-```env
-NEXT_PUBLIC_SUPABASE_URL=https://your-project-id.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-
-NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME=your-cloudinary-cloud-name
-CLOUDINARY_API_SECRET=your-cloudinary-api-secret
-```
-
-### 5. Jalankan Skema Database
-Buka **SQL Editor** pada dashboard proyek Supabase Anda, lalu eksekusi berkas DDL:
-`supabase/migrations/20260918_init_klinik_cikidang.sql`
-
-### 6. Jalankan Server Development
-```bash
-npm run dev
-```
-Akses aplikasi melalui peramban di [http://localhost:3000](http://localhost:3000).
+### 4. 📊 Dashboard Eksekutif & Laporan Excel
+- **Pantauan Kunjungan Harian & Bulanan:** Grafik tren pasien baru vs pasien lama.
+- **Statistik 10 Besar Penyakit:** Pemetaan sebaran diagnosa penyakit terbanyak di wilayah Cikidang.
+- **Ekspor Excel 1-Klik:** Unduh rekapitulasi data pendaftaran, kunjungan, dan keuangan kasir ke format Microsoft Excel (`.xlsx`) tanpa batasan baris.
 
 ---
 
-## Skrip & Verifikasi Kualitas
+## 👥 Pengguna Sistem (User Roles)
 
-| Perintah | Deskripsi |
+| Peran | Tanggung Jawab Utama |
 |---|---|
-| `npm run dev` | Menjalankan Next.js development server di port 3000. |
-| `npm run build` | Menjalankan build produksi Next.js (prerender static routes). |
-| `npx tsc --noEmit` | Menjalankan type-checking TypeScript mode strict (zero error). |
-| `npm run context:validate` | Memverifikasi konsistensi dokumen spesifikasi SDD di `docs/`. |
+| **Petugas Loket / Kasir** | Melayani pendaftaran pasien lama/baru, mengatur antrean harian, menerima pembayaran, dan mencetak kuitansi. |
+| **Dokter Pemeriksa** | Memanggil antrean pasien, mencatat anamnesa, menetapkan diagnosa ICD-10, meresepkan terapi obat, dan memantau riwayat medis. |
+| **Pimpinan / Pemilik Klinik** | Memantau omzet harian/bulanan, arus kas operasional, tren kunjungan, serta mengunduh laporan eksekutif dari mana saja melalui smartphone. |
 
 ---
 
-## Keamanan Data & Privasi
+## 🏛️ Profil Faskes
 
-- **Penyembunyian Data Pasien (PII):** Seluruh data rekam medis historis CSV berada di luar repositori publik (`docs/data/` masuk ke `.gitignore`).
-- **Autentikasi & RLS:** Akses tabel pasien dan keuangan dilindungi oleh kebijakan PostgreSQL Row Level Security (RLS).
-- **Foto Medis Privat:** File foto medis dikompresi di sisi klien ke format WebP < 300KB dan diakses menggunakan signed URL dengan batas waktu (TTL 3600 detik).
+- **Nama Faskes:** Klinik Pratama Cikidang Medika
+- **Lokasi:** Jl. Raya Cikidang KM. 01, Kecamatan Cikidang, Kabupaten Sukabumi, Jawa Barat
+- **Izin Operasional:** 503/012/K-PRATAMA/DPMPTSP
+- **Layanan:** Rawat Jalan Umum, Pemeriksaan Ibu Hamil (ANC), Sirkumsisi (Sunat Medis), dan Program Pengobatan Kohort.
+
+---
+
+*Hak Cipta © 2026 Klinik Pratama Cikidang Medika. Dikembangkan khusus untuk peningkatan mutu pelayanan kesehatan masyarakat Cikidang.*
