@@ -186,10 +186,10 @@ export function RegisterVisitModal({
           <ClipboardCheck className="w-5 h-5" />
         </div>
       }
-      maxWidth="2xl"
+      maxWidth="lg"
     >
       {/* Selected Patient Identity Banner */}
-      <div className="px-6 py-3 bg-blue-50/70 border-b border-blue-100 flex items-center justify-between flex-wrap gap-2">
+      <div className="px-4 sm:px-6 py-3 bg-blue-50/70 border-b border-blue-100 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
             <User className="w-4 h-4" />
@@ -233,7 +233,7 @@ export function RegisterVisitModal({
       </div>
 
       {/* Modal Form */}
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
         {errorMessage && (
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -265,7 +265,7 @@ export function RegisterVisitModal({
               <button
                 type="button"
                 onClick={() => handleJenisPasienChange('BPJS')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                className={`py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
                   jenisPasien === 'BPJS'
                     ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -277,7 +277,7 @@ export function RegisterVisitModal({
               <button
                 type="button"
                 onClick={() => handleJenisPasienChange('UMUM')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                className={`py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
                   jenisPasien === 'UMUM'
                     ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
                     : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
@@ -384,12 +384,13 @@ export function RegisterVisitModal({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">
+        <div className="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="ghost"
             onClick={onClose}
             disabled={isSubmitting}
+            className="w-full sm:w-auto min-h-[44px]"
           >
             Batal
           </Button>
@@ -397,6 +398,7 @@ export function RegisterVisitModal({
             type="submit"
             variant="primary"
             isLoading={isSubmitting}
+            className="w-full sm:w-auto min-h-[44px]"
           >
             Daftarkan ke Antrian Pasien
           </Button>

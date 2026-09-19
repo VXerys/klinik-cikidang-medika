@@ -15,26 +15,26 @@ import Link from 'next/link';
 
 export default function DashboardPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-6 min-w-0 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Dashboard Ringkasan Klinik</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Dashboard Ringkasan Klinik</h1>
           <p className="text-xs text-slate-500 mt-1">Ringkasan operasional dan keuangan Klinik Cikidang Medika</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Link 
             href="/pendaftaran"
-            className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition"
+            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto"
           >
-            <UserCheck className="w-4 h-4" />
-            + Pasien Baru / Kasir
+            <UserCheck className="w-4 h-4 shrink-0" />
+            <span>+ Pasien Baru / Kasir</span>
           </Link>
           <Link 
             href="/laporan"
-            className="inline-flex items-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition"
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto"
           >
-            <FileText className="w-4 h-4" />
-            Unduh Excel
+            <FileText className="w-4 h-4 shrink-0" />
+            <span>Unduh Excel</span>
           </Link>
         </div>
       </div>
@@ -111,9 +111,11 @@ export default function DashboardPage() {
               { code: 'Z00', name: 'Pemeriksaan Kesehatan Umum', count: 282, pct: 4 },
             ].map((d) => (
               <div key={d.code} className="space-y-1">
-                <div className="flex justify-between text-xs">
-                  <span className="font-semibold text-slate-700">[{d.code}] {d.name}</span>
-                  <span className="font-bold text-slate-900">{d.count} kasus</span>
+                <div className="flex justify-between text-xs items-center gap-2">
+                  <span className="font-semibold text-slate-700 truncate min-w-0" title={`[${d.code}] ${d.name}`}>
+                    [{d.code}] {d.name}
+                  </span>
+                  <span className="font-bold text-slate-900 shrink-0">{d.count} kasus</span>
                 </div>
                 <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
                   <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${d.pct * 3}%` }}></div>

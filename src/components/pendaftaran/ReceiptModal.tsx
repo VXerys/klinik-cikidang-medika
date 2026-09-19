@@ -43,7 +43,7 @@ export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
       maxWidth="lg"
     >
       {/* Printable Receipt Content */}
-      <div ref={printRef} className="p-6 overflow-y-auto space-y-4 print:p-4 text-slate-900">
+      <div ref={printRef} className="p-4 sm:p-6 overflow-y-auto space-y-4 print:p-4 text-slate-900">
         {/* Clinic Header */}
         <div className="text-center pb-3 border-b-2 border-slate-900 space-y-0.5">
           <h1 className="text-base font-extrabold tracking-wide uppercase">
@@ -187,11 +187,12 @@ export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
       </div>
 
       {/* Modal Footer Actions (Hidden on print) */}
-      <div className="p-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 print:hidden">
+      <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-2.5 print:hidden">
         <Button
           type="button"
           variant="secondary"
           onClick={onClose}
+          className="w-full sm:w-auto min-h-[44px]"
         >
           Tutup
         </Button>
@@ -200,6 +201,7 @@ export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
           variant="primary"
           leftIcon={<Printer className="w-4 h-4" />}
           onClick={handlePrint}
+          className="w-full sm:w-auto min-h-[44px]"
         >
           Cetak Kuitansi (Print)
         </Button>

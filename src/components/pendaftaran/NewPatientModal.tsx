@@ -176,9 +176,9 @@ export function NewPatientModal({
           <UserPlus className="w-5 h-5" />
         </div>
       }
-      maxWidth="2xl"
+      maxWidth="lg"
     >
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
         {errorMessage && (
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs">
             <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
@@ -286,12 +286,13 @@ export function NewPatientModal({
         </div>
 
         {/* Modal Footer Actions */}
-        <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">
+        <div className="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
           <Button
             type="button"
             variant="ghost"
             onClick={onClose}
             disabled={isLoading}
+            className="w-full sm:w-auto min-h-[44px]"
           >
             Batal
           </Button>
@@ -299,6 +300,7 @@ export function NewPatientModal({
             type="submit"
             variant="primary"
             isLoading={isLoading}
+            className="w-full sm:w-auto min-h-[44px]"
           >
             Simpan Pasien Baru
           </Button>

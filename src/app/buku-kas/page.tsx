@@ -5,20 +5,20 @@ import { PlusCircle, ArrowDownLeft, ArrowUpRight, Banknote } from 'lucide-react'
 
 export default function BukuKasPage() {
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6 min-w-0 w-full">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Buku Kas Operasional Klinik</h1>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Buku Kas Operasional Klinik</h1>
           <p className="text-xs text-slate-500 mt-1">Pencatatan dana kapitasi BPJS, pembelian obat, operasional non-klinik, dan setor tunai</p>
         </div>
-        <div className="flex gap-2">
-          <button className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
-            <PlusCircle className="w-4 h-4" />
-            + Kas Masuk (Kapitasi/Lainnya)
+        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+          <button className="inline-flex items-center justify-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto">
+            <PlusCircle className="w-4 h-4 shrink-0" />
+            <span>+ Kas Masuk</span>
           </button>
-          <button className="inline-flex items-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2 rounded-lg text-xs font-semibold shadow-sm transition">
-            <PlusCircle className="w-4 h-4" />
-            + Kas Keluar (Obat/Operasional)
+          <button className="inline-flex items-center justify-center gap-1.5 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto">
+            <PlusCircle className="w-4 h-4 shrink-0" />
+            <span>+ Kas Keluar</span>
           </button>
         </div>
       </div>
@@ -58,7 +58,8 @@ export default function BukuKasPage() {
         <div className="p-4 border-b border-slate-200">
           <h2 className="text-sm font-bold text-slate-800">Daftar Mutasi Kas Operasional</h2>
         </div>
-        <table className="w-full text-left text-xs text-slate-600">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left text-xs text-slate-600 whitespace-nowrap sm:whitespace-normal">
           <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200">
             <tr>
               <th className="p-3">Tanggal</th>
@@ -88,6 +89,7 @@ export default function BukuKasPage() {
             ))}
           </tbody>
         </table>
+        </div>
       </div>
     </div>
   );

@@ -253,24 +253,24 @@ export function ExaminationForm({
               <HeartPulse className="w-3.5 h-3.5 text-rose-500" />
               Input Cepat Tanda Vital (Opsional):
             </span>
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-2">
               <Input
                 placeholder="Tensi: 120/80"
                 value={tensi}
                 onChange={(e) => setTensi(e.target.value)}
-                className="text-xs h-8"
+                className="text-xs min-h-[40px]"
               />
               <Input
                 placeholder="BB: 65 kg"
                 value={beratBadan}
                 onChange={(e) => setBeratBadan(e.target.value)}
-                className="text-xs h-8"
+                className="text-xs min-h-[40px]"
               />
               <Input
                 placeholder="Suhu: 36.5 °C"
                 value={suhu}
                 onChange={(e) => setSuhu(e.target.value)}
-                className="text-xs h-8"
+                className="text-xs min-h-[40px]"
               />
               <Button
                 type="button"
@@ -278,7 +278,7 @@ export function ExaminationForm({
                 size="sm"
                 onClick={handleAppendVitalSigns}
                 disabled={!tensi && !beratBadan && !suhu}
-                className="h-8 text-xs font-medium"
+                className="min-h-[40px] text-xs font-medium w-full"
               >
                 + Tambah ke Catatan
               </Button>
@@ -374,8 +374,8 @@ export function ExaminationForm({
       </div>
 
       {/* 3. Sticky Action Footer */}
-      <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between flex-wrap gap-3">
-        <div className="flex items-center gap-2">
+      <div className="p-4 border-t border-slate-200 bg-slate-50 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
+        <div className="w-full sm:w-auto">
           <Button
             type="button"
             variant="outline"
@@ -392,20 +392,20 @@ export function ExaminationForm({
               setErrorMessage(null);
             }}
             disabled={isSaving}
-            className="text-xs text-slate-600 gap-1.5"
+            className="w-full sm:w-auto min-h-[44px] text-xs text-slate-600 gap-1.5 justify-center"
           >
             <RotateCcw className="w-3.5 h-3.5" />
             Reset Perubahan
           </Button>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="w-full sm:w-auto">
           <Button
             type="submit"
             variant="primary"
             size="md"
             disabled={isSaving}
-            className="text-xs font-bold px-5 py-2.5 gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
+            className="w-full sm:w-auto min-h-[44px] text-xs font-bold px-5 py-2.5 gap-2 bg-blue-600 hover:bg-blue-700 text-white shadow-sm justify-center"
           >
             {isSaving ? (
               <>

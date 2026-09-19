@@ -124,23 +124,24 @@ export default function PendaftaranKasirPage() {
   }).format(new Date());
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full">
       {/* Top Banner & Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Loket Pendaftaran & Kasir
           </h1>
           <p className="text-xs text-slate-500 mt-1">
             Cari data dari 4.238+ pasien lama, daftarkan pasien baru, dan kelola kasir real-time.
           </p>
         </div>
-        <div>
+        <div className="w-full sm:w-auto">
           <Button
             type="button"
             variant="primary"
             leftIcon={<UserPlus className="w-4 h-4" />}
             onClick={() => setIsNewPatientOpen(true)}
+            className="w-full sm:w-auto min-h-[44px]"
           >
             + Pasien Baru
           </Button>
@@ -187,13 +188,13 @@ export default function PendaftaranKasirPage() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center flex-wrap gap-2">
             {/* View Mode Toggle */}
-            <div className="inline-flex rounded-lg bg-slate-200/80 p-0.5 text-xs font-medium">
+            <div className="inline-flex rounded-lg bg-slate-200/80 p-0.5 text-xs font-medium min-h-[38px] items-center">
               <button
                 type="button"
                 onClick={() => setViewMode('today')}
-                className={`px-3 py-1 rounded-md transition ${
+                className={`px-3 py-1.5 rounded-md transition min-h-[32px] ${
                   viewMode === 'today'
                     ? 'bg-white text-slate-900 shadow-xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900'
@@ -204,7 +205,7 @@ export default function PendaftaranKasirPage() {
               <button
                 type="button"
                 onClick={() => setViewMode('recent')}
-                className={`px-3 py-1 rounded-md transition ${
+                className={`px-3 py-1.5 rounded-md transition min-h-[32px] ${
                   viewMode === 'recent'
                     ? 'bg-white text-slate-900 shadow-xs font-semibold'
                     : 'text-slate-600 hover:text-slate-900'
@@ -219,7 +220,7 @@ export default function PendaftaranKasirPage() {
               type="button"
               onClick={fetchVisits}
               disabled={isLoadingVisits}
-              className="p-1.5 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition"
+              className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition min-w-[38px] min-h-[38px] flex items-center justify-center"
               title="Perbarui data"
             >
               <RefreshCw className={`w-4 h-4 ${isLoadingVisits ? 'animate-spin text-blue-600' : ''}`} />
@@ -236,7 +237,7 @@ export default function PendaftaranKasirPage() {
         )}
 
         {/* Table Content */}
-        <div className="overflow-x-auto">
+        <div className="overflow-x-auto w-full -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 select-none">
               <tr>
@@ -382,11 +383,12 @@ export default function PendaftaranKasirPage() {
                           type="button"
                           variant="outline"
                           size="sm"
-                          leftIcon={<Receipt className="w-3 h-3 text-blue-600" />}
+                          leftIcon={<Receipt className="w-3.5 h-3.5 text-blue-600" />}
                           onClick={() => {
                             setActiveReceiptVisit(visit);
                             setIsReceiptOpen(true);
                           }}
+                          className="min-h-[36px]"
                         >
                           Kuitansi
                         </Button>

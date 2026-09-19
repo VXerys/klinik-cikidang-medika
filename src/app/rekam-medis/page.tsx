@@ -104,12 +104,12 @@ export default function RekamMedisPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 min-w-0 w-full">
       {/* Top Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl shrink-0">
               <Stethoscope className="w-5 h-5" />
             </div>
             <div>
@@ -124,14 +124,14 @@ export default function RekamMedisPage() {
         </div>
 
         {/* Date Filter and Actions */}
-        <div className="flex items-center gap-2.5">
-          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-1.5 shadow-2xs">
-            <Calendar className="w-3.5 h-3.5 text-slate-400" />
+        <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-2xs min-h-[44px] flex-1 sm:flex-initial">
+            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-xs font-medium text-slate-700 outline-none bg-transparent cursor-pointer"
+              className="text-xs font-medium text-slate-700 outline-none bg-transparent cursor-pointer w-full"
             />
           </div>
 
@@ -139,7 +139,7 @@ export default function RekamMedisPage() {
             variant="outline"
             size="sm"
             onClick={() => setSelectedDate(getTodayString())}
-            className="text-xs font-semibold"
+            className="text-xs font-semibold min-h-[44px]"
             disabled={selectedDate === getTodayString()}
           >
             Hari Ini
@@ -150,10 +150,11 @@ export default function RekamMedisPage() {
             size="sm"
             onClick={fetchVisits}
             disabled={isLoading}
-            className="text-xs"
+            className="text-xs min-h-[44px] min-w-[44px] p-2 flex items-center justify-center"
             title="Muat ulang antrean"
+            aria-label="Muat ulang antrean pasien"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
           </Button>
         </div>
       </div>

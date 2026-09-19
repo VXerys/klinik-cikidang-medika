@@ -62,7 +62,7 @@ export function Icd10QuickPicker({
                 type="button"
                 onClick={() => handleSelect(item)}
                 className={cn(
-                  'px-2.5 py-1 rounded-lg text-xs font-medium border transition select-none flex items-center gap-1.5',
+                  'px-2.5 py-1.5 min-h-[36px] rounded-xl text-xs font-medium border transition select-none flex items-center gap-1.5',
                   isSelected
                     ? 'bg-blue-600 text-white border-blue-600 shadow-xs ring-1 ring-blue-500'
                     : 'bg-slate-50 hover:bg-slate-100 text-slate-700 border-slate-200'
@@ -70,7 +70,7 @@ export function Icd10QuickPicker({
               >
                 <span
                   className={cn(
-                    'font-mono text-[10px] font-bold px-1 rounded',
+                    'font-mono text-[10px] font-bold px-1.5 py-0.5 rounded',
                     isSelected ? 'bg-blue-700 text-white' : 'bg-slate-200 text-slate-700'
                   )}
                 >
@@ -86,7 +86,7 @@ export function Icd10QuickPicker({
       {/* Search Input for Other ICD-10 Codes */}
       <div className="relative">
         <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-3 top-2.5 text-slate-400 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 absolute left-3 top-3 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
@@ -98,7 +98,7 @@ export function Icd10QuickPicker({
               if (searchQuery.trim()) setIsDropdownOpen(true);
             }}
             placeholder="Ketik untuk mencari diagnosa lain (contoh: Hipertensi, Asma, TBC, Gigi)..."
-            className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-9 pr-3 py-2.5 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-500"
           />
         </div>
 

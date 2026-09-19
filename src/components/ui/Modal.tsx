@@ -66,18 +66,19 @@ export function Modal({
       >
         {/* Header */}
         {(title || icon) && (
-          <div className="px-6 py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between print:hidden">
-            <div className="flex items-center gap-3">
+          <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between print:hidden">
+            <div className="flex items-center gap-3 min-w-0 mr-2">
               {icon && <div className="shrink-0">{icon}</div>}
-              <div>
-                {title && <h2 className="text-base font-bold text-slate-800">{title}</h2>}
-                {description && <p className="text-xs text-slate-500 mt-0.5">{description}</p>}
+              <div className="min-w-0">
+                {title && <h2 className="text-sm sm:text-base font-bold text-slate-800 truncate">{title}</h2>}
+                {description && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{description}</p>}
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition"
+              aria-label="Tutup modal"
+              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
             >
               <X className="w-5 h-5" />
             </button>

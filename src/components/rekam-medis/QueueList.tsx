@@ -50,12 +50,12 @@ export function QueueList({
   const doneCount = visits.filter((v) => isVisitDone(v)).length;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col h-[calc(100vh-140px)] min-h-[500px]">
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col h-[400px] lg:h-[calc(100vh-140px)] min-h-0">
       {/* Header Bar */}
       <div className="p-4 border-b border-slate-200 bg-slate-50/70 space-y-3 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg">
+            <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg shrink-0">
               <Users className="w-4 h-4" />
             </div>
             <div>
@@ -72,8 +72,9 @@ export function QueueList({
             type="button"
             onClick={onRefresh}
             disabled={isLoading}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition"
+            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition min-w-[36px] min-h-[36px] flex items-center justify-center"
             title="Muat ulang antrean"
+            aria-label="Muat ulang antrean"
           >
             <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-blue-600')} />
           </button>
@@ -81,23 +82,23 @@ export function QueueList({
 
         {/* Search in Queue */}
         <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-2.5 text-slate-400 pointer-events-none" />
+          <Search className="w-3.5 h-3.5 absolute left-2.5 top-3 text-slate-400 pointer-events-none" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Cari nama atau No RM..."
-            className="w-full pl-8 pr-3 py-1.5 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px]"
           />
         </div>
 
         {/* Filter Pills */}
-        <div className="flex rounded-lg bg-slate-200/80 p-0.5 text-[11px] font-medium">
+        <div className="flex rounded-lg bg-slate-200/80 p-0.5 text-[11px] font-medium min-h-[36px] items-center">
           <button
             type="button"
             onClick={() => setFilterStatus('waiting')}
             className={cn(
-              'flex-1 py-1 text-center rounded-md transition flex items-center justify-center gap-1',
+              'flex-1 py-1.5 text-center rounded-md transition flex items-center justify-center gap-1 min-h-[30px]',
               filterStatus === 'waiting'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
@@ -113,7 +114,7 @@ export function QueueList({
             type="button"
             onClick={() => setFilterStatus('done')}
             className={cn(
-              'flex-1 py-1 text-center rounded-md transition flex items-center justify-center gap-1',
+              'flex-1 py-1.5 text-center rounded-md transition flex items-center justify-center gap-1 min-h-[30px]',
               filterStatus === 'done'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
@@ -129,7 +130,7 @@ export function QueueList({
             type="button"
             onClick={() => setFilterStatus('all')}
             className={cn(
-              'flex-1 py-1 text-center rounded-md transition',
+              'flex-1 py-1.5 text-center rounded-md transition min-h-[30px]',
               filterStatus === 'all'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
