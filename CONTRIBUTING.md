@@ -1,94 +1,62 @@
-# Contributing Workflow
+# Panduan Kontribusi & Alur Kerja (Contributing Workflow)
 
-## 1. Choose the correct AI surface
+Dokumen ini menjelaskan alur kerja pengembangan (*development workflow*) dan standar kualitas untuk berkontribusi pada proyek **Klinik Pratama Cikidang Medika**.
 
-Use conversational AI for product and documentation planning. Use a repository-integrated coding agent for repository inspection, context tooling, implementation, and verification.
+---
 
-Read `docs/documentation/AI_COLLABORATION_MODEL.md`.
+## 1. Prinsip Dasar: Spec-Driven Development (SDD)
 
-## 2. Select the delivery path
+Proyek ini menerapkan pendekatan **Spec-Driven Development**. Setiap pengerjaan fitur wajib diawali dengan pendefinisian spesifikasi yang jelas sebelum kode ditulis:
 
-| Change | Required artifacts |
-|---|---|
-| New project | PRD, constitution, architecture baseline, roadmap, first feature spec |
-| Normal feature | Requirements, design, tasks, verification |
-| Small feature without architecture impact | Compact feature spec, tasks, verification |
-| Complex bug | Investigation/root cause, design impact, task, regression evidence |
-| Internal refactor | Design-first specification and safety tests |
-| Architecture change | ADR, architecture update, feature-design impact |
-| Production hotfix | Minimal approved scope, regression evidence, post-stabilization docs |
+1. **Requirements (`requirements.md`)**: Identifikasi kebutuhan fungsional (FR) dan kriteria penerimaan (AC) menggunakan format EARS / RFC 2119.
+2. **Design (`design.md`)**: Arsitektur komponen, relasi query Supabase, dan model data.
+3. **Tasks (`tasks.md`)**: Pembagian tugas terperinci (`TASK-001`, `TASK-002`, dst.) dengan urutan eksekusi satu per satu.
+4. **Implementation**: Penulisan kode yang hanya berfokus pada task aktif tanpa melakukan refactor di luar cakupan.
+5. **Verification**: Pengujian statis (`npx tsc --noEmit`), build (`npm run build`), dan validasi konteks (`npm run context:validate`).
 
-## 3. Before implementation
+---
 
-- Choose one feature and task ID.
-- Confirm requirements and design are approved.
-- Run context sync and validation when implemented.
-- Read the order in `docs/context/CONTEXT_INDEX.md`.
-- Verify branch and worktree against `docs/handoff/current.md`.
-- Create a purpose-specific branch.
+## 2. Standar Kode & Desain UI
 
-## 4. During implementation
+- **Komponen UI Reusable:** Seluruh halaman dan fitur baru **wajib** menggunakan komponen atomik dari `src/components/ui/` (`Button`, `Badge`, `Modal`, `Input`, `Select`, `Card`). Pembuatan backdrop modal kustom atau duplikasi elemen input secara inline tidak diperbolehkan.
+- **Konstanta Terpusat:** Nilai tetap seperti daftar desa domisili, sapaan/gelar, tarif standar, dan nomor kontak klinik **harus** diimpor dari `src/constants/clinic.ts`.
+- **Penanganan Nilai Uang:** Seluruh nilai moneter disimpan sebagai `NUMERIC(15,2)` di PostgreSQL dan ditampilkan ke pengguna dengan format rupiah standar Indonesia (`formatRupiah(amount)` dari `src/lib/utils.ts`).
+- **Penyimpanan Foto Medis:** Seluruh unggahan foto medis wajib melalui fungsi `uploadMedicalPhoto` dari `src/lib/storage.ts` yang secara otomatis mengompresi gambar ke format WebP < 300KB.
 
-- Keep the diff within the selected task.
-- Add tests with behavior changes.
-- Stop when an unapproved product or architecture decision appears.
-- Record architecture decisions as ADRs.
-- Use migrations for database changes.
-- Update execution status through `docs/context/state.yaml` tooling, not generated Markdown.
+---
 
-## 5. Before pull request
+## 3. Alur Kerja Git & Penamaan Branch
 
-Run the project-equivalent commands:
+### Penamaan Branch
+- Fitur baru: `feature/{feature-id}-{deskripsi-singkat}` (contoh: `feature/F-002-rekam-medis-dokter`)
+- Perbaikan bug: `fix/{deskripsi-bug}` (contoh: `fix/search-debounce-timeout`)
+
+### Pesan Commit
+Gunakan kalimat perintah (*imperative mood*) dan cantumkan ID fitur jika relevan:
+- `feat(F-001): add patient search autocomplete component`
+- `fix(pendaftaran): handle duplicate No RM error gracefully`
+- `docs: update hybrid storage architecture decision`
+
+---
+
+## 4. Checklist Verifikasi Sebelum Push
+
+Sebelum melakukan *commit* atau *pull request*, pastikan seluruh pemeriksaan berikut berhasil tanpa error:
 
 ```bash
-{{CONTEXT_SYNC_COMMAND}}
-{{CONTEXT_VALIDATE_COMMAND}}
-{{FORMAT_COMMAND}}
-{{LINT_COMMAND}}
-{{TEST_COMMAND}}
-{{BUILD_COMMAND}}
+# 1. Validasi integritas dokumen spesifikasi SDD
+npm run context:validate
+
+# 2. Type-checking TypeScript mode strict
+npx tsc --noEmit
+
+# 3. Build produksi Next.js
+npm run build
 ```
 
-Update:
+---
 
-- feature verification evidence;
-- `docs/context/state.yaml` through the context tooling;
-- generated `PROJECT_STATE.md` and `PROGRESS.md`;
-- `docs/handoff/current.md`;
-- architecture or ADR artifacts when contracts changed.
+## 5. Keamanan & Privasi Data
 
-## 6. Documentation review
-
-Check:
-
-- no raw chat history was committed;
-- no giant manual context file was introduced;
-- each fact has one canonical owner;
-- generated files were not edited directly;
-- long documents were reviewed using `docs/documentation/MODULARIZATION_GUIDE.md`;
-- one ADR contains one decision;
-- oversized features were split by capability before adding deep subfolders.
-
-## 7. Pull request
-
-The PR identifies:
-
-- feature, task, and requirement IDs;
-- intended behavior and out-of-scope work;
-- changed boundaries;
-- verification evidence;
-- migration and compatibility impact;
-- context and documentation impact;
-- remaining risks.
-
-Default to draft until deterministic checks pass.
-
-## 8. Merge and closeout
-
-After merge:
-
-1. refresh execution state against the merged commit;
-2. regenerate context views;
-3. archive a meaningful handoff when work continues later;
-4. update roadmap or release state;
-5. do not delete accepted specifications or ADRs.
+- **Dilarang keras melakukan commit berkas rahasia:** Jangan pernah meng-commit `.env.local` atau berkas apa pun yang berisi `SUPABASE_SERVICE_ROLE_KEY` atau `CLOUDINARY_API_SECRET`.
+- **Dilarang memasukkan data pasien asli ke Git:** Data spreadsheet asli di `docs/data/` dan catatan transkrip negosiasi privat telah di-ignore secara permanen oleh `.gitignore`.
