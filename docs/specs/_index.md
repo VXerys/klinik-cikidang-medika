@@ -14,11 +14,11 @@ Mutable execution status, active task, blockers, and commits belong in `docs/con
 
 | Feature ID | Feature | Spec path | Product priority | Lifecycle gate | Related milestone |
 |---|---|---|---|---|---|
-| `F-001` | Master Pasien & Kasir | `docs/specs/F-001-master-pasien-kasir/` | P1 | in_progress | MVP |
-| `F-002` | Rekam Medis Dokter | `docs/specs/F-002-rekam-medis/` | P1 | in_progress | MVP |
-| `F-003` | Buku Kas & Kapitasi BPJS | `docs/specs/F-003-buku-kas/` | P1 | in_progress | MVP |
-| `F-004` | Dashboard & Ekspor Excel | `docs/specs/F-004-dashboard/` | P1 | in_progress | MVP |
-| `F-005` | Migrasi 7,493 Data CSV | `docs/specs/F-005-migrasi-data/` | P2 | pending | MVP |
+| `F-001` | Master Pasien & Kasir | `docs/specs/F-001-master-pasien-kasir/` | P1 | implemented | MVP |
+| `F-002` | Rekam Medis Dokter | `docs/specs/F-002-rekam-medis-dokter/` | P1 | in_progress | MVP |
+| `F-003` | Buku Kas & Kapitasi BPJS | `docs/specs/F-003-buku-kas/` | P1 | pending | MVP |
+| `F-004` | Dashboard & Ekspor Excel | `docs/specs/F-004-dashboard/` | P1 | pending | MVP |
+| `F-005` | Migrasi 7,493 Data CSV | `docs/specs/F-005-migrasi-data-lama/` | P2 | implemented | MVP |
 | `F-006` | Register Program Khusus | `docs/specs/F-006-program-khusus/` | P2 | requirements | MVP |
 
 ## Lifecycle gate meaning
