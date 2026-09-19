@@ -87,6 +87,12 @@ export default function RekamMedisPage() {
 
   const handleSelectVisit = (visit: Visit) => {
     setSelectedVisit(visit);
+    // On mobile and tablet (< lg), smoothly scroll to the workstation form
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        document.getElementById('exam-workstation')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
   };
 
   const handleSaveSuccess = (updatedVisit: Visit) => {
@@ -179,7 +185,7 @@ export default function RekamMedisPage() {
         </div>
 
         {/* Right Column: Examination Form & Patient Past Timeline (8 cols) */}
-        <div className="lg:col-span-7 xl:col-span-8 space-y-6">
+        <div id="exam-workstation" className="lg:col-span-7 xl:col-span-8 space-y-6 scroll-mt-6">
           {selectedVisit ? (
             <>
               {/* Active Patient Examination Form */}

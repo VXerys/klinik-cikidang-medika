@@ -107,3 +107,16 @@ Rules:
 | Reusability | 100% shared UI primitives | Components in `src/components/ui/` reused across modules |
 | Storage Efficiency | Medical photos < 300KB WebP | `compressImageToWebP` before upload |
 | Security | Role-based data access & signed URLs | RLS policy tests & signed URL TTL |
+| Responsiveness | Fluid mobile (360px) to desktop | Zero horizontal scroll, touch targets >= 44px |
+
+## 8. Typography & Mobile/Tablet Responsiveness (UI/UX Pro Max)
+
+- **Canonical Typography**: The application uses **Plus Jakarta Sans** via `next/font/google` with optical font weights (`400`, `500`, `600`, `700`, `800`). Tabular numbers / monospace font are enforced for monetary currencies, ICD-10 diagnosis codes, No RM, and queue tokens.
+- **Responsive Layout Architecture**: Orchestrated by `src/components/AppLayout.tsx`.
+  - **Desktop (>= 1024px / `lg`)**: Fixed 64-column persistent dark sidebar (`w-64`).
+  - **Mobile & Tablet (< 1024px / `<lg`)**: Responsive slide-over drawer with smooth transition, darkened backdrop blur, and minimum 44×44px tap targets. Triggered via the mobile hamburger button in `Navbar.tsx`. Automatically closes upon route navigation or Escape key.
+- **Touch & Accessibility Standards**:
+  - Minimum touch target: 44×44px for buttons, inputs, and navigation links.
+  - Minimum gap: 8px (`gap-2`) between interactive elements.
+  - Fluid padding: `p-3 sm:p-5 md:p-6` across screen sizes.
+  - Zero horizontal overflow: All data tables must use horizontal scrolling within dedicated overflow containers (`overflow-x-auto`).

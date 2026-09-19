@@ -97,6 +97,8 @@ supabase/migrations/ (independent, no src/ imports)
 2. Server-side Supabase client (`src/lib/supabase/server.ts`) for server components and API routes. Browser client (`src/lib/supabase/client.ts`) for client components.
 3. Medical photo uploads must be compressed client-side to WebP < 300KB via `compressImageToWebP` before upload to the hybrid storage adapter (`src/lib/storage.ts`).
 4. Reusable UI mandate: All UI pages and feature components MUST consume atomic primitives from `src/components/ui/` (Button, Badge, Modal, Input, Select, Card) and constants from `src/constants/clinic.ts`. Direct ad-hoc styling of raw modal backdrops or inline duplicated form elements is prohibited.
+5. Canonical Typography (Plus Jakarta Sans): The application standardizes on **Plus Jakarta Sans** via Next.js Font Optimization (`next/font/google`). All headings, labels, and body text use Plus Jakarta Sans. Monospace / tabular numbers are mandatory for currency values, ICD-10 codes, No RM, and queue tokens.
+6. Mobile & Tablet Responsiveness Mandate (UI/UX Pro Max): The application must be 100% responsive across mobile smartphones (viewport 360px–640px), tablets (768px–1024px), and desktop monitors (1024px+). Navigation on mobile/tablet must use the responsive slide-over drawer triggered by the hamburger button in `Navbar.tsx`. All interactive touch targets (buttons, inputs, menu links) must have a minimum area of 44×44px with at least 8px (`gap-2`) spacing. Zero horizontal page scroll: all data tables and master-detail grids must stack gracefully or contain horizontal scrolling inside dedicated overflow wrappers.
 
 Detailed architecture: `docs/architecture/overview.md`.
 

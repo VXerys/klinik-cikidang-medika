@@ -1,7 +1,20 @@
-import type { Metadata } from 'next';
+import type { Metadata, Viewport } from 'next';
+import { Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
-import Sidebar from '@/components/Sidebar';
-import Navbar from '@/components/Navbar';
+import AppLayout from '@/components/AppLayout';
+
+const plusJakartaSans = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  weight: ['400', '500', '600', '700', '800'],
+  variable: '--font-plus-jakarta',
+  display: 'swap',
+});
+
+export const viewport: Viewport = {
+  width: 'device-width',
+  initialScale: 1,
+  maximumScale: 1,
+};
 
 export const metadata: Metadata = {
   title: 'Klinik Cikidang Medika — SIM & Keuangan',
@@ -14,15 +27,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id">
-      <body className="flex h-screen overflow-hidden bg-slate-100">
-        <Sidebar />
-        <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-          <Navbar />
-          <main className="flex-1 overflow-y-auto p-6">
-            {children}
-          </main>
-        </div>
+    <html lang="id" className={plusJakartaSans.variable}>
+      <body className="font-sans antialiased text-slate-900 bg-slate-100 selection:bg-blue-100 selection:text-blue-900">
+        <AppLayout>{children}</AppLayout>
       </body>
     </html>
   );
