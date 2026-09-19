@@ -2,8 +2,8 @@
 id: DOCS-AI-COLLABORATION
 title: AI Collaboration Model
 status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+owner: "Developer"
+last_updated: "2026-09-18"
 ---
 
 # AI Collaboration Model

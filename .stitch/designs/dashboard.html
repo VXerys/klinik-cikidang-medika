@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+
+<html lang="id"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Dashboard Eksekutif &amp; Keuangan - Klinik Pratama Cikidang Medika</title>
+<!-- Google Fonts: Geist & JetBrains Mono -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols Outlined -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS v3 with Plugins -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Configuration verbatim -->
+<script id="tailwind-config">
+  tailwind.config = {
+    darkMode: "class",
+    theme: {
+      extend: {
+        "colors": {
+          "on-primary": "#ffffff",
+          "on-primary-container": "#a3faef",
+          "surface-tint": "#006a63",
+          "on-surface-variant": "#3e4947",
+          "on-error-container": "#93000a",
+          "surface-variant": "#dae2fd",
+          "muted-slate": "#475569",
+          "on-tertiary-container": "#ffe5db",
+          "surface": "#faf8ff",
+          "background": "#faf8ff",
+          "charcoal-slate": "#0F172A",
+          "surface-bright": "#faf8ff",
+          "secondary": "#006398",
+          "on-tertiary-fixed": "#370e00",
+          "surface-container-low": "#f2f3ff",
+          "tertiary": "#7f4025",
+          "secondary-fixed": "#cce5ff",
+          "tertiary-container": "#9c573a",
+          "on-secondary": "#ffffff",
+          "inverse-primary": "#80d5cb",
+          "surface-container-highest": "#dae2fd",
+          "on-surface": "#131b2e",
+          "on-secondary-container": "#00476e",
+          "umum-amber": "#D97706",
+          "subtle-border": "#E2E8F0",
+          "tertiary-fixed-dim": "#ffb598",
+          "on-background": "#131b2e",
+          "primary": "#005c55",
+          "bpjs-blue": "#0284C7",
+          "surface-container-lowest": "#ffffff",
+          "soft-red": "#DC2626",
+          "error": "#ba1a1a",
+          "outline-variant": "#bdc9c6",
+          "tertiary-fixed": "#ffdbce",
+          "primary-container": "#0f766e",
+          "on-error": "#ffffff",
+          "on-tertiary-fixed-variant": "#72361b",
+          "on-secondary-fixed": "#001d31",
+          "error-container": "#ffdad6",
+          "on-primary-fixed": "#00201d",
+          "surface-dim": "#d2d9f4",
+          "outline": "#6e7977",
+          "inverse-on-surface": "#eef0ff",
+          "clinical-teal": "#0F766E",
+          "surface-container-high": "#e2e7ff",
+          "on-secondary-fixed-variant": "#004b73",
+          "pure-surface": "#FFFFFF",
+          "on-primary-fixed-variant": "#00504a",
+          "on-tertiary": "#ffffff",
+          "inverse-surface": "#283044",
+          "secondary-fixed-dim": "#93ccff",
+          "canvas-white": "#F8FAFC",
+          "primary-fixed-dim": "#80d5cb",
+          "primary-fixed": "#9cf2e8",
+          "secondary-container": "#5bb8fe",
+          "surface-container": "#eaedff"
+        },
+        "borderRadius": {
+          "DEFAULT": "0.125rem",
+          "lg": "0.25rem",
+          "xl": "0.5rem",
+          "full": "0.75rem"
+        },
+        "spacing": {
+          "gutter": "1.5rem",
+          "space-xs": "0.25rem",
+          "space-lg": "1.5rem",
+          "space-xl": "2rem",
+          "space-md": "1rem",
+          "space-sm": "0.5rem",
+          "margin": "2rem"
+        },
+        "fontFamily": {
+          "label-sm": ["Geist"],
+          "headline-sm": ["Geist"],
+          "body-sm": ["Geist"],
+          "body-md": ["Geist"],
+          "headline-md": ["Geist"],
+          "headline-lg": ["Geist"],
+          "body-lg": ["Geist"],
+          "mono-data": ["JetBrains Mono"],
+          "label-md": ["Geist"]
+        },
+        "fontSize": {
+          "label-sm": ["11px", { "lineHeight": "14px", "letterSpacing": "0.05em", "fontWeight": "600" }],
+          "headline-sm": ["18px", { "lineHeight": "24px", "letterSpacing": "-0.01em", "fontWeight": "600" }],
+          "body-sm": ["13px", { "lineHeight": "18px", "fontWeight": "400" }],
+          "body-md": ["14px", { "lineHeight": "20px", "fontWeight": "400" }],
+          "headline-md": ["22px", { "lineHeight": "28px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+          "headline-lg": ["28px", { "lineHeight": "36px", "letterSpacing": "-0.02em", "fontWeight": "600" }],
+          "body-lg": ["16px", { "lineHeight": "24px", "fontWeight": "400" }],
+          "mono-data": ["13px", { "lineHeight": "18px", "fontWeight": "500" }],
+          "label-md": ["12px", { "lineHeight": "16px", "fontWeight": "500" }]
+        }
+      },
+    },
+  }
+  </script>
+</head>
+<body class="bg-canvas-white text-charcoal-slate font-body-md antialiased flex min-h-screen overflow-x-hidden">
+<!-- ========================================================================= -->
+<!-- 1. SIDEBAR NAVIGATION (Anchored from Shared Component SideNavBar JSON) -->
+<!-- ========================================================================= -->
+<aside class="fixed top-0 left-0 h-screen w-60 z-40 bg-pure-surface border-r border-subtle-border flex flex-col justify-between p-4">
+<!-- Header Brand Section -->
+<div>
+<div class="flex items-center gap-3 px-2 py-2 mb-6">
+<div class="w-10 h-10 rounded-xl bg-primary-container flex items-center justify-center text-on-primary shadow-sm">
+<span class="material-symbols-outlined text-[24px]">local_hospital</span>
+</div>
+<div class="flex flex-col">
+<span class="font-headline-sm text-headline-sm font-bold text-charcoal-slate tracking-tight">Cikidang Medika</span>
+<span class="font-label-md text-label-md text-muted-slate font-normal">Klinik Pratama Rawat Jalan</span>
+</div>
+</div>
+<!-- Quick Action CTA -->
+<div class="mb-5 px-1">
+<button class="w-full flex items-center justify-center gap-2 bg-canvas-white hover:bg-surface-container border border-subtle-border text-primary py-2 px-3 rounded-xl font-label-md text-label-md font-semibold transition-colors duration-150 active:translate-y-px">
+<span class="material-symbols-outlined text-[18px]">point_of_sale</span>
+<span>Buka Kasir</span>
+</button>
+</div>
+<!-- Navigation Tabs: Exact Labels & Icons from JSON, semantic active detection: Dashboard -->
+<nav aria-label="Menu Utama" class="space-y-1.5">
+<!-- 1. Dashboard (Active Destination) -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl bg-primary-container text-on-primary font-semibold transition-transform duration-75 active:translate-y-px" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="dashboard">dashboard</span>
+<span class="font-label-md text-label-md">Dashboard</span>
+</a>
+<!-- 2. Pendaftaran & Loket -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-slate hover:text-charcoal-slate hover:bg-canvas-white font-medium transition-colors duration-150 active:translate-y-px" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="how_to_reg">how_to_reg</span>
+<span class="font-label-md text-label-md">Pendaftaran &amp; Loket</span>
+</a>
+<!-- 3. Rekam Medis -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-slate hover:text-charcoal-slate hover:bg-canvas-white font-medium transition-colors duration-150 active:translate-y-px" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="clinical_notes">clinical_notes</span>
+<span class="font-label-md text-label-md">Rekam Medis</span>
+</a>
+<!-- 4. Buku Kas & Keuangan -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-slate hover:text-charcoal-slate hover:bg-canvas-white font-medium transition-colors duration-150 active:translate-y-px" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="account_balance_wallet">account_balance_wallet</span>
+<span class="font-label-md text-label-md">Buku Kas &amp; Keuangan</span>
+</a>
+<!-- 5. Laporan & Ekspor -->
+<a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-muted-slate hover:text-charcoal-slate hover:bg-canvas-white font-medium transition-colors duration-150 active:translate-y-px" href="#">
+<span class="material-symbols-outlined text-[20px]" data-icon="summarize">summarize</span>
+<span class="font-label-md text-label-md">Laporan &amp; Ekspor</span>
+</a>
+</nav>
+</div>
+<!-- Bottom User Profile & Status (From JSON Footer) -->
+<div class="pt-4 border-t border-subtle-border">
+<div class="flex items-center gap-3 px-2 py-2 rounded-xl bg-canvas-white border border-subtle-border mb-2">
+<div class="relative flex-shrink-0">
+<div class="w-9 h-9 rounded-full bg-primary-container text-on-primary flex items-center justify-center font-bold text-xs">
+            DO
+          </div>
+<span class="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-emerald-500 ring-2 ring-white"></span>
+</div>
+<div class="flex flex-col min-w-0">
+<span class="font-label-md text-label-md font-semibold text-charcoal-slate truncate">dr. Ovan</span>
+<span class="font-label-sm text-label-sm text-muted-slate truncate">Pimpinan • Cloud Aktif</span>
+</div>
+</div>
+<a class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-muted-slate hover:text-charcoal-slate hover:bg-canvas-white font-label-md text-label-md font-medium transition-colors" href="#">
+<span class="material-symbols-outlined text-[18px]" data-icon="settings">settings</span>
+<span>Pengaturan</span>
+</a>
+</div>
+</aside>
+<!-- ========================================================================= -->
+<!-- MAIN VIEWPORT CANVAS (Left margin offset for fixed 240px sidebar) -->
+<!-- ========================================================================= -->
+<div class="ml-60 flex-1 flex flex-col min-h-screen">
+<!-- 2. TOP HEADER BAR (Anchored from Shared Component TopNavBar JSON) -->
+<header class="sticky top-0 h-16 w-full z-30 bg-pure-surface border-b border-subtle-border flex justify-between items-center px-8">
+<!-- Title & Product Anchor -->
+<div class="flex flex-col">
+<div class="flex items-center gap-3">
+<h1 class="font-headline-md text-headline-md font-bold text-charcoal-slate">Eksekutif &amp; Keuangan</h1>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-teal-50 text-clinical-teal border border-teal-200">
+            Rawat Jalan
+          </span>
+</div>
+<span class="font-body-sm text-body-sm text-muted-slate">Ringkasan Operasional &amp; Pendapatan Klinik Pratama Cikidang Medika</span>
+</div>
+<!-- Navigation & Trailing Actions -->
+<div class="flex items-center gap-3">
+<!-- Cloud DB State Indicator -->
+<div class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-medium">
+<span class="material-symbols-outlined text-[16px] text-emerald-600" data-icon="cloud_done">cloud_done</span>
+<span class="font-mono-data text-mono-data">PostgreSQL Aktif</span>
+</div>
+<!-- Periode Selector -->
+<div class="inline-flex items-center gap-2 px-3 py-1.5 rounded-lg bg-pure-surface border border-subtle-border text-muted-slate text-xs font-medium">
+<span class="material-symbols-outlined text-[16px]">calendar_today</span>
+<span>Periode: Bulan Ini (Sep 2026)</span>
+</div>
+<!-- Notification Bell -->
+<button class="p-2 rounded-lg text-muted-slate hover:bg-canvas-white hover:text-charcoal-slate border border-transparent hover:border-subtle-border transition-colors">
+<span class="material-symbols-outlined text-[20px]" data-icon="notifications">notifications</span>
+</button>
+<!-- Primary Action: Trailing CTA from JSON (Ekspor Excel) -->
+<button class="inline-flex items-center gap-2 bg-clinical-teal text-on-primary px-4 py-2 rounded-lg font-label-md text-label-md font-medium shadow-sm hover:bg-[#0d6961] active:translate-y-0.5 transition-all">
+<span class="material-symbols-outlined text-[18px]">table_view</span>
+<span>Ekspor Excel</span>
+</button>
+</div>
+</header>
+<!-- CONTENT WRAPPER (Max-width 1440px structure) -->
+<main class="p-8 max-w-[1440px] w-full mx-auto space-y-8 flex-1">
+<!-- ========================================================================= -->
+<!-- 3. TOP 4 METRIC KPI CARDS -->
+<!-- ========================================================================= -->
+<section aria-label="Indikator Kinerja Utama" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-5">
+<!-- CARD 1: Total Kunjungan Pasien -->
+<div class="bg-pure-surface rounded-xl border border-subtle-border p-5 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-colors">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-muted-slate font-semibold">TOTAL KUNJUNGAN PASIEN</span>
+<div class="w-8 h-8 rounded-lg bg-teal-50 text-clinical-teal flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">groups</span>
+</div>
+</div>
+<div class="my-3">
+<span class="font-mono-data text-headline-lg font-bold text-charcoal-slate">7.493</span>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
+              +24% vs 2025
+            </span>
+<span class="font-body-sm text-body-sm text-muted-slate text-xs">2.882 thn berjalan</span>
+</div>
+</div>
+<!-- CARD 2: Pasien Unik Terdaftar -->
+<div class="bg-pure-surface rounded-xl border border-subtle-border p-5 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-colors">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-muted-slate font-semibold">PASIEN UNIK TERDAFTAR</span>
+<div class="w-8 h-8 rounded-lg bg-slate-100 text-charcoal-slate flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">folder_shared</span>
+</div>
+</div>
+<div class="my-3">
+<span class="font-mono-data text-headline-lg font-bold text-charcoal-slate">4.238 <span class="text-sm font-normal text-muted-slate">Pasien</span></span>
+</div>
+<div class="flex items-center">
+<span class="font-body-sm text-body-sm text-muted-slate text-xs">Rekam medis aktif migrasi cloud</span>
+</div>
+</div>
+<!-- CARD 3: Dana Kapitasi BPJS (Estimasi) -->
+<div class="bg-pure-surface rounded-xl border border-subtle-border p-5 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-colors">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-muted-slate font-semibold">DANA KAPITASI BPJS (ESTIMASI)</span>
+<div class="w-8 h-8 rounded-lg bg-sky-50 text-bpjs-blue flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">verified_user</span>
+</div>
+</div>
+<div class="my-3">
+<span class="font-mono-data text-headline-lg font-bold text-charcoal-slate">Rp 28.540.000</span>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-sky-50 text-bpjs-blue border border-sky-200">
+              Pencairan Bulanan
+            </span>
+<span class="font-body-sm text-body-sm text-muted-slate text-xs">Biaya periksa Rp 0 / pasien</span>
+</div>
+</div>
+<!-- CARD 4: Omzet Kasir Umum Bulan Ini -->
+<div class="bg-pure-surface rounded-xl border border-subtle-border p-5 flex flex-col justify-between shadow-sm hover:border-slate-300 transition-colors">
+<div class="flex items-start justify-between">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-muted-slate font-semibold">OMZET KASIR UMUM BULAN INI</span>
+<div class="w-8 h-8 rounded-lg bg-amber-50 text-umum-amber flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">receipt_long</span>
+</div>
+</div>
+<div class="my-3">
+<span class="font-mono-data text-headline-lg font-bold text-charcoal-slate">Rp 14.850.000</span>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-amber-50 text-umum-amber border border-amber-200">
+              Pasien Umum
+            </span>
+<span class="font-body-sm text-body-sm text-muted-slate text-xs truncate">Tunai Rp 10.2M • Trf Rp 4.65M</span>
+</div>
+</div>
+</section>
+<!-- ========================================================================= -->
+<!-- 4. ASYMMETRIC GRID (65% Clinical Left / 35% Financial Right) -->
+<!-- ========================================================================= -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- LEFT COLUMN (65% ~ 8 cols) -->
+<div class="lg:col-span-8 space-y-6">
+<!-- 10 Besar Diagnosa ICD-10 Card -->
+<div class="bg-pure-surface rounded-xl border border-subtle-border p-6 shadow-sm">
+<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-subtle-border">
+<div>
+<h2 class="font-headline-sm text-headline-sm text-charcoal-slate">10 Besar Diagnosa ICD-10 (Bulan September 2026)</h2>
+<p class="font-body-sm text-body-sm text-muted-slate mt-0.5">Distribusi kasus morbiditas rawat jalan terkonfirmasi dokter</p>
+</div>
+<div class="relative">
+<select class="font-label-md text-label-md text-charcoal-slate bg-canvas-white border border-subtle-border rounded-lg pl-3 pr-8 py-1.5 focus:ring-1 focus:ring-clinical-teal focus:border-clinical-teal cursor-pointer">
+<option>Semua Poli (Umum &amp; KIA)</option>
+<option>Poli Umum Sahaja</option>
+<option>Poli KIA &amp; KB</option>
+</select>
+</div>
+</div>
+<!-- ICD-10 Visual Progress Bar Chart List -->
+<div class="mt-6 space-y-4">
+<!-- Item 1: J00 -->
+<div class="space-y-1.5">
+<div class="flex justify-between items-center text-sm">
+<div class="flex items-center gap-2">
+<span class="font-mono-data text-mono-data font-bold px-2 py-0.5 rounded bg-teal-50 text-clinical-teal border border-teal-200">J00</span>
+<span class="font-body-md text-body-md font-medium text-charcoal-slate">ISPA (Infeksi Saluran Pernapasan Akut)</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono-data text-mono-data text-muted-slate">807 kasus</span>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate w-10 text-right">28%</span>
+</div>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+<div class="bg-[#0F766E] h-2 rounded-full" style="width: 28%"></div>
+</div>
+</div>
+<!-- Item 2: K30 -->
+<div class="space-y-1.5">
+<div class="flex justify-between items-center text-sm">
+<div class="flex items-center gap-2">
+<span class="font-mono-data text-mono-data font-bold px-2 py-0.5 rounded bg-teal-50 text-clinical-teal border border-teal-200">K30</span>
+<span class="font-body-md text-body-md font-medium text-charcoal-slate">Dispepsia / Gastritis</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono-data text-mono-data text-muted-slate">634 kasus</span>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate w-10 text-right">22%</span>
+</div>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+<div class="bg-[#0F766E]/80 h-2 rounded-full" style="width: 22%"></div>
+</div>
+</div>
+<!-- Item 3: I10 -->
+<div class="space-y-1.5">
+<div class="flex justify-between items-center text-sm">
+<div class="flex items-center gap-2">
+<span class="font-mono-data text-mono-data font-bold px-2 py-0.5 rounded bg-teal-50 text-clinical-teal border border-teal-200">I10</span>
+<span class="font-body-md text-body-md font-medium text-charcoal-slate">Hipertensi Esensial</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono-data text-mono-data text-muted-slate">518 kasus</span>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate w-10 text-right">18%</span>
+</div>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+<div class="bg-[#0F766E]/65 h-2 rounded-full" style="width: 18%"></div>
+</div>
+</div>
+<!-- Item 4: Z34 -->
+<div class="space-y-1.5">
+<div class="flex justify-between items-center text-sm">
+<div class="flex items-center gap-2">
+<span class="font-mono-data text-mono-data font-bold px-2 py-0.5 rounded bg-sky-50 text-bpjs-blue border border-sky-200">Z34</span>
+<span class="font-body-md text-body-md font-medium text-charcoal-slate">Pengawasan Kehamilan Normal (ANC)</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono-data text-mono-data text-muted-slate">403 kasus</span>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate w-10 text-right">14%</span>
+</div>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+<div class="bg-[#0284C7] h-2 rounded-full" style="width: 14%"></div>
+</div>
+</div>
+<!-- Item 5: L23 -->
+<div class="space-y-1.5">
+<div class="flex justify-between items-center text-sm">
+<div class="flex items-center gap-2">
+<span class="font-mono-data text-mono-data font-bold px-2 py-0.5 rounded bg-slate-100 text-muted-slate border border-slate-200">L23</span>
+<span class="font-body-md text-body-md font-medium text-charcoal-slate">Dermatitis Kontak Alergi</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono-data text-mono-data text-muted-slate">288 kasus</span>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate w-10 text-right">10%</span>
+</div>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+<div class="bg-slate-500 h-2 rounded-full" style="width: 10%"></div>
+</div>
+</div>
+<!-- Item 6: A09 -->
+<div class="space-y-1.5">
+<div class="flex justify-between items-center text-sm">
+<div class="flex items-center gap-2">
+<span class="font-mono-data text-mono-data font-bold px-2 py-0.5 rounded bg-amber-50 text-umum-amber border border-amber-200">A09</span>
+<span class="font-body-md text-body-md font-medium text-charcoal-slate">Gastroenteritis Akut (Diare)</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="font-mono-data text-mono-data text-muted-slate">232 kasus</span>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate w-10 text-right">8%</span>
+</div>
+</div>
+<div class="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+<div class="bg-[#D97706] h-2 rounded-full" style="width: 8%"></div>
+</div>
+</div>
+</div>
+<!-- Footer Notice -->
+<div class="mt-6 pt-4 border-t border-subtle-border flex items-center justify-between text-xs text-muted-slate">
+<span class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-clinical-teal">verified</span>
+                Data diintegrasikan otomatis dari resume medis E-Rekam Medis (dr. Ovan &amp; dr. Neneng)
+              </span>
+<span class="font-mono-data">Sync: Realtime</span>
+</div>
+</div>
+<!-- Sebaran Asal Wilayah Desa Pasien Card -->
+<div class="bg-pure-surface rounded-xl border border-subtle-border p-6 shadow-sm">
+<div class="pb-3 border-b border-subtle-border">
+<h2 class="font-headline-sm text-headline-sm text-charcoal-slate">Sebaran Asal Wilayah Desa Pasien</h2>
+<p class="font-body-sm text-body-sm text-muted-slate mt-0.5">Jangkauan geografis kunjungan fasilitas kesehatan tingkat pertama</p>
+</div>
+<!-- Segmented Distribution Bar -->
+<div class="mt-5 space-y-4">
+<div class="h-4 w-full flex rounded-lg overflow-hidden gap-1 bg-slate-100 p-0.5 border border-subtle-border">
+<div class="bg-clinical-teal h-full rounded" style="width: 42%" title="Desa Cikidang: 42%"></div>
+<div class="bg-[#0284C7] h-full rounded" style="width: 24%" title="Desa Pangkalan: 24%"></div>
+<div class="bg-[#4F46E5] h-full rounded" style="width: 18%" title="Desa Sampora: 18%"></div>
+<div class="bg-slate-400 h-full rounded" style="width: 16%" title="Luar Wilayah / Rujukan: 16%"></div>
+</div>
+<!-- Pill Legend Metrics -->
+<div class="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-clinical-teal"></span>
+<span class="font-label-md text-label-md font-medium text-charcoal-slate">Desa Cikidang</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate mt-1">42% <span class="font-normal text-muted-slate text-xs">(1.210)</span></span>
+</div>
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#0284C7]"></span>
+<span class="font-label-md text-label-md font-medium text-charcoal-slate">Desa Pangkalan</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate mt-1">24% <span class="font-normal text-muted-slate text-xs">(692)</span></span>
+</div>
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-[#4F46E5]"></span>
+<span class="font-label-md text-label-md font-medium text-charcoal-slate">Desa Sampora</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate mt-1">18% <span class="font-normal text-muted-slate text-xs">(519)</span></span>
+</div>
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col">
+<div class="flex items-center gap-1.5">
+<span class="w-2.5 h-2.5 rounded-full bg-slate-400"></span>
+<span class="font-label-md text-label-md font-medium text-charcoal-slate">Luar Wilayah</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate mt-1">16% <span class="font-normal text-muted-slate text-xs">(461)</span></span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- RIGHT COLUMN (35% ~ 4 cols) -->
+<div class="lg:col-span-4 space-y-6">
+<!-- Ringkasan Arus Kas Terakhir (Hari Ini) Card -->
+<div class="bg-pure-surface rounded-xl border border-subtle-border p-6 shadow-sm flex flex-col justify-between">
+<div>
+<div class="pb-3 border-b border-subtle-border">
+<h2 class="font-headline-sm text-headline-sm text-charcoal-slate">Ringkasan Arus Kas (Hari Ini)</h2>
+<p class="font-body-sm text-body-sm text-muted-slate mt-0.5">Saldo riil operasional &amp; mutasi terkini</p>
+</div>
+<!-- Top Balance Dual-Card Display -->
+<div class="grid grid-cols-1 gap-3 my-5">
+<div class="p-3.5 rounded-lg bg-teal-50/60 border border-teal-100 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-clinical-teal text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">payments</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-muted-slate block">Kas Tunai Laci Kasir</span>
+<span class="font-mono-data text-headline-sm font-bold text-charcoal-slate">Rp 3.420.000</span>
+</div>
+</div>
+<span class="font-mono-data text-xs text-clinical-teal font-semibold">Tersedia</span>
+</div>
+<div class="p-3.5 rounded-lg bg-slate-50 border border-subtle-border flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-8 h-8 rounded bg-charcoal-slate text-white flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">account_balance</span>
+</div>
+<div>
+<span class="font-label-sm text-label-sm text-muted-slate block">Kas Rekening Bank (BRI)</span>
+<span class="font-mono-data text-headline-sm font-bold text-charcoal-slate">Rp 32.180.000</span>
+</div>
+</div>
+<span class="font-mono-data text-xs text-muted-slate font-semibold">Komersial</span>
+</div>
+</div>
+<!-- Subheader -->
+<div class="pt-2 pb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-wider text-muted-slate font-semibold">Mutasi Kas Masuk &amp; Keluar Terkini</span>
+</div>
+<!-- Compact Transaction List -->
+<div class="space-y-2.5">
+<!-- Mutasi 1: Masuk -->
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col gap-1.5 hover:bg-white transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-emerald-100 text-emerald-800 border border-emerald-200">Masuk</span>
+<span class="font-body-sm text-body-sm font-semibold text-charcoal-slate truncate max-w-[150px]">Dana Kapitasi BPJS</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-emerald-700">+Rp 28.540.000</span>
+</div>
+<div class="flex items-center justify-between text-xs text-muted-slate">
+<span>Transfer Bank BRI</span>
+<span class="font-mono-data">09:15 WIB</span>
+</div>
+</div>
+<!-- Mutasi 2: Keluar PT Kimia Farma -->
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col gap-1.5 hover:bg-white transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-soft-red border border-red-200">Keluar</span>
+<span class="font-body-sm text-body-sm font-semibold text-charcoal-slate truncate max-w-[150px]">Obat PT Kimia Farma</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate">-Rp 4.250.000</span>
+</div>
+<div class="flex items-center justify-between text-xs text-muted-slate">
+<span>Debit Bank BRI</span>
+<span class="font-mono-data">11:30 WIB</span>
+</div>
+</div>
+<!-- Mutasi 3: Keluar Spuit -->
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col gap-1.5 hover:bg-white transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-red-100 text-soft-red border border-red-200">Keluar</span>
+<span class="font-body-sm text-body-sm font-semibold text-charcoal-slate truncate max-w-[150px]">Alkes Habis Pakai</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-charcoal-slate">-Rp 850.000</span>
+</div>
+<div class="flex items-center justify-between text-xs text-muted-slate">
+<span>Kasir Tunai</span>
+<span class="font-mono-data">13:45 WIB</span>
+</div>
+</div>
+<!-- Mutasi 4: Setor Tunai -->
+<div class="p-3 rounded-lg border border-subtle-border bg-canvas-white flex flex-col gap-1.5 hover:bg-white transition-colors">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="px-2 py-0.5 rounded text-[11px] font-bold bg-sky-100 text-bpjs-blue border border-sky-200">Setor</span>
+<span class="font-body-sm text-body-sm font-semibold text-charcoal-slate truncate max-w-[150px]">Setor Kasir ke BRI</span>
+</div>
+<span class="font-mono-data text-mono-data font-bold text-blue-700">Rp 5.000.000</span>
+</div>
+<div class="flex items-center justify-between text-xs text-muted-slate">
+<span>Setor Tunai</span>
+<span class="font-mono-data">15:20 WIB</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Bottom Action Button -->
+<div class="mt-6 pt-4 border-t border-subtle-border">
+<a class="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg border border-subtle-border bg-pure-surface hover:bg-canvas-white text-charcoal-slate font-label-md text-label-md font-semibold transition-colors duration-150 active:translate-y-0.5" href="#">
+<span>Lihat Seluruh Buku Kas &amp; Rekap Setoran</span>
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</a>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

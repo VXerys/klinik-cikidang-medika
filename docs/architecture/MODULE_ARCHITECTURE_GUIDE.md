@@ -2,8 +2,8 @@
 id: ARCH-MODULE-GUIDE
 title: Module System Architecture Guide
 status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+owner: "Developer"
+last_updated: "2026-09-18"
 ---
 
 # Module System Architecture Guide

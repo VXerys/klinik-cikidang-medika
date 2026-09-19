@@ -2,57 +2,36 @@
 id: QUALITY-DOD
 title: Definition of Done
 status: approved
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+owner: "Technical Lead"
+last_updated: "2026-09-19"
 ---
 
 # Definition of Done
 
 ## Task
 
-A task is done only when:
+A task is considered done only when:
 
-- referenced requirements and acceptance criteria are addressed;
-- implementation follows approved design and ADRs;
-- relevant format, lint, tests, and build checks pass;
-- error and security paths are handled;
-- no unrelated change is included;
-- verification evidence is recorded;
-- execution state is updated through the context system;
-- generated context views are current;
-- `docs/handoff/current.md` reflects partial or continuing work.
+- Code compiles successfully (`npm run build` passes).
+- Linting passes without errors (`npm run lint`).
+- Type checking passes without errors (`npx tsc --noEmit`).
+- All acceptance criteria from the specification are met.
+- No unrelated changes are included in the commit or pull request.
+- The execution state is updated appropriately.
 
 ## Feature
 
-A feature is done only when:
+A feature is considered done only when:
 
-- all committed tasks are complete or explicitly deferred;
-- every acceptance criterion has evidence;
-- migrations and compatibility obligations are verified;
-- critical manual flows are accepted;
-- documentation and ADR impact is resolved;
-- no unresolved P0/P1 defect remains;
-- human product acceptance is recorded;
-- feature lifecycle gate and execution state are synchronized.
+- All committed tasks for the feature are completed.
+- Edge cases are explicitly handled, including empty states, error states, and loading states.
+- The feature has been tested manually with real clinic data samples (e.g., patient records, cash flows).
+- Critical manual flows are accepted by the product owner or technical lead.
 
 ## Documentation
 
-A documentation change is done only when:
+A documentation change is considered done only when:
 
-- one canonical owner exists for each fact;
-- links and IDs validate;
-- generated files were not edited directly;
-- long files were reviewed for modularization by responsibility;
-- no raw chat history or duplicated status was introduced;
-- assumptions and approved facts are distinguished.
-
-## Context system
-
-The context system is done only when:
-
-- `state.yaml` is canonical for execution state;
-- generated views match a clean render;
-- repeated sync is idempotent;
-- invalid IDs and statuses fail validation;
-- provider adapters are reproducible and non-canonical;
-- the repository works after moving to another machine.
+- The canonical source is updated.
+- Links and references validate successfully.
+- Assertions and claims are grounded in actual project artifacts without fabrication.

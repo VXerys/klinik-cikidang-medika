@@ -1,9 +1,9 @@
 ---
 id: ADR-INDEX
 title: Architecture Decision Records
-status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+status: active
+owner: Developer
+last_updated: 2026-09-18
 ---
 
 # Architecture Decision Records
@@ -58,6 +58,8 @@ Never rewrite accepted history to make the past look cleaner. Create a new ADR a
 
 | ADR | Status | Decision | Superseded by |
 |---|---|---|---|
-| `NNNN` | proposed | {{DECISION}} | — |
+| `ADR-001` | accepted | Next.js + Supabase as primary stack | — |
+| `ADR-002` | accepted | Supabase Storage for medical photo uploads | — |
+| `ADR-003` | accepted | Hybrid Storage Architecture with Cloudinary Fallback | — |
 
 Use `ADR.template.md` for new records.

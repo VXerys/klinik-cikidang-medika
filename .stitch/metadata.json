@@ -1,0 +1,24 @@
+{
+  "name": "projects/13074078228953025446",
+  "projectId": "13074078228953025446",
+  "title": "SIM Klinik Cikidang Medika",
+  "visibility": "PRIVATE",
+  "projectType": "PROJECT_DESIGN",
+  "origin": "STITCH",
+  "deviceType": "DESKTOP",
+  "designSystem": "assets/95293427f01641f6925061b5f17253da",
+  "screens": {
+    "dashboard": {
+      "id": "014ad976ba5d41a18a3585953cfeff93",
+      "sourceScreen": "projects/13074078228953025446/screens/014ad976ba5d41a18a3585953cfeff93",
+      "title": "Dashboard Eksekutif & Keuangan - Klinik Pratama Cikidang Medika",
+      "width": 2560,
+      "height": 2476,
+      "htmlPath": ".stitch/designs/dashboard.html",
+      "screenshotPath": ".stitch/designs/dashboard.png"
+    }
+  },
+  "metadata": {
+    "userRole": "OWNER"
+  }
+}

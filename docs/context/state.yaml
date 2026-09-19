@@ -1,43 +1,62 @@
-# Canonical execution state.
-# Edit through the repository context CLI when available.
-# Product requirements, architecture, ADRs, and verification details do not belong here.
-
+# Canonical execution state for Klinik Cikidang Medika SIM
 schema_version: 1
 project:
-  id: "{{PROJECT_ID}}"
-  name: "{{PROJECT_NAME}}"
-  stage: discovery
-  current_release: unreleased
+  id: "klinik-cikidang-medika"
+  name: "Klinik Cikidang Medika SIM & Keuangan"
+  stage: implementation
+  current_release: "v1.0.0-mvp"
 
 tracks:
   - id: product
-    name: Product and Design
+    name: Product and Requirements
   - id: engineering
-    name: Engineering
+    name: Frontend and Database Engineering
 
-features: []
-# Example:
-# features:
-#   - id: F-001
-#     name: Example Feature
-#     track: engineering
-#     status: approved
-#     spec_path: docs/specs/F-001-example-feature
-#     active_phase: implementation
-#     tasks:
-#       - id: TASK-001
-#         title: Implement example vertical slice
-#         status: pending
-#         commit: null
-#         blocker: null
+features:
+  - id: F-001
+    name: Master Pasien dan Loket Kasir
+    track: engineering
+    status: completed
+    spec_path: docs/specs/F-001-master-pasien-kasir
+    active_phase: completed
+  - id: F-002
+    name: Rekam Medis Ringkas Dokter
+    track: engineering
+    status: in_progress
+    spec_path: docs/specs/F-002-rekam-medis-dokter
+    active_phase: implementation
+  - id: F-003
+    name: Buku Kas Operasional dan Kapitasi BPJS
+    track: engineering
+    status: in_progress
+    spec_path: docs/specs/F-003-buku-kas-operasional
+    active_phase: implementation
+  - id: F-004
+    name: Dashboard Eksekutif dan Ekspor Excel
+    track: engineering
+    status: in_progress
+    spec_path: docs/specs/F-004-dashboard-laporan
+    active_phase: implementation
+  - id: F-005
+    name: Migrasi 7.493 Data CSV ke Supabase
+    track: engineering
+    status: completed
+    spec_path: docs/specs/F-005-migrasi-data-lama
+    active_phase: completed
+  - id: F-006
+    name: Register Program Khusus (TBC, Sunat + Foto, Pos-Rawat)
+    track: engineering
+    status: in_progress
+    spec_path: docs/specs/F-006-program-khusus
+    active_phase: requirements
 
 active:
-  feature_id: null
-  task_id: null
-  branch: null
+  feature_id: "F-001"
+  task_id: "TASK-IMPL-PASIEN-KASIR"
+  branch: "main"
 
 blockers: []
 risks: []
 
-last_updated: "{{YYYY-MM-DD}}"
-last_verified_commit: null
+last_updated: "2026-09-19"
+last_verified_commit: "migration-verified"

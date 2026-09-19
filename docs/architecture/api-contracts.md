@@ -1,39 +1,56 @@
 # API Contracts
 
-Use this index for contracts shared across applications or services. Prefer machine-readable OpenAPI, GraphQL schema, or generated client contracts when available.
+This project uses the Supabase JavaScript Client SDK directly rather than a custom REST API. This document outlines the standard interaction patterns.
 
-## Contract Ownership
+## Interaction Patterns
 
-| Contract | Provider | Consumers | Canonical definition | Versioning |
-|---|---|---|---|---|
-| {{CONTRACT}} | {{PROVIDER}} | {{CONSUMERS}} | `{{PATH}}` | {{STRATEGY}} |
+All data access is mediated through the Supabase SDK:
 
-## Global Rules
+```javascript
+// Querying
+const { data, error } = await supabase
+  .from('table_name')
+  .select('*')
+  .eq('column', value);
 
-1. Inputs are validated at the trusted boundary.
-2. Errors use stable machine-readable codes.
-3. Public behavior changes require compatibility analysis.
-4. Authentication and authorization failures must remain distinguishable.
-5. Pagination, idempotency, retry, and timeout behavior must be explicit.
-6. Sensitive internal errors must not be returned to clients.
+// Inserting
+const { data, error } = await supabase
+  .from('table_name')
+  .insert([{ column: value }]);
+
+// Updating
+const { data, error } = await supabase
+  .from('table_name')
+  .update({ column: value })
+  .eq('id', id);
+
+// Deleting
+const { data, error } = await supabase
+  .from('table_name')
+  .delete()
+  .eq('id', id);
+```
 
 ## Error Envelope
 
+The standard error handling follows the Supabase envelope:
+
 ```json
 {
+  "data": null,
   "error": {
-    "code": "stable_error_code",
-    "message": "Safe user-facing message",
-    "requestId": "optional-correlation-id"
+    "code": "PGRST116",
+    "details": "The result contains 0 rows",
+    "hint": null,
+    "message": "JSON object requested, multiple (or no) rows returned"
   }
 }
 ```
 
-## Compatibility Policy
+## Complex Operations
 
-- Backward-compatible additions: {{POLICY}}
-- Breaking changes: {{POLICY}}
-- Deprecation window: {{WINDOW}}
-- Client version support: {{POLICY}}
+For operations that require complex transaction logic or aggregations that cannot be efficiently executed from the client, PostgreSQL RPC (Remote Procedure Call) functions will be deployed and invoked via:
 
-Feature-specific request and response details belong in each feature `design.md` or the machine-readable contract.
+```javascript
+const { data, error } = await supabase.rpc('function_name', { arg: value });
+```

@@ -1,15 +1,13 @@
-# Repository Operating Contract — `{{PROJECT_NAME}}`
-
-> Replace all placeholders with verified repository facts before treating this file as authoritative. Remove sections that do not apply. Keep this file concise and link to detailed documentation instead of duplicating it.
+# Repository Operating Contract — klinik-cikidang-medika
 
 ## 1. Project Identity
 
-`{{PROJECT_NAME}}` is a `{{APPLICATION_OR_SYSTEM_TYPE}}` for `{{TARGET_USERS_OR_SYSTEMS}}` that `{{PRIMARY_OUTCOME}}`.
+`klinik-cikidang-medika` is a web-based clinic management information system (SIM) for the staff and owners of Klinik Pratama Cikidang Medika that replaces manual Google Sheets with a structured database, real-time dashboard, and role-based access for patient registration, medical records, billing, and financial reporting.
 
-- Lifecycle stage: `{{DISCOVERY | MVP | BETA | PRODUCTION | OTHER}}`
-- Primary repository purpose: `{{PURPOSE}}`
-- Production sensitivity: `{{LOW | MEDIUM | HIGH}}`
-- Primary owner/team: `{{OWNER_OR_TEAM}}`
+- Lifecycle stage: MVP
+- Primary repository purpose: Full-stack clinic management web application
+- Production sensitivity: HIGH (patient medical records, financial data, PII including NIK KTP and BPJS numbers)
+- Primary owner/team: Solo developer (commissioned by dr. Ovan and dr. Neneng via intermediary)
 
 ## 2. Source of Truth
 
@@ -17,18 +15,20 @@ Use these sources in priority according to the question being answered:
 
 | Question | Canonical source |
 |---|---|
-| Product goals/scope | `{{PATH_TO_PRD_OR_PRODUCT_DOCS}}` |
-| Engineering governance | `{{PATH_TO_CONSTITUTION}}` |
-| Shared architecture | `{{PATH_TO_ARCHITECTURE}}` |
-| Significant technical decisions | `{{PATH_TO_ADRS}}` |
-| Feature behavior | `{{PATH_TO_FEATURE_REQUIREMENTS}}` |
-| Feature/module system architecture | `{{PATH_TO_FEATURE_SYSTEM_ARCHITECTURES_OR_NA}}` |
-| Feature implementation design | `{{PATH_TO_FEATURE_DESIGNS}}` |
-| API/data contracts | `{{PATH_TO_CONTRACT_DOCS_OR_SCHEMA}}` |
-| Database schema/migrations | `{{PATH_TO_SCHEMA_AND_MIGRATIONS}}` |
+| Product goals/scope | `docs/product/prd.md` |
+| Engineering governance | `AGENTS.md` (this file) |
+| Shared architecture | `docs/architecture/overview.md` |
+| Significant technical decisions | `docs/adr/` |
+| Feature behavior | `docs/product/prd.md`, `docs/specs/` |
+| Feature/module system architecture | N/A (single monolith, no module-level architecture needed at MVP) |
+| Feature implementation design | `docs/specs/{feature-id}/design.md` |
+| API/data contracts | `docs/architecture/api-contracts.md` |
+| Database schema/migrations | `supabase/migrations/` |
 | Current implemented behavior | code, tests, schemas, migrations, configuration |
-| Execution/task state | `{{ISSUE_TRACKER_OR_TASK_PATH}}` |
-| Operations/runbooks | `{{PATH_TO_OPERATIONS}}` |
+| Execution/task state | `docs/context/state.yaml` |
+| Operations/runbooks | `docs/runbooks/` |
+| Client communication history | `docs/context/CHAT_TRANSCRIPT.md` |
+| Clinic operational data (CSV) | `docs/data/DASHBOARD - *.csv` (excludes Emerys Glow files) |
 
 ### Conflict Rule
 
@@ -46,15 +46,15 @@ Conversation history and provider memory are never the sole source of truth.
 
 ## 3. Technology Stack
 
-- Language/runtime: `{{LANGUAGE_RUNTIME}}`
-- Client/application framework: `{{FRAMEWORK}}`
-- Backend/API: `{{BACKEND}}`
-- Database/persistence: `{{DATABASE}}`
-- Auth: `{{AUTH}}`
-- State management: `{{STATE_MANAGEMENT}}`
-- Package/build tooling: `{{TOOLING}}`
-- Testing: `{{TEST_FRAMEWORKS}}`
-- Deployment/runtime: `{{DEPLOYMENT_TARGET}}`
+- Language/runtime: TypeScript 5.6, Node.js
+- Client/application framework: Next.js 14 App Router, React 18, Tailwind CSS 3.4
+- Backend/API: Next.js API Routes (server components) + Supabase client SDK
+- Database/persistence: Supabase Cloud PostgreSQL + Hybrid Storage (Supabase Storage 1GB primary + Cloudinary 25GB fallback for medical photos)
+- Auth: Supabase Auth with RBAC (roles: `kasir`, `dokter`, `owner`)
+- State management: React component state (no external state library)
+- Package/build tooling: npm, PostCSS, Autoprefixer
+- Testing: Not yet configured (planned: Vitest + React Testing Library)
+- Deployment/runtime: Vercel Free Tier, custom domain via client's DNS
 
 Do not add or replace major dependencies without following the dependency policy and obtaining approval where required.
 
@@ -62,74 +62,68 @@ Do not add or replace major dependencies without following the dependency policy
 
 ### System Shape
 
-`{{ONE_PARAGRAPH_ARCHITECTURE_SUMMARY}}`
+Monolithic Next.js 14 App Router application. The browser client renders server components and client components. Data flows through the Supabase JS client SDK (`@supabase/ssr` for server, `@supabase/supabase-js` for client) to a managed PostgreSQL database on Supabase Cloud. Medical photos (circumcision post-op) are managed through a hybrid storage adapter (`src/lib/storage.ts`) using Supabase Storage (1GB private bucket) as primary and Cloudinary (25GB free tier) as fallback, with client-side compression to WebP < 300KB. Excel export happens entirely in the browser via the `xlsx` (SheetJS) library.
 
 ### Primary Components / Modules
 
 | Component | Responsibility | May depend on | Must not depend on |
 |---|---|---|---|
-| `{{COMPONENT_A}}` | `{{RESPONSIBILITY}}` | `{{ALLOWED}}` | `{{PROHIBITED}}` |
-| `{{COMPONENT_B}}` | `{{RESPONSIBILITY}}` | `{{ALLOWED}}` | `{{PROHIBITED}}` |
+| `src/app/` | Next.js App Router pages (dashboard, pendaftaran, rekam-medis, buku-kas, laporan) | `src/components`, `src/constants`, `src/lib`, `src/types` | `supabase/migrations` |
+| `src/components/ui/` | Reusable atomic UI primitives (Button, Badge, Modal, Input, Select, Card) | `src/lib/utils.ts` | Domain logic, Supabase SDK |
+| `src/components/` | Domain and feature UI components | `src/components/ui`, `src/constants`, `src/lib`, `src/types` | `src/app` route-private logic |
+| `src/constants/` | Canonical clinic configuration and design tokens (`clinic.ts`, `theme.ts`) | TypeScript primitives | React, Supabase |
+| `src/lib/storage.ts` | Hybrid media storage adapter (Supabase Storage + Cloudinary fallback) | `@supabase/supabase-js`, Cloudinary API | UI components |
+| `src/lib/supabase/` | Supabase client instances (browser + server) | `@supabase/ssr`, `@supabase/supabase-js` | `src/app`, `src/components` |
+| `src/lib/utils.ts` | Utility functions (clsx, tailwind-merge, formatRupiah) | `clsx`, `tailwind-merge` | Supabase, React |
+| `src/types/` | TypeScript type definitions (`database.ts`) | None | None |
+| `supabase/migrations/` | PostgreSQL DDL schema | None | `src/` |
 
 ### Dependency Direction
 
 ```text
-{{DEPENDENCY_DIRECTION_DIAGRAM}}
+src/app/ (pages)
+  └── src/components/{feature}/ (feature components)
+       └── src/components/ui/ (reusable primitives)
+            └── src/constants/ (clinic constants & design tokens)
+                 └── src/types/ (type definitions)
+                      └── src/lib/ (supabase, storage adapter, utils)
+
+supabase/migrations/ (independent, no src/ imports)
 ```
 
 ### Permanent Architecture Rules
 
-1. `{{ARCH_RULE_1}}`
-2. `{{ARCH_RULE_2}}`
-3. `{{ARCH_RULE_3}}`
+1. All database access goes through the Supabase client SDK. No raw `pg` connections or direct PostgreSQL drivers.
+2. Server-side Supabase client (`src/lib/supabase/server.ts`) for server components and API routes. Browser client (`src/lib/supabase/client.ts`) for client components.
+3. Medical photo uploads must be compressed client-side to WebP < 300KB via `compressImageToWebP` before upload to the hybrid storage adapter (`src/lib/storage.ts`).
+4. Reusable UI mandate: All UI pages and feature components MUST consume atomic primitives from `src/components/ui/` (Button, Badge, Modal, Input, Select, Card) and constants from `src/constants/clinic.ts`. Direct ad-hoc styling of raw modal backdrops or inline duplicated form elements is prohibited.
 
-Detailed architecture: `{{ARCHITECTURE_REFERENCE}}`.
-
-### Module System Architecture
-
-For a Level 2/3 capability with meaningful system concerns, create and approve a feature/module `system-architecture.md` before implementation design and dependent coding tasks.
-
-The module architecture owns decisions such as:
-
-- architectural drivers and workload assumptions;
-- module/system boundaries and ownership;
-- data source of truth, storage model, consistency, concurrency, ordering, and idempotency;
-- synchronous, asynchronous, event-driven, or realtime communication;
-- caching and invalidation when justified;
-- scalability, hotspot, partitioning, load-balancing, and edge/CDN strategy when justified;
-- failure handling, retry/replay/recovery, and resilience;
-- trust boundaries, authorization ownership, sensitive data, and abuse considerations;
-- observability and operational signals;
-- cost and operational complexity;
-- credible alternatives, pros/cons, accepted trade-offs, risks, and redesign triggers.
-
-Rules:
-
-- Architecture starts from requirements, quality attributes, constraints, and workload—not from a preferred technology.
-- Do not add Redis, queues, microservices, sharding, CDN/edge, circuit breakers, or other distributed mechanisms merely because they are common system-design patterns.
-- A Level 1 change may omit module architecture when it does not create or change a module-level architecture decision.
-- `design.md` maps approved architecture into concrete repository components; it must not silently re-decide the architecture.
-- A module-local decision becomes global architecture only after deliberate promotion and, when significant, an ADR.
-
-Framework references:
-
-- `docs/architecture/MODULE_ARCHITECTURE_GUIDE.md`
-- `templates/FEATURE_SYSTEM_ARCHITECTURE_TEMPLATE.md`
+Detailed architecture: `docs/architecture/overview.md`.
 
 ## 5. Directory Responsibilities
 
-Document only non-obvious or important repository responsibilities.
-
 | Path | Responsibility | Rules |
 |---|---|---|
-| `{{PATH}}` | `{{RESPONSIBILITY}}` | `{{IMPORTANT_RULE}}` |
-| `{{PATH}}` | `{{RESPONSIBILITY}}` | `{{IMPORTANT_RULE}}` |
-| `{{GENERATED_PATH}}` | generated artifacts | do not edit manually |
+| `src/app/` | Next.js App Router pages, one route per clinic module | Each route folder contains its own `page.tsx` |
+| `src/components/ui/` | Atomic, highly reusable UI primitives | No business logic or direct database calls |
+| `src/components/` | Domain-specific feature components (e.g. `pendaftaran/`) | Receive data via props, use UI primitives |
+| `src/constants/` | Canonical domain constants (clinic profile, villages, tariffs, theme tokens) | Single source of truth for fixed clinic attributes |
+| `src/lib/storage.ts` | Hybrid image compression and storage adapter | Handles Supabase 1GB + Cloudinary 25GB fallback |
+| `src/lib/supabase/` | Supabase client factory (server + browser) | Single instance pattern per request lifecycle |
+| `src/types/` | TypeScript interfaces for database rows | Must match `supabase/migrations/` schema |
+| `supabase/migrations/` | PostgreSQL DDL, append-only | Never edit an already-applied migration |
+| `docs/` | Canonical project documentation | Source of truth hierarchy per Section 2 |
+| `docs/data/DASHBOARD - *.csv` | Original clinic operational data from Google Sheets | Read-only reference; source of truth for data migration |
+| `docs/data/Emerys Glow*` | Skincare retail data (out of scope) | Do not process, migrate, or build features for these files |
+| `.stitch/` | Design system and generated UI mockups | Generated artifacts; do not treat as implementation spec |
+| `scripts/` | Utility scripts (PDF generation, context automation) | Not part of the production application |
 
 ### Directory Rules
 
-- `{{RULE}}`
-- `{{RULE}}`
+- One Next.js route folder per clinic module (pendaftaran, rekam-medis, buku-kas, laporan).
+- Shared components in `src/components/ui/`; feature-specific components co-located in `src/components/{module}/`.
+- All constant clinic data (villages, honorifics, default tariffs) must be defined in `src/constants/` and never hardcoded in component files.
+- All documentation changes go through `docs/`; raw chat and session notes do not belong in permanent docs.
 
 ## 6. Engineering Rules
 
@@ -141,11 +135,11 @@ Document only non-obvious or important repository responsibilities.
 - Do not fabricate files, APIs, schema, commands, or framework behavior; inspect the repository.
 - Preserve backward compatibility unless the approved specification explicitly changes it.
 - Treat generated files according to their generator workflow.
-- `{{PROJECT_SPECIFIC_RULE}}`
+- All monetary values stored as `NUMERIC(15,2)` in PostgreSQL and displayed with `Rp` prefix and Indonesian thousand separators.
 
 ### Error Handling
 
-- `{{ERROR_CONTRACT}}`
+- Surface Supabase errors to the UI with user-readable messages in Bahasa Indonesia.
 - Do not swallow errors merely to make flows appear successful.
 - Preserve domain/API error semantics unless an approved change says otherwise.
 
@@ -160,45 +154,41 @@ Before adding a dependency, document when applicable:
 - security/license impact;
 - reason existing dependencies are insufficient.
 
-Project rule: `{{DEPENDENCY_APPROVAL_RULE}}`.
+Project rule: No new dependencies without developer approval. The bundle must stay small for clinic computers with limited bandwidth.
 
 ## 7. State and Data Rules
 
-- Primary state owners: `{{STATE_OWNERS}}`
-- Server/persistent state source of truth: `{{SERVER_STATE_RULE}}`
-- Cache invalidation/synchronization: `{{CACHE_RULE}}`
-- Serialization/validation boundary: `{{VALIDATION_BOUNDARY}}`
-- Concurrency/idempotency rule: `{{CONCURRENCY_RULE_OR_NA}}`
-- `{{OTHER_DATA_RULE}}`
+- Primary state owners: Supabase PostgreSQL is the single source of truth for all persistent data.
+- Server/persistent state source of truth: All patient, visit, billing, and cash flow data lives in PostgreSQL. No localStorage persistence for business data.
+- Cache invalidation/synchronization: Next.js `revalidatePath()` after mutations. No external cache layer.
+- Serialization/validation boundary: Validate at the form component level before Supabase insert/update. Database constraints (NOT NULL, UNIQUE, FK) are the last line of defense.
+- Concurrency/idempotency rule: N/A at MVP scale (single clinic, low concurrent users).
+- CSV data files in `docs/data/DASHBOARD - *.csv` are the historical source of truth for the ETL migration script (F-005). After migration, PostgreSQL becomes the sole source.
 
 Do not introduce a second writable source of truth without explicit reconciliation rules.
 
 ## 8. API Rules
 
-Remove this section if the project has no meaningful API boundary.
+This project uses Supabase client SDK instead of custom REST APIs. The SDK calls go directly to the managed PostgREST layer.
 
-- API ownership: `{{API_OWNER}}`
-- Request validation: `{{API_VALIDATION_RULE}}`
-- Authentication: `{{API_AUTH_RULE}}`
-- Authorization: `{{API_AUTHZ_RULE}}`
-- Error contract: `{{API_ERROR_RULE}}`
-- Versioning/backward compatibility: `{{API_COMPATIBILITY_RULE}}`
-- Retry/timeout ownership: `{{RETRY_TIMEOUT_RULE}}`
-- Generated clients/contracts: `{{CODEGEN_RULE_OR_NA}}`
-
-Public or external contract changes require: `{{APPROVAL_RULE}}`.
+- API ownership: Supabase manages the PostgREST API layer. Custom business logic lives in Next.js server components and server actions.
+- Request validation: Validate in React components before SDK calls. PostgreSQL constraints as fallback.
+- Authentication: Supabase Auth handles session management. JWT tokens passed automatically by the SDK.
+- Authorization: Row Level Security (RLS) policies on PostgreSQL tables enforce role-based access (kasir, dokter, owner).
+- Error contract: Supabase SDK returns `{ data, error }` objects. Always check `error` before using `data`.
+- Versioning/backward compatibility: N/A (no public API).
+- Retry/timeout ownership: Supabase SDK handles retries internally.
+- Generated clients/contracts: `src/types/database.ts` must stay in sync with the migration schema.
 
 ## 9. Database Rules
 
-Remove or simplify if not applicable.
-
-- Schema source: `{{SCHEMA_SOURCE}}`
-- Migration path: `{{MIGRATION_PATH}}`
-- Migration command: `{{MIGRATION_COMMAND}}`
-- Access boundary: `{{DB_ACCESS_RULE}}`
-- Authorization/RLS/policy rule: `{{RLS_OR_AUTHZ_RULE}}`
-- Transaction rule: `{{TRANSACTION_RULE}}`
-- Seed/fixture rule: `{{SEED_RULE}}`
+- Schema source: `supabase/migrations/` (append-only SQL files)
+- Migration path: Create new timestamped `.sql` files in `supabase/migrations/`
+- Migration command: Copy SQL content and execute in Supabase SQL Editor (no CLI migration tool configured yet)
+- Access boundary: All application access through Supabase client SDK with RLS policies
+- Authorization/RLS/policy rule: RLS must be enabled on all tables containing patient or financial data. Policies enforce role-based access.
+- Transaction rule: Use Supabase RPC functions for multi-table operations that require atomicity.
+- Seed/fixture rule: Doctor seed data is included in the init migration. Patient/visit data migrated via ETL script from CSV.
 
 ### Prohibited Data Operations Without Explicit Approval
 
@@ -206,77 +196,77 @@ Remove or simplify if not applicable.
 - dropping/removing production data structures;
 - database reset on non-disposable environments;
 - mass delete/backfill with unknown impact;
-- bypassing authorization policies;
-- editing already-applied migrations when unsafe for project tooling.
+- bypassing RLS policies;
+- editing already-applied migrations.
 
 ## 10. Security Rules
 
-- Never commit secrets or real credentials.
-- Use least privilege for service credentials.
-- Enforce authorization at a trusted boundary; UI hiding is not authorization.
-- Validate untrusted input.
-- Do not log secrets, auth headers, tokens, or unnecessary PII.
+- Never commit secrets or real credentials. Use `.env.local` (gitignored) for Supabase keys.
+- Use least privilege for service credentials. Prefer `anon` key for client-side, `service_role` key only in trusted server contexts.
+- Enforce authorization at the database boundary via RLS. UI hiding is not authorization.
+- Validate untrusted input (patient names, NIK KTP, BPJS numbers) at the form level.
+- Do not log secrets, auth headers, tokens, or patient PII (NIK, BPJS number, medical diagnoses).
 - Security-sensitive changes require explicit verification.
-- Project-specific security constraints: `{{SECURITY_RULES}}`.
+- Project-specific: Medical photos in Supabase Storage must use a private bucket with signed URLs. No public bucket for patient images.
 
-Detailed security architecture: `{{SECURITY_REFERENCE}}`.
+Detailed security architecture: `docs/architecture/security.md`.
 
 ## 11. Project Commands
-
-Use actual commands. If a command is unavailable in the current environment, report that fact rather than inventing success.
 
 ### Install / Bootstrap
 
 ```bash
-{{INSTALL_COMMAND}}
+npm install
 ```
 
 ### Development
 
 ```bash
-{{DEV_COMMAND}}
+npm run dev
 ```
 
 ### Format
 
 ```bash
-{{FORMAT_COMMAND}}
+# No dedicated formatter configured yet. Tailwind handles class ordering.
 ```
 
 ### Lint / Static Analysis
 
 ```bash
-{{LINT_COMMAND}}
+npm run lint
 ```
 
 ### Type Check
 
 ```bash
-{{TYPECHECK_COMMAND_OR_NA}}
+npx tsc --noEmit
 ```
 
 ### Unit Tests
 
 ```bash
-{{UNIT_TEST_COMMAND}}
+# Not yet configured. Planned: npx vitest
 ```
 
 ### Integration / Component / E2E Tests
 
 ```bash
-{{INTEGRATION_TEST_COMMAND_OR_NA}}
+# Not yet configured.
 ```
 
 ### Build / Compile
 
 ```bash
-{{BUILD_COMMAND}}
+npm run build
 ```
 
 ### Database / Migration Checks
 
 ```bash
-{{DATABASE_CHECK_COMMAND_OR_NA}}
+# Manual: copy SQL from supabase/migrations/ and execute in Supabase SQL Editor.
+# Context validation:
+npm run context:validate
 ```
 
 ## 12. Task Execution Protocol
@@ -316,8 +306,8 @@ Use actual commands. If a command is unavailable in the current environment, rep
 - Keep commits/PRs coherent and scoped.
 - Inspect diffs before commit/merge.
 - Do not commit secrets, generated junk, debug artifacts, or unrelated changes.
-- `{{COMMIT_OR_BRANCH_POLICY}}`
-- `{{PR_POLICY}}`
+- Branch naming: `feature/{feature-id}-{short-description}` or `fix/{description}`.
+- Commit messages: imperative mood, reference feature ID when applicable (e.g., "F-001: add patient search autocomplete").
 
 ### Destructive Git Operations
 
@@ -332,7 +322,7 @@ Without the required explicit approval, do not:
 - replace major framework/provider/dependency;
 - make a breaking architecture change;
 - change production infrastructure or credentials;
-- bypass authentication/authorization;
+- bypass authentication/authorization or RLS policies;
 - disable tests to make CI pass;
 - modify unrelated code for cleanup;
 - edit generated files manually when a generator owns them;
@@ -341,8 +331,8 @@ Without the required explicit approval, do not:
 
 Project-specific prohibitions:
 
-- `{{PROHIBITION_1}}`
-- `{{PROHIBITION_2}}`
+- Do not build features for Emerys Glow skincare data. That scope is explicitly excluded per client instruction.
+- Do not integrate with BPJS P-Care API. The system records BPJS data internally only, per client confirmation.
 
 ## 15. Definition of Done
 
@@ -361,19 +351,22 @@ A task is complete when applicable:
 
 Project-specific additional gates:
 
-- `{{DOD_GATE}}`
+- Monetary calculations verified with real clinic data samples from CSV.
 
 ## 16. Important References
 
-- Product: `{{PRODUCT_DOC}}`
-- Constitution: `{{CONSTITUTION_DOC}}`
-- Architecture: `{{ARCHITECTURE_DOC}}`
+- Product: `docs/product/prd.md`
+- Proposal: `docs/product/PROPOSAL_SISTEM_KLINIK_CIKIDANG.md`
+- Architecture: `docs/architecture/overview.md`
 - Module architecture guide: `docs/architecture/MODULE_ARCHITECTURE_GUIDE.md`
-- Module architecture template: `templates/FEATURE_SYSTEM_ARCHITECTURE_TEMPLATE.md`
-- Feature index: `{{FEATURE_INDEX}}`
-- Decisions: `{{ADR_INDEX}}`
-- Operations: `{{OPERATIONS_INDEX}}`
-- Security: `{{SECURITY_DOC}}`
+- Feature index: `docs/specs/_index.md`
+- Decisions: `docs/adr/`
+- Operations: `docs/runbooks/`
+- Security: `docs/architecture/security.md`
+- Client communication: `docs/context/CHAT_TRANSCRIPT.md`
+- Clinic CSV data: `docs/data/DASHBOARD - *.csv`
+- Execution state: `docs/context/state.yaml`
+- Design mockups: `.stitch/designs/`
 
 ## 17. Maintenance Note
 

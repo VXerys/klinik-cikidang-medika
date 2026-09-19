@@ -1,118 +1,63 @@
 ---
-status: inactive
-owner: "{{SESSION_OWNER}}"
-session_date: "{{YYYY-MM-DD}}"
-branch: "{{BRANCH}}"
-base_commit: "{{COMMIT_BEFORE_SESSION}}"
-current_commit: "{{CURRENT_COMMIT_OR_UNCOMMITTED}}"
-active_feature: "{{FEATURE_ID}}"
-active_task: "{{TASK_ID}}"
-expires_after: "{{YYYY-MM-DD}}"
+status: active
+owner: "Lead Developer"
+session_date: "2026-09-18"
+branch: "main"
+base_commit: "initial-clone"
+current_commit: "scaffold-complete"
+active_feature: "F-001"
+active_task: "TASK-SETUP-SCAFFOLD"
+expires_after: "2026-09-25"
 ---
 
-# Session Handoff
-
-This file stores the current coding session delta. It does not replace product docs, architecture, ADRs, feature specs, or `docs/context/state.yaml`.
-
-The repository-integrated coding agent updates this file before ending implementation work.
+# Session Handoff: Scaffolding & Context Bootstrap
 
 ## Session objective
 
-{{ONE_CONCRETE_OBJECTIVE}}
+Setup arsitektur proyek Next.js 14 + Supabase untuk Klinik Cikidang Medika, mengintegrasikan konteks percakapan klien WhatsApp ke dalam repositori, serta memvalidasi kesiapan build sistem.
 
 ## Context used
 
-- `AGENTS.md`
-- `docs/context/PROJECT_STATE.md`
+- `docs/context/CHAT_TRANSCRIPT.md`
+- `docs/product/idea-brief.md`
+- `docs/product/prd.md`
 - `docs/context/state.yaml`
-- `docs/specs/{{FEATURE_PATH}}/requirements.md`
-- `docs/specs/{{FEATURE_PATH}}/design.md`
-- `docs/specs/{{FEATURE_PATH}}/tasks.md`
-- `docs/adr/{{RELEVANT_ADR_OR_NONE}}`
+- 4 berkas CSV data klinik: `DASHBOARD - DATAUTAMA.csv`, `ANALISA.csv`, `QUERY.csv`, `DASHBOARD.csv`
 
 ## Completed
 
-- {{COMPLETED_ITEM}}
-
-## Requirement coverage
-
-- {{REQUIREMENT_OR_ACCEPTANCE_ID}}: {{STATUS_AND_EVIDENCE}}
+- Mengubah nama folder template dari `ai-assisted-sdd-project-template` menjadi `klinik-cikidang-medika`.
+- Mengkonfigurasi `package.json` dengan Next.js 14, React 18, Tailwind CSS, Lucide, `@supabase/ssr`, `@supabase/supabase-js`, dan `xlsx`.
+- Membangun seluruh antarmuka 4 modul utama:
+  - `src/app/page.tsx` (Dashboard metrik & 10 penyakit ICD-10).
+  - `src/app/pendaftaran/page.tsx` (Loket pendaftaran pasien & kasir).
+  - `src/app/rekam-medis/page.tsx` (Antrean periksa dokter & catatan anamnesa/resep).
+  - `src/app/buku-kas/page.tsx` (Buku kas masuk/keluar & rekap setor tunai).
+  - `src/app/laporan/page.tsx` (Filter laporan & 1-klik unduh Excel .xlsx).
+- Menyiapkan skema database PostgreSQL lengkap di `supabase/migrations/20260918_init_klinik_cikidang.sql`.
+- Menyiapkan skrip migrasi CSV ke database di `scripts/migrate_csv_to_supabase.py`.
+- Menguji `npm install` (129 paket) dan memverifikasi `next build` lolos 100% dengan 8 halaman statis.
 
 ## Changed files
 
 | File | Change | State |
 |---|---|---|
-| `{{PATH}}` | {{DESCRIPTION}} | Complete/Partial |
-
-## Commands executed
-
-### Command
-
-```bash
-{{COMMAND}}
-```
-
-Result:
-
-```text
-{{RESULT_SUMMARY}}
-```
-
-## Current implementation state
-
-{{OBSERVABLE_FACTS_ABOUT_WHAT_WORKS_AND_WHAT_IS_PARTIAL}}
-
-## Uncommitted work
-
-- {{UNCOMMITTED_CHANGE_OR_NONE}}
-
-Expected Git status:
-
-```text
-{{GIT_STATUS_SUMMARY}}
-```
-
-## Blockers
-
-- {{BLOCKER_OR_NONE}}
-
-For each blocker, include cause, affected task, required decision/dependency, and safe next action.
-
-## Decisions made during session
-
-- {{DECISION_OR_NONE}}
-
-Permanent architecture decisions must be recorded as ADRs. Product decisions must update the approved specification. This handoff is not the permanent decision record.
-
-## Context updates
-
-- `state.yaml` updated: {{YES_OR_NO}}
-- generated views refreshed: {{YES_OR_NO}}
-- verification updated: {{YES_OR_NO}}
-- specification or ADR changed: {{YES_OR_NO}}
+| `docs/context/CHAT_TRANSCRIPT.md` | Rekaman lengkap percakapan klien WhatsApp | Complete |
+| `docs/product/idea-brief.md` | Dokumen brief ide dan permasalahan klien | Complete |
+| `docs/product/prd.md` | Dokumen spesifikasi kebutuhan produk (PRD) | Complete |
+| `docs/context/state.yaml` | Pembaruan status kanonikal proyek | Complete |
+| `docs/handoff/current.md` | Rekaman handoff sesi aktif | Complete |
+| `package.json` | Konfigurasi dependensi Next.js & Supabase | Complete |
+| `src/app/*` | Komponen halaman aplikasi web klinik | Complete |
+| `supabase/migrations/*` | Skema database PostgreSQL | Complete |
 
 ## Exact next step
 
-```text
-{{ONE_EXACT_NEXT_ACTION}}
-```
-
-Expected files:
-
-- `{{PATH}}`
-
-Required verification:
-
 ```bash
-{{COMMAND}}
+# 1. Buat project baru di Supabase Dashboard (https://supabase.com)
+# 2. Jalankan berkas DDL di SQL Editor:
+#    supabase/migrations/20260918_init_klinik_cikidang.sql
+# 3. Salin URL dan Anon Key ke .env.local
+# 4. Jalankan aplikasi lokal:
+npm run dev
 ```
-
-## Do not do next
-
-- Do not {{OUT_OF_SCOPE_ACTION}}.
-- Do not modify {{PROTECTED_AREA}}.
-- Do not mark {{TASK_OR_FEATURE}} complete before {{REQUIRED_CHECK}}.
-
-## Validity
-
-This handoff is valid only for the recorded branch, commit/worktree, feature, and task. Revalidate it when any of them changes.

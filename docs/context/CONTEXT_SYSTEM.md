@@ -2,8 +2,8 @@
 id: CONTEXT-SYSTEM
 title: Repository Context System
 status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+owner: "Developer"
+last_updated: "2026-09-18"
 ---
 
 # Repository Context System

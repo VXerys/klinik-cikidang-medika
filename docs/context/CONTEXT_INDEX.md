@@ -1,9 +1,9 @@
 ---
 id: CONTEXT-INDEX
 title: Context Reading Index
-status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+status: active
+owner: Developer
+last_updated: 2026-09-18
 ---
 
 # Context Reading Index
@@ -13,18 +13,16 @@ last_updated: "{{YYYY-MM-DD}}"
 Read in order:
 
 1. `AGENTS.md`
-2. `docs/context/PROJECT_STATE.md`
-3. `docs/handoff/current.md`
-4. active feature requirements
-5. active feature system architecture when present/required
-6. active feature implementation design
-7. active feature tasks
-8. relevant ADRs
-9. relevant code and tests
+2. `docs/context/state.yaml`
+3. `docs/product/prd.md`
+4. Relevant active feature specifications (`docs/specs/<feature>/`)
+5. `docs/context/PROJECT_STATE.md`
+6. `docs/handoff/current.md`
+7. Relevant code and tests
 
 Read `docs/context/PROGRESS.md` only when the compact state is insufficient.
 
-Use progressive disclosure for module architecture. A task that only changes local UI may need only the architecture constraints already referenced by the task/design. A task that touches data ownership, consistency, realtime/async communication, caching, security, external services, reliability, scale, or cost-sensitive behavior should read the relevant `system-architecture.md` sections directly.
+Use progressive disclosure for module architecture. A task that only touches local UI may need only the constraints referenced by the task/design. A task that touches data ownership, consistency, auth, or external services should read relevant sections.
 
 ## Planning or documentation session
 
@@ -72,7 +70,7 @@ Read `docs/architecture/MODULE_ARCHITECTURE_GUIDE.md` for the boundary between m
 
 ## Generated files
 
-These files are generated and must not be edited:
+These files are generated and must not be edited manually:
 
 - `docs/context/PROJECT_STATE.md`
 - `docs/context/PROGRESS.md`
@@ -80,8 +78,6 @@ These files are generated and must not be edited:
 ## Context-system implementation
 
 Read `docs/context/CONTEXT_SYSTEM.md`.
-
-The repository-integrated coding agent owns implementation and provider adapters. A conversational AI may draft requirements, architecture alternatives, and design but cannot determine real local commands, schemas, provider configuration, or hooks without repository access.
 
 ## Conflict protocol
 

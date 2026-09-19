@@ -1,41 +1,31 @@
 ---
 id: CONTEXT-NEW-CHAT
-title: New Coding-Agent Session Protocol
-status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+title: Agent Session Initialization Protocol
+status: active
+owner: Developer
+last_updated: 2026-09-18
 ---
 
-# New Coding-Agent Session Protocol
+# Agent Session Initialization Protocol
 
-This protocol is for Codex, Claude Code, or another repository-integrated coding agent.
+This protocol is for AI agents interacting with the clinic repository.
 
 ## Opening prompt
 
 ```text
-Continue work in this repository. Do not implement immediately.
+Continue work in this repository. Follow this protocol:
 
 1. Read AGENTS.md.
-2. Run the repository context sync and validation commands when available.
-3. Read docs/context/PROJECT_STATE.md.
-4. Read docs/handoff/current.md.
-5. Identify the active feature and task from docs/context/state.yaml.
-6. Read that feature's requirements.
-7. Read its system-architecture.md when present/required, prioritizing the sections relevant to the selected task.
-8. Read its design.md, tasks.md, and relevant ADRs.
-9. Inspect Git status, branch, recent commits, and relevant code/tests.
+2. Read docs/context/state.yaml to identify the current active task and overall status.
+3. Read the relevant feature specifications in docs/specs/<feature>/ if working on a specific feature.
+4. Inspect the relevant code, components, database schemas (e.g., supabase/migrations), and tests.
 
 Return:
-- current objective and requirement references;
-- relevant module architecture constraints and trade-offs;
-- whether generated context and handoff are still valid;
-- repository conflicts or stale information;
-- expected change surface;
-- constraints and approval gates;
-- verification commands;
+- current objective based on state.yaml;
+- expected code changes;
 - a small execution plan.
 
-Do not resolve conflicts silently. Do not replace approved module architecture with a preferred generic pattern. Implement only the selected task after context confirmation.
+Do not resolve conflicts silently. Implement only the selected task after context confirmation.
 ```
 
 ## Architecture-sensitive task rule
@@ -43,36 +33,19 @@ Do not resolve conflicts silently. Do not replace approved module architecture w
 Read the relevant module system architecture directly when the selected task touches any of these concerns:
 
 - data ownership/storage/indexing/partitioning;
-- consistency, ordering, transactions, or idempotency;
-- realtime, asynchronous communication, events, queues, or external services;
-- caching or invalidation;
-- scale/capacity/load distribution;
-- reliability, retries, circuit breaking, recovery, or degradation;
-- authentication, authorization, tenant isolation, PII, or trust boundaries;
-- observability or material operational cost.
-
-For a small UI/local implementation task, prefer the minimum sufficient architecture context carried by the task/design instead of loading unrelated system-design sections.
+- Supabase Auth roles or RLS policies;
+- financial calculations (e.g., Buku Kas, BPJS);
+- scale/capacity (e.g., migrating 7,493 rows of CSV data).
 
 ## Session close
 
-Before ending:
+Before ending a session or completing a significant task:
 
-1. review `git diff` and `git status`;
-2. run required checks;
-3. record acceptance evidence and architecture-sensitive evidence when applicable;
-4. update task status through the context system;
-5. regenerate and validate context;
-6. update `docs/handoff/current.md`;
-7. report the exact next task.
-
-If implementation exposed a new architectural constraint, do not silently update code and continue. Record the conflict and follow the specification/architecture change protocol.
+1. Update `docs/context/state.yaml` if task status has changed.
+2. Update `docs/handoff/current.md` if significant progress was made or if transferring context to another agent.
+3. Review `git diff` and ensure code quality matches standards.
+4. Report the exact next task or state that the milestone is complete.
 
 ## When context tooling is not implemented
 
-The coding agent first completes the bootstrap task in `docs/context/CONTEXT_SYSTEM.md`.
-
-Do not create a manual second progress document as a shortcut.
-
-## Chat-based AI distinction
-
-A ChatGPT or website-based planning chat may help draft the next requirements, module architecture, implementation design, or decision. It is not the session-state mechanism. Final artifacts must be committed into the repository and checked by the coding agent against repository/platform reality where necessary.
+The coding agent first completes the bootstrap task in `docs/context/CONTEXT_SYSTEM.md` if necessary, or follows the manual state.yaml update process.

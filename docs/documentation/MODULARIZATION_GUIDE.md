@@ -2,8 +2,8 @@
 id: DOCS-MODULARIZATION
 title: Documentation Modularization Guide
 status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+owner: "Developer"
+last_updated: "2026-09-18"
 ---
 
 # Documentation Modularization Guide

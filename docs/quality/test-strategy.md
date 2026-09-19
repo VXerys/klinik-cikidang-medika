@@ -1,48 +1,26 @@
 # Test Strategy
 
-## Purpose
+## Current State
 
-Define the minimum confidence model for this project. Customize this file after selecting the stack and risk profile.
+No automated test framework is currently configured for the project. Testing relies heavily on manual verification against real CSV data samples migrated from the legacy system.
 
-## Test Layers
+## Planned Test Layers (Pyramid)
 
-| Layer | Primary purpose | Typical targets |
+| Layer | Technology | Target |
 |---|---|---|
-| Unit | Business rules and deterministic transformations | use cases, validators, parsers, state reducers |
-| Integration | Boundaries and real contracts | repositories, database policies, API clients, migrations |
-| UI / Component | Rendering and interaction states | loading, empty, success, validation, error |
-| End-to-End | Critical user journeys | authentication, purchase, submission, destructive flows |
-| Manual | UX and environment-specific behavior | accessibility, device behavior, production smoke checks |
+| Unit | Vitest | Utility functions, data transformations, and billing calculations. |
+| Component | React Testing Library | Form validation, UI states (loading, error, empty). |
+| End-to-End | Playwright | Critical user flows: patient registration, visit recording, cash entry. |
+| Manual | N/A | UX verification, environment-specific behavior using real data samples. |
 
 ## Risk-Based Rules
 
-- High-impact business rules require direct automated tests.
-- Every bug fix requires a regression test when technically practical.
-- Authorization must be tested at the enforcement boundary, not only in UI.
-- Database migrations require forward validation and rollback or an explicit residual-risk decision.
-- Snapshot tests must not replace behavioral assertions.
-- End-to-end tests should cover critical journeys, not every UI permutation.
+- Financial and billing calculations are the highest priority for unit tests.
+- Form inputs for patient registration and medical records must handle validation accurately.
+- Database access relies on Supabase Row Level Security (RLS) which must be verified manually until integration tests are set up.
+- All manual verification must use real clinic data samples to ensure edge cases in legacy data are handled.
 
-## Test Evidence
+## Coverage Target
 
-Every active feature records evidence in its `verification.md`:
-
-- command or test path;
-- tested commit;
-- environment;
-- result;
-- unresolved limitation.
-
-## Required Project Commands
-
-- Unit: `{{UNIT_TEST_COMMAND}}`
-- Integration: `{{INTEGRATION_TEST_COMMAND}}`
-- UI: `{{UI_TEST_COMMAND}}`
-- End-to-end: `{{E2E_COMMAND}}`
-- Coverage: `{{COVERAGE_COMMAND}}`
-
-## Coverage Policy
-
-Use coverage to find untested risk, not as the only quality target.
-
-Project threshold: `{{THRESHOLD_OR_RISK_BASED}}`.
+- Primary focus: Critical paths first (billing calculations, patient search).
+- Secondary focus: CRUD operations for core entities (patients, visits, cash flows).

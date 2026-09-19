@@ -12,16 +12,22 @@ node_modules/
 .DS_Store
 Thumbs.db
 
-# Build and coverage
+# Build, TypeScript and coverage
 coverage/
 dist/
 build/
 .next/
 .dart_tool/
+tsconfig.tsbuildinfo
 
 # Logs
 *.log
 npm-debug.log*
 
-# Temporary context tooling
+# Temporary context and agent tooling
 .context-cache/
+.antigravity/
+
+# Sensitive Patient Medical Data & Negotiation Transcripts (PII Shielding)
+docs/data/
+docs/context/CHAT_TRANSCRIPT.md
