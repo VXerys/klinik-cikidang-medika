@@ -16,6 +16,7 @@ A task is considered done only when:
 - Linting passes without errors (`npm run lint`).
 - Type checking passes without errors (`npx tsc --noEmit`).
 - All acceptance criteria from the specification are met.
+- Mobile (360px–640px) and tablet (768px–1024px) responsiveness verified with 44×44px minimum touch targets and zero horizontal overflow.
 - No unrelated changes are included in the commit or pull request.
 - The execution state is updated appropriately.
 

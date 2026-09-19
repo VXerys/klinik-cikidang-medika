@@ -138,6 +138,8 @@ Detailed architecture: `docs/architecture/overview.md`.
 - Preserve backward compatibility unless the approved specification explicitly changes it.
 - Treat generated files according to their generator workflow.
 - All monetary values stored as `NUMERIC(15,2)` in PostgreSQL and displayed with `Rp` prefix and Indonesian thousand separators.
+- Strict Mobile & Tablet Responsiveness Mandate: Every UI component, modal, table, card, and page MUST be 100% responsive across mobile smartphones (360px–640px), tablets (768px–1024px), and desktop monitors (1024px+). Interactive touch targets must be at least 44×44px with minimum 8px (`gap-2`) spacing. Zero horizontal page overflow is permitted on any viewport.
+- Anti-Slop Skills Enforcement Mandate: For every user prompt and coding task, the agent MUST strictly apply and adhere to `/antislop`, `/antislop-ui`, `/antislop-code`, and `/antislop-human`. No fabricated numbers or stats (R-17, R-38), no generic AI slop comments (antislop-code), no em dashes in UI copy (R-02), no generic AI gradients or template layouts (R-01, R-05), WCAG AA contrast (R-25), full keyboard navigation with visible focus indicators (R-32), and delivery gate compliance before completion.
 
 ### Error Handling
 
@@ -354,6 +356,7 @@ A task is complete when applicable:
 Project-specific additional gates:
 
 - Monetary calculations verified with real clinic data samples from CSV.
+- Mobile and tablet responsiveness verification is strictly mandatory for every UI code task (checked across 360px, 768px, and 1024px+ viewports with no text truncation or horizontal page scroll).
 
 ## 16. Important References
 
@@ -373,3 +376,13 @@ Project-specific additional gates:
 ## 17. Maintenance Note
 
 Update this contract only when a permanent, frequently relevant repository rule changes. Feature-local behavior, transient task status, debugging notes, and raw chat do not belong here.
+
+<!-- antislop:start -->
+## Mandatory Anti-Slop Standards
+For UI, visual, copywriting, accessibility, mobile layout, and code comment work, the agent MUST read and apply:
+- Core Anti-Slop Filter: `antislop` (Rules R-01 through R-38, Delivery Gate)
+- UI / Visual Craft: `antislop-ui`
+- Code Comment Hygiene: `antislop-code`
+- Accessibility & Human: `antislop-human`
+Mode: DURING implementation (zero AI slop from the start).
+<!-- antislop:end -->

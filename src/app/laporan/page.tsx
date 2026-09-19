@@ -1,125 +1,350 @@
 'use client';
 
-import React from 'react';
-import { FileSpreadsheet, Download, Filter, Calendar } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Download,
+  FileSpreadsheet,
+  Layers,
+  AlertCircle,
+  RefreshCw,
+} from 'lucide-react';
+import { createClient } from '@/lib/supabase/client';
+import { normalizeRupiah } from '@/lib/utils';
+import {
+  exportVisitsToExcel,
+  exportCashFlowsToExcel,
+  exportMorbidityToExcel,
+  exportFullClinicWorkbook,
+  type VisitExportRow,
+  type CashFlowExportRow,
+  type MorbidityExportRow,
+} from '@/lib/excel';
+import {
+  ReportTabs,
+  type ReportTabType,
+} from '@/components/laporan/ReportTabs';
+import { ReportFilterBar } from '@/components/laporan/ReportFilterBar';
+import { ReportPreviewTable } from '@/components/laporan/ReportPreviewTable';
 
 export default function LaporanPage() {
-  const previewRows = [
-    { rm: '021303596', nama: 'An. Agaisha Pinka', jk: 'Perempuan', desa: 'Luar Daerah', tgl: '18-09-2026', dokter: 'dr. Ovan', icd: 'J00 - Common cold', tipe: 'UMUM', biaya: 150000 },
-    { rm: '010101231', nama: 'Tn. Umar', jk: 'Laki-laki', desa: 'Cikidang', tgl: '18-09-2026', dokter: 'dr. Ovan', icd: 'J00 - Common cold', tipe: 'UMUM', biaya: 200000 },
-    { rm: '010400529', nama: 'An. Faizan', jk: 'Laki-laki', desa: 'Cijambe', tgl: '18-09-2026', dokter: 'dr. Ovan', icd: 'A09 - Gastroenteritis', tipe: 'UMUM', biaya: 120000 },
-    { rm: '010400093', nama: 'Tn. Aziz Supriatman', jk: 'Laki-laki', desa: 'Cijambe', tgl: '18-09-2026', dokter: 'dr. Ovan', icd: 'K35 - Appendicitis', tipe: 'BPJS', biaya: 0 },
-    { rm: '020102094', nama: 'Ny. Lilis Lisnawati', jk: 'Perempuan', desa: 'Cikidang', tgl: '18-09-2026', dokter: 'dr. Ovan', icd: 'R20 - Kebas', tipe: 'BPJS', biaya: 0 },
-  ];
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
 
-  const handleExportExcel = () => {
-    // Generate sheet data from clinic records
-    const wb = XLSX.utils.book_new();
-    const wsData = [
-      ['LAPORAN REKAPITULASI KUNJUNGAN & KEUANGAN KLINIK CIKIDANG MEDIKA'],
-      ['Tanggal Unduh:', new Date().toLocaleDateString('id-ID')],
-      [],
-      ['No RM', 'Nama Pasien', 'Jenis Kelamin', 'Desa', 'Tanggal Periksa', 'Dokter', 'Diagnosa ICD-10', 'Jenis Pasien', 'Biaya'],
-      ...previewRows.map((r) => [r.rm, r.nama, r.jk, r.desa, r.tgl, r.dokter, r.icd, r.tipe, r.biaya]),
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Rekap Kunjungan');
-    XLSX.writeFile(wb, 'Laporan_Klinik_Cikidang_Medika.xlsx');
+  const defaultStartDate = new Date(currentYear, currentMonth, 1)
+    .toISOString()
+    .split('T')[0];
+  const defaultEndDate = new Date(currentYear, currentMonth + 1, 0)
+    .toISOString()
+    .split('T')[0];
+
+  const [activeTab, setActiveTab] = useState<ReportTabType>('kunjungan');
+  const [startDate, setStartDate] = useState(defaultStartDate);
+  const [endDate, setEndDate] = useState(defaultEndDate);
+  const [jenisPasien, setJenisPasien] = useState('Semua');
+  const [dokterId, setDokterId] = useState('Semua');
+  const [doctorsList, setDoctorsList] = useState<{ id: string; nama: string }[]>([]);
+
+  const [visitsData, setVisitsData] = useState<VisitExportRow[]>([]);
+  const [morbidityData, setMorbidityData] = useState<MorbidityExportRow[]>([]);
+  const [cashFlowData, setCashFlowData] = useState<CashFlowExportRow[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  // Fetch doctors list on mount
+  useEffect(() => {
+    async function loadDoctors() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.from('doctors').select('id, nama').eq('aktif', true);
+        if (data) setDoctorsList(data);
+      } catch (e) {
+        console.error('Error loading doctors list:', e);
+      }
+    }
+    loadDoctors();
+  }, []);
+
+  // Fetch report data
+  const fetchReportData = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const supabase = createClient();
+      const pageSize = 1000;
+
+      // 1. Fetch Visits with joined patient & doctor info
+      let allVisits: any[] = [];
+      let visitPage = 0;
+
+      while (true) {
+        let query = supabase
+          .from('visits')
+          .select(
+            'id, tanggal_periksa, jenis_pasien, biaya_periksa, pendapatan_lain, jenis_pembayaran, kode_icd10, diagnosa_deskripsi, dokter_id, doctors(nama), patients(nama, no_rm, jenis_kelamin, desa)'
+          )
+          .order('tanggal_periksa', { ascending: false })
+          .range(visitPage * pageSize, (visitPage + 1) * pageSize - 1);
+
+        if (startDate) query = query.gte('tanggal_periksa', startDate);
+        if (endDate) query = query.lte('tanggal_periksa', endDate);
+        if (jenisPasien !== 'Semua') query = query.eq('jenis_pasien', jenisPasien);
+        if (dokterId !== 'Semua') query = query.eq('dokter_id', dokterId);
+
+        const { data, error } = await query;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+
+        allVisits.push(...data);
+        if (data.length < pageSize) break;
+        visitPage++;
+      }
+
+      // 2. Fetch Cash Flows
+      let allFlows: any[] = [];
+      let flowPage = 0;
+
+      while (true) {
+        let flowQuery = supabase
+          .from('cash_flows')
+          .select('id, tanggal, jenis, kategori, nominal, keterangan')
+          .order('tanggal', { ascending: false })
+          .range(flowPage * pageSize, (flowPage + 1) * pageSize - 1);
+
+        if (startDate) flowQuery = flowQuery.gte('tanggal', startDate);
+        if (endDate) flowQuery = flowQuery.lte('tanggal', endDate);
+
+        const { data, error } = await flowQuery;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+
+        allFlows.push(...data);
+        if (data.length < pageSize) break;
+        flowPage++;
+      }
+
+      // 3. Format Visits Export Rows
+      const formattedVisits: VisitExportRow[] = allVisits.map((v) => {
+        const biaya = normalizeRupiah(Number(v.biaya_periksa) || 0);
+        const lain = normalizeRupiah(Number(v.pendapatan_lain) || 0);
+
+        return {
+          no_rm: v.patients?.no_rm || '-',
+          nama_pasien: v.patients?.nama || 'Pasien',
+          jenis_kelamin: v.patients?.jenis_kelamin || '-',
+          desa: v.patients?.desa || 'Luar Daerah',
+          tanggal_periksa: v.tanggal_periksa,
+          nama_dokter: v.doctors?.nama || 'dr. Ovan',
+          kode_icd10: v.kode_icd10 || '-',
+          diagnosa_deskripsi: v.diagnosa_deskripsi || '-',
+          jenis_pasien: v.jenis_pasien,
+          biaya_periksa: biaya,
+          pendapatan_lain: lain,
+          total_biaya: biaya + lain,
+          jenis_pembayaran: v.jenis_pembayaran || 'Tunai',
+        };
+      });
+
+      // 4. Format Cash Flows Export Rows
+      const formattedFlows: CashFlowExportRow[] = allFlows.map((f) => ({
+        tanggal: f.tanggal,
+        jenis: f.jenis,
+        kategori: f.kategori,
+        nominal: normalizeRupiah(Number(f.nominal) || 0),
+        keterangan: f.keterangan || '-',
+      }));
+
+      // 5. Aggregate Morbidity ICD-10
+      const morbMap: Record<string, { code: string; name: string; count: number }> = {};
+      let validDiagCount = 0;
+
+      allVisits.forEach((v) => {
+        if (v.kode_icd10) {
+          validDiagCount++;
+          const code = v.kode_icd10.trim().toUpperCase();
+          const name = v.diagnosa_deskripsi || code;
+          if (!morbMap[code]) {
+            morbMap[code] = { code, name, count: 0 };
+          }
+          morbMap[code].count++;
+        }
+      });
+
+      const formattedMorbidity: MorbidityExportRow[] = Object.values(morbMap)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+        .map((m, idx) => ({
+          rank: idx + 1,
+          kode_icd10: m.code,
+          diagnosa_deskripsi: m.name,
+          jumlah_kasus: m.count,
+          persentase: validDiagCount > 0 ? (m.count / validDiagCount) * 100 : 0,
+        }));
+
+      setVisitsData(formattedVisits);
+      setCashFlowData(formattedFlows);
+      setMorbidityData(formattedMorbidity);
+    } catch (err) {
+      console.error('Error loading report data:', err);
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Gagal memuat data laporan dari server.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [startDate, endDate, jenisPasien, dokterId]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [fetchReportData]);
+
+  // Preset Handler
+  const handlePresetChange = (preset: 'today' | 'this_month' | 'last_month' | 'this_year' | 'all') => {
+    const now = new Date();
+    const yr = now.getFullYear();
+    const mo = now.getMonth();
+
+    if (preset === 'today') {
+      const today = now.toISOString().split('T')[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === 'this_month') {
+      setStartDate(new Date(yr, mo, 1).toISOString().split('T')[0]);
+      setEndDate(new Date(yr, mo + 1, 0).toISOString().split('T')[0]);
+    } else if (preset === 'last_month') {
+      setStartDate(new Date(yr, mo - 1, 1).toISOString().split('T')[0]);
+      setEndDate(new Date(yr, mo, 0).toISOString().split('T')[0]);
+    } else if (preset === 'this_year') {
+      setStartDate(`${yr}-01-01`);
+      setEndDate(`${yr}-12-31`);
+    } else if (preset === 'all') {
+      setStartDate('');
+      setEndDate('');
+    }
+  };
+
+  const handleReset = () => {
+    handlePresetChange('this_month');
+    setJenisPasien('Semua');
+    setDokterId('Semua');
+  };
+
+  // Export Handlers
+  const handleExportActiveTab = () => {
+    const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
+
+    if (activeTab === 'kunjungan') {
+      exportVisitsToExcel(visitsData, dateRange);
+    } else if (activeTab === 'morbiditas') {
+      exportMorbidityToExcel(morbidityData, dateRange);
+    } else if (activeTab === 'buku_kas') {
+      exportCashFlowsToExcel(cashFlowData, dateRange);
+    }
+  };
+
+  const handleExportFullWorkbook = () => {
+    const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
+    exportFullClinicWorkbook({
+      visits: visitsData,
+      flows: cashFlowData,
+      morbidity: morbidityData,
+      dateRange,
+    });
   };
 
   return (
     <div className="space-y-6 min-w-0 w-full">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      {/* Header with Title and Download Actions */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">Laporan & Ekspor Excel</h1>
-          <p className="text-xs text-slate-500 mt-1">Unduh laporan rekapitulasi data kunjungan dan pembukuan keuangan klinik</p>
-        </div>
-        <button
-          onClick={handleExportExcel}
-          className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto"
-        >
-          <Download className="w-4 h-4 shrink-0" />
-          <span>Unduh File Excel (.xlsx)</span>
-        </button>
-      </div>
-
-      {/* Filter Tanggal */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-xs flex flex-col sm:flex-row sm:items-center gap-3 text-xs">
-        <div className="flex items-center gap-2 shrink-0">
-          <Calendar className="w-4 h-4 text-slate-400" />
-          <span className="font-semibold text-slate-700">Periode Laporan:</span>
-        </div>
-        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
-          <input type="date" defaultValue="2026-09-01" className="p-2 min-h-[44px] border border-slate-300 rounded-xl outline-none text-xs flex-1 sm:flex-initial" />
-          <span className="text-slate-500">s/d</span>
-          <input type="date" defaultValue="2026-09-30" className="p-2 min-h-[44px] border border-slate-300 rounded-xl outline-none text-xs flex-1 sm:flex-initial" />
-        </div>
-        <button className="inline-flex items-center justify-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl font-semibold w-full sm:w-auto transition">
-          <Filter className="w-3.5 h-3.5 shrink-0" />
-          <span>Terapkan Filter</span>
-        </button>
-      </div>
-
-      {/* Kartu Informasi Ekspor */}
-      <div className="bg-white p-5 rounded-xl border border-slate-200 shadow-xs space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl shrink-0">
-            <FileSpreadsheet className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-sm sm:text-base font-bold text-slate-900">Format Laporan Siap Pakai</h2>
-            <p className="text-xs text-slate-500">File Excel yang diunduh langsung diformat rapi dengan kolom identitas pasien, diagnosa medis, dan nominal pembayaran kasir.</p>
-          </div>
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            Pusat Laporan & Ekspor Excel
+          </h1>
+          <p className="text-xs text-slate-500 mt-1">
+            Unduh rekapitulasi data kunjungan, morbiditas ICD-10, dan mutasi kas klinik format .xlsx
+          </p>
         </div>
 
-        {/* Preview Data Table */}
-        <div className="border border-slate-200 rounded-xl overflow-hidden">
-          <div className="p-3 bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-700">
-            Pratinjau Data Rekapitulasi (5 Data Teratas)
-          </div>
-          <div className="overflow-x-auto w-full">
-            <table className="w-full text-left text-xs text-slate-600">
-              <thead className="bg-slate-50/70 text-slate-500 font-semibold border-b border-slate-200 select-none whitespace-nowrap">
-                <tr>
-                  <th className="py-2.5 px-3">No RM</th>
-                  <th className="py-2.5 px-3">Nama Pasien</th>
-                  <th className="py-2.5 px-3">Jenis Kelamin</th>
-                  <th className="py-2.5 px-3">Desa</th>
-                  <th className="py-2.5 px-3">Tanggal</th>
-                  <th className="py-2.5 px-3">Dokter</th>
-                  <th className="py-2.5 px-3">Diagnosa ICD-10</th>
-                  <th className="py-2.5 px-3">Jenis Pasien</th>
-                  <th className="py-2.5 px-3 text-right">Biaya</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-slate-100 whitespace-nowrap">
-                {previewRows.map((r, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="py-2.5 px-3 font-mono font-bold text-blue-600">{r.rm}</td>
-                    <td className="py-2.5 px-3 font-medium text-slate-900">{r.nama}</td>
-                    <td className="py-2.5 px-3">{r.jk}</td>
-                    <td className="py-2.5 px-3">{r.desa}</td>
-                    <td className="py-2.5 px-3">{r.tgl}</td>
-                    <td className="py-2.5 px-3">{r.dokter}</td>
-                    <td className="py-2.5 px-3 font-medium">{r.icd}</td>
-                    <td className="py-2.5 px-3">
-                      <span className={`px-2 py-0.5 rounded-md font-semibold text-[10px] ${
-                        r.tipe === 'BPJS' ? 'bg-teal-50 text-teal-700 border border-teal-200' : 'bg-blue-50 text-blue-700 border border-blue-200'
-                      }`}>
-                        {r.tipe}
-                      </span>
-                    </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-medium">
-                      {r.biaya === 0 ? 'Rp 0 (BPJS)' : `Rp ${r.biaya.toLocaleString('id-ID')}`}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+          {/* Export Active Tab Button */}
+          <button
+            type="button"
+            onClick={handleExportActiveTab}
+            disabled={isLoading || (activeTab === 'kunjungan' && visitsData.length === 0)}
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
+          >
+            <Download className="w-4 h-4 shrink-0 text-slate-500" />
+            <span>Unduh Tab Ini (.xlsx)</span>
+          </button>
+
+          {/* Export Full 3-Sheet Workbook (Recommended) */}
+          <button
+            type="button"
+            onClick={handleExportFullWorkbook}
+            disabled={isLoading || (visitsData.length === 0 && cashFlowData.length === 0)}
+            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
+          >
+            <Layers className="w-4 h-4 shrink-0" />
+            <span>Unduh Rekap Lengkap (3 Sheet)</span>
+          </button>
         </div>
       </div>
+
+      {/* Error Alert */}
+      {errorMessage && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <span>{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={fetchReportData}
+            className="font-semibold underline hover:no-underline shrink-0"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      )}
+
+      {/* Filter Parameters Bar */}
+      <ReportFilterBar
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        jenisPasien={jenisPasien}
+        onJenisPasienChange={setJenisPasien}
+        dokterId={dokterId}
+        onDokterIdChange={setDokterId}
+        doctorsList={doctorsList}
+        onApplyFilter={fetchReportData}
+        onResetFilter={handleReset}
+        onPresetChange={handlePresetChange}
+        isLoading={isLoading}
+      />
+
+      {/* Report Tabs */}
+      <ReportTabs
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        counts={{
+          kunjungan: visitsData.length,
+          morbiditas: morbidityData.length,
+          buku_kas: cashFlowData.length,
+        }}
+      />
+
+      {/* Interactive Preview Table */}
+      <ReportPreviewTable
+        activeTab={activeTab}
+        visitsData={visitsData}
+        morbidityData={morbidityData}
+        cashFlowData={cashFlowData}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

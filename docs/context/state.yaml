@@ -34,9 +34,9 @@ features:
   - id: F-004
     name: Dashboard Eksekutif dan Ekspor Excel
     track: engineering
-    status: in_progress
+    status: completed
     spec_path: docs/specs/F-004-dashboard-laporan
-    active_phase: implementation
+    active_phase: completed
   - id: F-005
     name: Migrasi 7.493 Data CSV ke Supabase
     track: engineering
@@ -51,7 +51,7 @@ features:
     active_phase: requirements
 
 active:
-  feature_id: "F-003"
+  feature_id: "F-004"
   task_id: "TASK-007"
   branch: "staging"
 
