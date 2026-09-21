@@ -28,6 +28,7 @@ Use these sources in priority according to the question being answered:
 | Execution/task state | `docs/context/state.yaml` |
 | Operations/runbooks | `docs/runbooks/` |
 | Client communication history | `docs/context/CHAT_TRANSCRIPT.md` |
+| Client agreement & UI prototype | `docs/product/Proposal_Klinik_Cikidang_Medika.pdf` |
 | Clinic operational data (CSV) | `docs/data/DASHBOARD - *.csv` (excludes Emerys Glow files) |
 
 ### Conflict Rule
@@ -361,7 +362,7 @@ Project-specific additional gates:
 ## 16. Important References
 
 - Product: `docs/product/prd.md`
-- Proposal: `docs/product/PROPOSAL_SISTEM_KLINIK_CIKIDANG.md`
+- Proposal: `docs/product/Proposal_Klinik_Cikidang_Medika.pdf`
 - Architecture: `docs/architecture/overview.md`
 - Module architecture guide: `docs/architecture/MODULE_ARCHITECTURE_GUIDE.md`
 - Feature index: `docs/specs/_index.md`
