@@ -12,6 +12,8 @@ import {
   CheckCircle2,
   AlertCircle,
 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import type { TbcProgram, Circumcision, PostCare } from '@/types/database';
 import { TbcControlCard } from '@/components/program-khusus/TbcControlCard';
@@ -217,71 +219,81 @@ export default function ProgramKhususPage() {
         </button>
       </div>
 
-      {/* Tab Contents */}
-      {activeTab === 'tbc' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Menampilkan kohort pemantauan minum obat OAT selama 6 bulan</span>
-            <span className="text-[11px] font-semibold text-slate-700">
-              Total {tbcList.length} Pasien Terdaftar
-            </span>
-          </div>
-
-          {isLoading ? (
-            <div className="space-y-3 animate-pulse">
-              {[1, 2].map((i) => (
-                <div key={i} className="h-40 bg-slate-100 rounded-2xl"></div>
-              ))}
-            </div>
-          ) : tbcList.length === 0 ? (
-            <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
-              <Pill className="w-8 h-8 mx-auto mb-2 text-slate-300" />
-              <p className="text-xs font-semibold">Belum ada pasien terdaftar di program TBC.</p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Klik tombol &quot;+ Pasien TBC Baru&quot; untuk memulai kartu kendali.
-              </p>
-            </div>
-          ) : (
+      {/* Tab Contents with Framer Motion Transition */}
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -8 }}
+          transition={{ duration: 0.15, ease: 'easeOut' }}
+        >
+          {activeTab === 'tbc' && (
             <div className="space-y-4">
-              {tbcList.map((prog) => (
-                <TbcControlCard key={prog.id} program={prog} onRefresh={fetchData} />
-              ))}
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Menampilkan kohort pemantauan minum obat OAT selama 6 bulan</span>
+                <span className="text-[11px] font-semibold text-slate-700">
+                  Total {tbcList.length} Pasien Terdaftar
+                </span>
+              </div>
+
+              {isLoading ? (
+                <div className="space-y-3 animate-pulse">
+                  {[1, 2].map((i) => (
+                    <div key={i} className="h-40 bg-slate-100 rounded-2xl"></div>
+                  ))}
+                </div>
+              ) : tbcList.length === 0 ? (
+                <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
+                  <Pill className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                  <p className="text-xs font-semibold">Belum ada pasien terdaftar di program TBC.</p>
+                  <p className="text-[11px] text-slate-400 mt-0.5">
+                    Klik tombol &quot;+ Pasien TBC Baru&quot; untuk memulai kartu kendali.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {tbcList.map((prog) => (
+                    <TbcControlCard key={prog.id} program={prog} onRefresh={fetchData} />
+                  ))}
+                </div>
+              )}
             </div>
           )}
-        </div>
-      )}
 
-      {activeTab === 'circumcision' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Dokumentasi bedah minor sunat, operator pelaksana, dan evaluasi foto luka</span>
-            <span className="text-[11px] font-semibold text-slate-700">
-              Total {circumcisionList.length} Tindakan
-            </span>
-          </div>
-          <CircumcisionList
-            records={circumcisionList}
-            onRefresh={fetchData}
-            isLoading={isLoading}
-          />
-        </div>
-      )}
+          {activeTab === 'circumcision' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Dokumentasi bedah minor sunat, operator pelaksana, dan evaluasi foto luka</span>
+                <span className="text-[11px] font-semibold text-slate-700">
+                  Total {circumcisionList.length} Tindakan
+                </span>
+              </div>
+              <CircumcisionList
+                records={circumcisionList}
+                onRefresh={fetchData}
+                isLoading={isLoading}
+              />
+            </div>
+          )}
 
-      {activeTab === 'postcare' && (
-        <div className="space-y-4">
-          <div className="flex items-center justify-between text-xs text-slate-500">
-            <span>Pemantauan jadwal kontrol berkala pasien paska rawat inap atau tindakan medis</span>
-            <span className="text-[11px] font-semibold text-slate-700">
-              Total {postCareList.length} Pasien
-            </span>
-          </div>
-          <PostCareAgenda
-            records={postCareList}
-            onRefresh={fetchData}
-            isLoading={isLoading}
-          />
-        </div>
-      )}
+          {activeTab === 'postcare' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs text-slate-500">
+                <span>Pemantauan jadwal kontrol berkala pasien paska rawat inap atau tindakan medis</span>
+                <span className="text-[11px] font-semibold text-slate-700">
+                  Total {postCareList.length} Pasien
+                </span>
+              </div>
+              <PostCareAgenda
+                records={postCareList}
+                onRefresh={fetchData}
+                isLoading={isLoading}
+              />
+            </div>
+          )}
+        </motion.div>
+      </AnimatePresence>
 
       {/* Modals */}
       <NewTbcModal

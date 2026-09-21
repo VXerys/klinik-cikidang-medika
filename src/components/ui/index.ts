@@ -4,3 +4,8 @@ export * from './Modal';
 export * from './Input';
 export * from './Select';
 export * from './Card';
+export * from './dialog';
+export * from './tabs';
+export * from './dropdown-menu';
+export * from './table';
+export * from './sonner';

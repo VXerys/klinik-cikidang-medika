@@ -11,6 +11,7 @@ import {
   Activity,
   FileText,
 } from 'lucide-react';
+import { toast } from 'sonner';
 import type { TbcProgram } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
 
@@ -53,11 +54,12 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
         .eq('id', program.id);
 
       if (error) throw error;
+      toast.success(`Kendali TBC ${program.pasien?.nama || ''} berhasil diperbarui`);
       setShowUpdateModal(false);
       onRefresh();
     } catch (err) {
       console.error('Error updating TBC program:', err);
-      alert('Gagal memperbarui status TBC');
+      toast.error('Gagal memperbarui status kendali TBC');
     } finally {
       setIsUpdating(false);
     }

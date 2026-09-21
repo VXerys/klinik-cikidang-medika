@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Pill, Search, Check, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Patient } from '@/types/database';
 import { PatientSearchAutocomplete } from '@/components/pendaftaran/PatientSearchAutocomplete';
 import { createClient } from '@/lib/supabase/client';
@@ -48,6 +49,7 @@ export function NewTbcModal({ isOpen, onClose, onSuccess }: NewTbcModalProps) {
       });
 
       if (error) throw error;
+      toast.success(`Pasien ${selectedPatient.nama} berhasil didaftarkan ke Kartu Kendali TBC 6 Bulan`);
       onSuccess();
       onClose();
     } catch (err) {

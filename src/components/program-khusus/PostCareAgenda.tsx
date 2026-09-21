@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { Calendar, CheckCircle2, Clock, AlertTriangle, User, ChevronRight } from 'lucide-react';
+import { toast } from 'sonner';
 import type { PostCare } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
 
@@ -38,10 +39,11 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
         .eq('id', id);
 
       if (error) throw error;
+      toast.success('Pasien berhasil ditandai telah menyelesaikan kontrol pos-rawat');
       onRefresh();
     } catch (err) {
       console.error('Error updating post-care status:', err);
-      alert('Gagal memperbarui status kontrol');
+      toast.error('Gagal memperbarui status kontrol');
     } finally {
       setUpdatingId(null);
     }

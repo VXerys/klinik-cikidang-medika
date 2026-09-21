@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Calendar, UserCheck, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Patient } from '@/types/database';
 import { PatientSearchAutocomplete } from '@/components/pendaftaran/PatientSearchAutocomplete';
 import { createClient } from '@/lib/supabase/client';
@@ -45,6 +46,7 @@ export function NewPostCareModal({ isOpen, onClose, onSuccess }: NewPostCareModa
       });
 
       if (error) throw error;
+      toast.success(`Jadwal kontrol pos-rawat untuk ${selectedPatient.nama} berhasil disimpan`);
       onSuccess();
       onClose();
     } catch (err) {

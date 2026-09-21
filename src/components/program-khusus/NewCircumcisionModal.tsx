@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import { X, Scissors, Upload, Camera, AlertCircle, Loader2, Image as ImageIcon } from 'lucide-react';
+import { toast } from 'sonner';
 import type { Patient } from '@/types/database';
 import { PatientSearchAutocomplete } from '@/components/pendaftaran/PatientSearchAutocomplete';
 import { createClient } from '@/lib/supabase/client';
@@ -106,6 +107,7 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess }: NewCircumci
       });
 
       if (error) throw error;
+      toast.success(`Tindakan sirkumsisi untuk ${selectedPatient.nama} berhasil didokumentasikan`);
       onSuccess();
       onClose();
     } catch (err) {
