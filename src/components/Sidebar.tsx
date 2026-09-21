@@ -11,6 +11,7 @@ import {
   FileSpreadsheet,
   Building2,
   ChevronRight,
+  HeartPulse,
   X,
 } from 'lucide-react';
 
@@ -18,6 +19,7 @@ const menus = [
   { href: '/', label: 'Dashboard Ringkasan', icon: LayoutDashboard },
   { href: '/pendaftaran', label: 'Loket & Kasir', icon: UserPlus },
   { href: '/rekam-medis', label: 'Pemeriksaan Dokter', icon: Stethoscope },
+  { href: '/program-khusus', label: 'Program Khusus Medis', icon: HeartPulse },
   { href: '/buku-kas', label: 'Buku Kas Operasional', icon: Wallet },
   { href: '/laporan', label: 'Laporan & Ekspor Excel', icon: FileSpreadsheet },
 ];

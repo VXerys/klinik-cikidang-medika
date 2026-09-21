@@ -150,3 +150,27 @@ async function uploadToCloudinary(blob: Blob, filename: string): Promise<UploadP
     path: data.public_id,
   };
 }
+
+/**
+ * Ambil signed URL untuk foto medis privat (Supabase Storage atau Cloudinary)
+ */
+export async function getSignedMedicalPhotoUrl(
+  path: string,
+  provider: StorageProvider = 'supabase'
+): Promise<string> {
+  if (provider === 'supabase') {
+    const supabase = createClient();
+    const { data, error } = await supabase.storage
+      .from('medical-photos')
+      .createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      throw error || new Error('Gagal membuat signed URL foto medis');
+    }
+    return data.signedUrl;
+  }
+
+  // Cloudinary URL
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'pzlvn2bl';
+  return `https://res.cloudinary.com/${cloudName}/image/upload/${path}`;
+}
+

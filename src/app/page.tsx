@@ -10,6 +10,7 @@ import {
   RefreshCw,
   AlertCircle,
   Clock,
+  HeartPulse,
 } from 'lucide-react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeRupiah } from '@/lib/utils';
@@ -29,6 +30,20 @@ import {
   VillageDistributionCard,
   type VillageStat,
 } from '@/components/dashboard/VillageDistributionCard';
+import {
+  ClinicalAlertWidget,
+  type ClinicalAlertCounts,
+} from '@/components/dashboard/ClinicalAlertWidget';
+import {
+  VisitTrendChart,
+  type DailyTrendPoint,
+  type MonthlyTrendPoint,
+} from '@/components/dashboard/VisitTrendChart';
+import {
+  CashLiquidityCard,
+  type CashLiquidityData,
+} from '@/components/dashboard/CashLiquidityCard';
+import type { CashFlow } from '@/types/database';
 
 export default function DashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>('all');
@@ -52,17 +67,39 @@ export default function DashboardPage() {
   const [umumCount, setUmumCount] = useState(0);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
 
+  // New Clinical Alerts & Trend States
+  const [clinicalAlerts, setClinicalAlerts] = useState<ClinicalAlertCounts>({
+    mangkirTbc: 0,
+    todayPostCare: 0,
+    overduePostCare: 0,
+    recentCircumcision: 0,
+  });
+
+  const [dailyTrends, setDailyTrends] = useState<DailyTrendPoint[]>([]);
+  const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrendPoint[]>([]);
+
+  const [cashLiquidity, setCashLiquidity] = useState<CashLiquidityData>({
+    laciCash: 0,
+    bankCash: 0,
+    todayCashIn: 0,
+    todayCashOut: 0,
+    cashRatio: 75,
+    transferRatio: 25,
+    recentMutations: [],
+  });
+
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
 
     try {
       const supabase = createClient();
+      const todayStr = new Date().toISOString().split('T')[0];
 
       // Determine date filters based on selected period
       const now = new Date();
       const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth(); // 0-indexed
+      const currentMonth = now.getMonth();
 
       let startDate: string | null = null;
       let endDate: string | null = null;
@@ -83,7 +120,7 @@ export default function DashboardPage() {
         .from('patients')
         .select('id', { count: 'exact', head: true });
 
-      // 2. Fetch visits with pagination chunks (to bypass 1000 limit)
+      // 2. Fetch visits with pagination chunks
       let allVisits: any[] = [];
       let visitPage = 0;
       const pageSize = 1000;
@@ -91,7 +128,7 @@ export default function DashboardPage() {
       while (true) {
         let query = supabase
           .from('visits')
-          .select('id, tanggal_periksa, jenis_pasien, biaya_periksa, pendapatan_lain, kode_icd10, diagnosa_deskripsi, patients(desa)')
+          .select('id, tanggal_periksa, jenis_pasien, biaya_periksa, pendapatan_lain, jenis_pembayaran, kode_icd10, diagnosa_deskripsi, patients(desa)')
           .range(visitPage * pageSize, (visitPage + 1) * pageSize - 1);
 
         if (startDate && endDate) {
@@ -107,14 +144,15 @@ export default function DashboardPage() {
         visitPage++;
       }
 
-      // 3. Fetch cash flows with pagination chunks
+      // 3. Fetch cash flows
       let allFlows: any[] = [];
       let flowPage = 0;
 
       while (true) {
         let flowQuery = supabase
           .from('cash_flows')
-          .select('id, tanggal, jenis, kategori, nominal')
+          .select('id, tanggal, jenis, kategori, nominal, keterangan')
+          .order('tanggal', { ascending: false })
           .range(flowPage * pageSize, (flowPage + 1) * pageSize - 1);
 
         if (startDate && endDate) {
@@ -130,22 +168,81 @@ export default function DashboardPage() {
         flowPage++;
       }
 
-      // 4. Client-side rapid aggregation
+      // 4. Fetch Clinical Alerts Data (TBC, Post-care, Circumcisions)
+      const { data: tbcData } = await supabase
+        .from('tbc_programs')
+        .select('id, status_tbc, bulan_ke, tanggal_mulai');
+
+      const { data: postCareData } = await supabase
+        .from('post_cares')
+        .select('id, tanggal_kontrol_berikutnya, status_kontrol');
+
+      const sevenDaysAgoStr = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
+      const { data: circData } = await supabase
+        .from('circumcisions')
+        .select('id, tanggal_tindakan')
+        .gte('tanggal_tindakan', sevenDaysAgoStr);
+
+      // Process clinical alerts
+      const mangkirTbc = (tbcData || []).filter((t) => t.status_tbc === 'Mangkir').length;
+      const todayPostCare = (postCareData || []).filter(
+        (p) => p.tanggal_kontrol_berikutnya === todayStr && p.status_kontrol !== 'Sudah Kontrol'
+      ).length;
+      const overduePostCare = (postCareData || []).filter(
+        (p) => p.tanggal_kontrol_berikutnya < todayStr && p.status_kontrol !== 'Sudah Kontrol'
+      ).length;
+      const recentCircumcision = (circData || []).length;
+
+      setClinicalAlerts({
+        mangkirTbc,
+        todayPostCare,
+        overduePostCare,
+        recentCircumcision,
+      });
+
+      // 5. Client-side rapid aggregation
       let bpjsVisits = 0;
       let umumVisits = 0;
       let umumRev = 0;
+      let tunaiRev = 0;
+      let tfRev = 0;
+
       const diseaseMap: Record<string, { code: string; name: string; count: number }> = {};
       const villageMap: Record<string, number> = {};
+      const dailyMap: Record<string, { bpjs: number; umum: number }> = {};
+      const monthlyMap: Record<string, { bpjs: number; umum: number }> = {};
       let diagnosisTotalCount = 0;
 
       allVisits.forEach((v) => {
+        const tgl = v.tanggal_periksa; // YYYY-MM-DD
+        const monthKey = tgl ? tgl.substring(0, 7) : ''; // YYYY-MM
+
+        if (!dailyMap[tgl]) {
+          dailyMap[tgl] = { bpjs: 0, umum: 0 };
+        }
+        if (monthKey && !monthlyMap[monthKey]) {
+          monthlyMap[monthKey] = { bpjs: 0, umum: 0 };
+        }
+
         if (v.jenis_pasien === 'BPJS') {
           bpjsVisits++;
+          dailyMap[tgl].bpjs++;
+          if (monthKey) monthlyMap[monthKey].bpjs++;
         } else {
           umumVisits++;
+          dailyMap[tgl].umum++;
+          if (monthKey) monthlyMap[monthKey].umum++;
+
           const biaya = normalizeRupiah(Number(v.biaya_periksa) || 0);
           const lain = normalizeRupiah(Number(v.pendapatan_lain) || 0);
-          umumRev += biaya + lain;
+          const totalRev = biaya + lain;
+          umumRev += totalRev;
+
+          if (v.jenis_pembayaran === 'TF' || v.jenis_pembayaran === 'Transfer') {
+            tfRev += totalRev;
+          } else {
+            tunaiRev += totalRev;
+          }
         }
 
         // ICD-10 Aggregation
@@ -166,14 +263,52 @@ export default function DashboardPage() {
         villageMap[formattedDesa] = (villageMap[formattedDesa] || 0) + 1;
       });
 
+      // Format 14-day daily trends (take last 14 available dates sorted)
+      const sortedDailyDates = Object.keys(dailyMap).sort();
+      const last14Dates = sortedDailyDates.slice(-14);
+      const formattedDailyTrends: DailyTrendPoint[] = last14Dates.map((d) => {
+        const item = dailyMap[d];
+        const dateObj = new Date(d);
+        const dayName = dateObj.toLocaleDateString('id-ID', { weekday: 'short' });
+        const dayNum = dateObj.getDate();
+        return {
+          date: d,
+          label: `${dayName} ${dayNum}`,
+          bpjs: item.bpjs,
+          umum: item.umum,
+          total: item.bpjs + item.umum,
+        };
+      });
+
+      // Format 12-month trends
+      const sortedMonths = Object.keys(monthlyMap).sort();
+      const last12Months = sortedMonths.slice(-12);
+      const formattedMonthlyTrends: MonthlyTrendPoint[] = last12Months.map((m) => {
+        const item = monthlyMap[m];
+        const [y, mo] = m.split('-');
+        const dateObj = new Date(Number(y), Number(mo) - 1, 1);
+        const monthLabel = dateObj.toLocaleDateString('id-ID', { month: 'short' });
+        return {
+          month: m,
+          label: `${monthLabel} ${y}`,
+          bpjs: item.bpjs,
+          umum: item.umum,
+          total: item.bpjs + item.umum,
+        };
+      });
+
       // Process Cash Flows
       let bpjsCapitation = 0;
       let expenses = 0;
+      let bankSetoran = 0;
 
       allFlows.forEach((f) => {
         const nom = normalizeRupiah(Number(f.nominal) || 0);
         if (f.jenis === 'Masuk' && f.kategori?.includes('Kapitasi')) {
           bpjsCapitation += nom;
+        }
+        if (f.jenis === 'Masuk' && f.kategori?.includes('Setor Tunai')) {
+          bankSetoran += nom;
         }
         if (f.jenis === 'Keluar') {
           expenses += nom;
@@ -181,6 +316,25 @@ export default function DashboardPage() {
       });
 
       const netCash = umumRev + bpjsCapitation - expenses;
+      const totalLoketRevenue = tunaiRev + tfRev;
+      const cashRatioPct =
+        totalLoketRevenue > 0 ? Math.round((tunaiRev / totalLoketRevenue) * 100) : 80;
+      const tfRatioPct = 100 - cashRatioPct;
+
+      // Real liquidity calculation:
+      // Kas Laci = Tunai Loket - Setoran Bank
+      const laciEstimated = Math.max(0, tunaiRev - bankSetoran);
+      const bankEstimated = bpjsCapitation + tfRev + bankSetoran;
+
+      setCashLiquidity({
+        laciCash: laciEstimated,
+        bankCash: bankEstimated,
+        todayCashIn: tunaiRev,
+        todayCashOut: expenses,
+        cashRatio: cashRatioPct,
+        transferRatio: tfRatioPct,
+        recentMutations: allFlows.slice(0, 4) as CashFlow[],
+      });
 
       // Format Top 10 Diseases
       const sortedDiseases: DiseaseStat[] = Object.values(diseaseMap)
@@ -218,6 +372,8 @@ export default function DashboardPage() {
       setVillageStats(sortedVillages);
       setBpjsCount(bpjsVisits);
       setUmumCount(umumVisits);
+      setDailyTrends(formattedDailyTrends);
+      setMonthlyTrends(formattedMonthlyTrends);
       setLastRefreshed(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -243,14 +399,14 @@ export default function DashboardPage() {
               Dashboard Eksekutif Klinik
             </h1>
             {lastRefreshed && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md font-mono">
                 <Clock className="w-3 h-3" />
                 {lastRefreshed}
               </span>
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Ringkasan operasional harian, omzet loket kasir, dan epidemiologi penyakit
+            Ringkasan operasional harian, morbiditas ICD-10, arus kas, dan surveilans pasien klinis
           </p>
         </div>
 
@@ -261,6 +417,14 @@ export default function DashboardPage() {
           >
             <UserCheck className="w-4 h-4 shrink-0" />
             <span>+ Pasien Baru / Kasir</span>
+          </Link>
+
+          <Link
+            href="/program-khusus"
+            className="inline-flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:outline-none"
+          >
+            <HeartPulse className="w-4 h-4 shrink-0" />
+            <span>Program Khusus</span>
           </Link>
 
           <Link
@@ -276,7 +440,7 @@ export default function DashboardPage() {
             className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
           >
             <FileSpreadsheet className="w-4 h-4 shrink-0" />
-            <span>Pusat Laporan & Excel</span>
+            <span>Laporan & Excel</span>
           </Link>
 
           <button
@@ -308,6 +472,9 @@ export default function DashboardPage() {
         </div>
       )}
 
+      {/* Clinical Surveillance Alert Widget (Q2 - Opsi A) */}
+      <ClinicalAlertWidget alerts={clinicalAlerts} isLoading={isLoading} />
+
       {/* Period Filter Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
         <DashboardPeriodSelector
@@ -316,28 +483,41 @@ export default function DashboardPage() {
           isLoading={isLoading}
         />
         <div className="text-[11px] text-slate-400 self-end sm:self-auto">
-          Menampilkan data berdasarkan periode aktif
+          Menampilkan agregasi data berdasarkan periode aktif
         </div>
       </div>
 
       {/* 5 Executive KPI Cards */}
       <DashboardKpiCards data={kpiData} isLoading={isLoading} />
 
-      {/* 2-Column Analytics Visualizations */}
+      {/* Recharts Visit Trend Visualization (Q1 - Opsi C) */}
+      <VisitTrendChart
+        dailyData={dailyTrends}
+        monthlyData={monthlyTrends}
+        isLoading={isLoading}
+      />
+
+      {/* 2-Column Analytics Visualizations: Morbidity & Cash Liquidity */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TopDiseasesChart
           data={topDiseases}
           totalDiagnoses={totalDiagnoses}
           isLoading={isLoading}
         />
-        <VillageDistributionCard
-          villages={villageStats}
-          totalPatients={kpiData.totalVisits}
-          bpjsCount={bpjsCount}
-          umumCount={umumCount}
+        <CashLiquidityCard
+          data={cashLiquidity}
           isLoading={isLoading}
         />
       </div>
+
+      {/* Demographics & Regional Catchment */}
+      <VillageDistributionCard
+        villages={villageStats}
+        totalPatients={kpiData.totalVisits}
+        bpjsCount={bpjsCount}
+        umumCount={umumCount}
+        isLoading={isLoading}
+      />
     </div>
   );
 }
