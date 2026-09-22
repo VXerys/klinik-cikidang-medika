@@ -1,11 +1,45 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, AlertCircle } from 'lucide-react';
+import { z } from 'zod';
+import { UserPlus, WarningCircle, IdentificationCard } from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
 import { DESA_OPTIONS, GELAR_OPTIONS, JENIS_KELAMIN_OPTIONS } from '@/constants/clinic';
 import { Modal, Button, Input, Select } from '@/components/ui';
+
+const patientSchema = z.object({
+  noRm: z.string().trim().min(1, 'Nomor Rekam Medis (No RM) wajib diisi.'),
+  gelar: z.string().trim().default('Tn.'),
+  nama: z.string().trim().min(2, 'Nama pasien minimal 2 karakter.'),
+  jenisKelamin: z.enum(['Laki-laki', 'Perempuan']),
+  tanggalLahir: z.string().optional().nullable(),
+  usia: z
+    .union([
+      z.number().int().min(0, 'Usia tidak boleh negatif.').max(130, 'Usia maksimal 130 tahun.'),
+      z.literal(''),
+    ])
+    .optional()
+    .nullable(),
+  desa: z.string().trim().min(1, 'Desa domisili wajib dipilih.'),
+  alamat: z.string().trim().optional().nullable(),
+  noKtp: z
+    .string()
+    .trim()
+    .refine((val) => !val || /^\d{16}$/.test(val), {
+      message: 'NIK KTP harus tepat 16 digit angka jika diisi.',
+    })
+    .optional()
+    .nullable(),
+  noBpjs: z
+    .string()
+    .trim()
+    .refine((val) => !val || /^\d{13}$/.test(val), {
+      message: 'Nomor Kartu BPJS harus tepat 13 digit angka jika diisi.',
+    })
+    .optional()
+    .nullable(),
+});
 
 export interface NewPatientModalProps {
   isOpen: boolean;
@@ -34,11 +68,12 @@ export function NewPatientModal({
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingRm, setIsGeneratingRm] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Initialize or reset form when modal opens
   useEffect(() => {
     if (!isOpen) {
       setErrorMessage(null);
+      setFieldErrors({});
       return;
     }
 
@@ -52,8 +87,8 @@ export function NewPatientModal({
     setNoKtp('');
     setNoBpjs('');
     setErrorMessage(null);
+    setFieldErrors({});
 
-    // Generate next sequential No RM preview
     const generateNextNoRm = async () => {
       setIsGeneratingRm(true);
       try {
@@ -72,8 +107,7 @@ export function NewPatientModal({
         setNoRm(formatted);
       } catch (err) {
         console.error('Failed to generate No RM:', err);
-        const fallback = `RM-${Date.now().toString().slice(-6)}`;
-        setNoRm(fallback);
+        setNoRm(`RM-${Date.now().toString().slice(-6)}`);
       } finally {
         setIsGeneratingRm(false);
       }
@@ -82,7 +116,6 @@ export function NewPatientModal({
     generateNextNoRm();
   }, [isOpen, initialQuery]);
 
-  // Automatically calculate age when date of birth changes
   const handleDateOfBirthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dob = e.target.value;
     setTanggalLahir(dob);
@@ -106,19 +139,31 @@ export function NewPatientModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setFieldErrors({});
 
-    if (!nama.trim()) {
-      setErrorMessage('Nama pasien wajib diisi.');
-      return;
-    }
+    const parseResult = patientSchema.safeParse({
+      noRm,
+      gelar,
+      nama,
+      jenisKelamin,
+      tanggalLahir: tanggalLahir || null,
+      usia: usia === '' ? null : Number(usia),
+      desa,
+      alamat: alamat || null,
+      noKtp: noKtp || null,
+      noBpjs: noBpjs || null,
+    });
 
-    if (!desa) {
-      setErrorMessage('Desa domisili wajib dipilih.');
-      return;
-    }
-
-    if (!noRm.trim()) {
-      setErrorMessage('Nomor Rekam Medis (No RM) wajib diisi.');
+    if (!parseResult.success) {
+      const errors: Record<string, string> = {};
+      parseResult.error.issues.forEach((issue) => {
+        const fieldName = issue.path[0] as string;
+        if (!errors[fieldName]) {
+          errors[fieldName] = issue.message;
+        }
+      });
+      setFieldErrors(errors);
+      setErrorMessage(parseResult.error.issues[0]?.message || 'Periksa kembali kelengkapan formulir.');
       return;
     }
 
@@ -126,18 +171,19 @@ export function NewPatientModal({
 
     try {
       const supabase = createClient();
+      const validData = parseResult.data;
 
       const newRecord = {
-        no_rm: noRm.trim(),
-        gelar: gelar.trim(),
-        nama: nama.trim(),
-        jenis_kelamin: jenisKelamin,
-        tanggal_lahir: tanggalLahir || null,
-        usia: usia === '' ? null : Number(usia),
-        desa: desa.trim(),
-        alamat: alamat.trim() || null,
-        no_ktp: noKtp.trim() || null,
-        no_bpjs: noBpjs.trim() || null,
+        no_rm: validData.noRm,
+        gelar: validData.gelar,
+        nama: validData.nama,
+        jenis_kelamin: validData.jenisKelamin,
+        tanggal_lahir: validData.tanggalLahir || null,
+        usia: validData.usia === '' || validData.usia === null || validData.usia === undefined ? null : validData.usia,
+        desa: validData.desa,
+        alamat: validData.alamat || null,
+        no_ktp: validData.noKtp || null,
+        no_bpjs: validData.noBpjs || null,
       };
 
       const { data, error } = await supabase
@@ -148,7 +194,7 @@ export function NewPatientModal({
 
       if (error) {
         if (error.code === '23505' || error.message.includes('unique') || error.message.includes('no_rm')) {
-          throw new Error(`Nomor RM "${noRm}" sudah terdaftar dalam sistem. Silakan gunakan nomor lain.`);
+          throw new Error(`Nomor RM "${validData.noRm}" sudah terdaftar dalam sistem. Silakan gunakan nomor lain.`);
         }
         throw new Error(error.message);
       }
@@ -173,7 +219,7 @@ export function NewPatientModal({
       description="Isi data rekam medis dasar untuk pasien baru di Klinik Cikidang Medika"
       icon={
         <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
-          <UserPlus className="w-5 h-5" />
+          <UserPlus className="w-5 h-5 text-blue-700" weight="duotone" />
         </div>
       }
       maxWidth="lg"
@@ -181,24 +227,30 @@ export function NewPatientModal({
       <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4">
         {errorMessage && (
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+            <WarningCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" weight="duotone" />
             <span>{errorMessage}</span>
           </div>
         )}
 
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* No RM */}
-          <Input
-            label="No RM"
-            requiredIndicator
-            value={noRm}
-            onChange={(e) => setNoRm(e.target.value)}
-            placeholder={isGeneratingRm ? 'Membuat...' : 'RM-XXXX'}
-            className="font-mono font-bold bg-slate-50"
-            required
-          />
+          <div>
+            <Input
+              label="No RM"
+              requiredIndicator
+              value={noRm}
+              onChange={(e) => {
+                setNoRm(e.target.value);
+                if (fieldErrors.noRm) setFieldErrors((prev) => ({ ...prev, noRm: '' }));
+              }}
+              placeholder={isGeneratingRm ? 'Membuat...' : 'RM-XXXX'}
+              className="font-mono font-bold bg-slate-50"
+              required
+            />
+            {fieldErrors.noRm && (
+              <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.noRm}</p>
+            )}
+          </div>
 
-          {/* Gelar */}
           <Select
             label="Gelar / Sapaan"
             value={gelar}
@@ -206,7 +258,6 @@ export function NewPatientModal({
             options={GELAR_OPTIONS}
           />
 
-          {/* Jenis Kelamin */}
           <Select
             label="Jenis Kelamin"
             requiredIndicator
@@ -216,18 +267,24 @@ export function NewPatientModal({
           />
         </div>
 
-        {/* Nama Lengkap */}
-        <Input
-          label="Nama Pasien Lengkap"
-          requiredIndicator
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
-          placeholder="Contoh: Siti Aisyah"
-          required
-        />
+        <div>
+          <Input
+            label="Nama Pasien Lengkap"
+            requiredIndicator
+            value={nama}
+            onChange={(e) => {
+              setNama(e.target.value);
+              if (fieldErrors.nama) setFieldErrors((prev) => ({ ...prev, nama: '' }));
+            }}
+            placeholder="Contoh: Siti Aisyah"
+            required
+          />
+          {fieldErrors.nama && (
+            <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.nama}</p>
+          )}
+        </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Tanggal Lahir */}
           <Input
             type="date"
             label="Tanggal Lahir"
@@ -235,48 +292,76 @@ export function NewPatientModal({
             onChange={handleDateOfBirthChange}
           />
 
-          {/* Usia (Tahun) */}
-          <Input
-            type="number"
-            min="0"
-            max="130"
-            label="Usia (Tahun)"
-            value={usia}
-            onChange={(e) => setUsia(e.target.value === '' ? '' : Number(e.target.value))}
-            placeholder="Contoh: 32"
-          />
+          <div>
+            <Input
+              type="number"
+              min="0"
+              max="130"
+              label="Usia (Tahun)"
+              value={usia}
+              onChange={(e) => {
+                setUsia(e.target.value === '' ? '' : Number(e.target.value));
+                if (fieldErrors.usia) setFieldErrors((prev) => ({ ...prev, usia: '' }));
+              }}
+              placeholder="Contoh: 32"
+            />
+            {fieldErrors.usia && (
+              <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.usia}</p>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Desa */}
-          <Select
-            label="Desa Domisili"
-            requiredIndicator
-            value={desa}
-            onChange={(e) => setDesa(e.target.value)}
-            options={DESA_OPTIONS}
-          />
+          <div>
+            <Select
+              label="Desa Domisili"
+              requiredIndicator
+              value={desa}
+              onChange={(e) => {
+                setDesa(e.target.value);
+                if (fieldErrors.desa) setFieldErrors((prev) => ({ ...prev, desa: '' }));
+              }}
+              options={DESA_OPTIONS}
+            />
+            {fieldErrors.desa && (
+              <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.desa}</p>
+            )}
+          </div>
 
-          {/* No BPJS */}
-          <Input
-            label="Nomor Kartu BPJS (Opsional)"
-            value={noBpjs}
-            onChange={(e) => setNoBpjs(e.target.value)}
-            placeholder="Contoh: 0001234567890"
-          />
+          <div>
+            <Input
+              label="Nomor Kartu BPJS (Opsional)"
+              value={noBpjs}
+              onChange={(e) => {
+                setNoBpjs(e.target.value);
+                if (fieldErrors.noBpjs) setFieldErrors((prev) => ({ ...prev, noBpjs: '' }));
+              }}
+              placeholder="13 digit angka kartu BPJS"
+              maxLength={13}
+            />
+            {fieldErrors.noBpjs && (
+              <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.noBpjs}</p>
+            )}
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* No KTP / NIK */}
-          <Input
-            label="NIK KTP (Opsional)"
-            value={noKtp}
-            onChange={(e) => setNoKtp(e.target.value)}
-            placeholder="16 digit NIK"
-            maxLength={16}
-          />
+          <div>
+            <Input
+              label="NIK KTP (Opsional)"
+              value={noKtp}
+              onChange={(e) => {
+                setNoKtp(e.target.value);
+                if (fieldErrors.noKtp) setFieldErrors((prev) => ({ ...prev, noKtp: '' }));
+              }}
+              placeholder="16 digit NIK KTP"
+              maxLength={16}
+            />
+            {fieldErrors.noKtp && (
+              <p className="text-[11px] text-rose-600 mt-1">{fieldErrors.noKtp}</p>
+            )}
+          </div>
 
-          {/* Alamat Lengkap */}
           <Input
             label="Alamat / Kampung / RT / RW"
             value={alamat}
@@ -285,7 +370,6 @@ export function NewPatientModal({
           />
         </div>
 
-        {/* Modal Footer Actions */}
         <div className="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
           <Button
             type="button"
@@ -300,6 +384,7 @@ export function NewPatientModal({
             type="submit"
             variant="primary"
             isLoading={isLoading}
+            leftIcon={<IdentificationCard className="w-4 h-4" weight="duotone" />}
             className="w-full sm:w-auto min-h-[44px]"
           >
             Simpan Pasien Baru

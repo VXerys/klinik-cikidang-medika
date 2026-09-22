@@ -4,16 +4,16 @@ import React, { useState, useEffect, useCallback } from 'react';
 import {
   UserPlus,
   Receipt,
-  CheckCircle2,
-  RefreshCw,
+  CheckCircle,
+  ArrowClockwise,
   Users,
-  Calendar,
+  CalendarBlank,
   Clock,
   MapPin,
   Stethoscope,
   ShieldCheck,
-  AlertCircle,
-} from 'lucide-react';
+  WarningCircle,
+} from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient, Visit } from '@/types/database';
 import { PatientSearchAutocomplete } from '@/components/pendaftaran/PatientSearchAutocomplete';
@@ -27,20 +27,15 @@ export default function PendaftaranKasirPage() {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [isLoadingVisits, setIsLoadingVisits] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
-  // View Filter: 'today' | 'recent'
   const [viewMode, setViewMode] = useState<'today' | 'recent'>('today');
 
-  // Modal State Management
   const [isNewPatientOpen, setIsNewPatientOpen] = useState(false);
   const [isRegisterVisitOpen, setIsRegisterVisitOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
-  // Active Selections
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [activeReceiptVisit, setActiveReceiptVisit] = useState<Visit | null>(null);
 
-  // Fetch Visits from Supabase
   const fetchVisits = useCallback(async () => {
     setIsLoadingVisits(true);
     setErrorMessage(null);
@@ -91,25 +86,20 @@ export default function PendaftaranKasirPage() {
     fetchVisits();
   }, [fetchVisits]);
 
-  // Handler: When patient selected from Autocomplete
   const handleSelectPatient = (patient: Patient) => {
     setSelectedPatient(patient);
     setIsRegisterVisitOpen(true);
   };
 
-  // Handler: When "+ Daftarkan Sebagai Pasien Baru" clicked
   const handleAddNewPatient = () => {
     setIsNewPatientOpen(true);
   };
 
-  // Handler: After new patient is created in modal
   const handlePatientCreated = (newPatient: Patient) => {
-    // Immediately open visit registration for the newly created patient
     setSelectedPatient(newPatient);
     setIsRegisterVisitOpen(true);
   };
 
-  // Handler: After visit is successfully registered
   const handleVisitRegistered = (newVisit: Visit) => {
     fetchVisits();
     setActiveReceiptVisit(newVisit);
@@ -125,21 +115,20 @@ export default function PendaftaranKasirPage() {
 
   return (
     <div className="space-y-6 min-w-0 w-full">
-      {/* Top Banner & Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
             Loket Pendaftaran & Kasir
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Cari data dari 4.238+ pasien lama, daftarkan pasien baru, dan kelola kasir real-time.
+            Pencarian cepat pasien terdaftar, registrasi pasien baru, dan antrian poli rawat jalan.
           </p>
         </div>
         <div className="w-full sm:w-auto">
           <Button
             type="button"
             variant="primary"
-            leftIcon={<UserPlus className="w-4 h-4" />}
+            leftIcon={<UserPlus className="w-4 h-4" weight="duotone" />}
             onClick={() => setIsNewPatientOpen(true)}
             className="w-full sm:w-auto min-h-[44px]"
           >
@@ -148,11 +137,10 @@ export default function PendaftaranKasirPage() {
         </div>
       </div>
 
-      {/* Instant Autocomplete Search Section */}
       <Card className="p-5 space-y-3">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
-            <Users className="w-4 h-4 text-blue-600" />
+            <Users className="w-4 h-4 text-blue-600" weight="duotone" />
             Pencarian Cepat Pasien (Autocomplete)
           </label>
           <span className="text-[11px] text-slate-400">
@@ -167,13 +155,11 @@ export default function PendaftaranKasirPage() {
         />
       </Card>
 
-      {/* Daftar Kunjungan Pasien Table */}
       <Card>
-        {/* Table Header Bar */}
         <div className="p-4 sm:p-5 border-b border-slate-200 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-slate-50/50">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
-              <Calendar className="w-4 h-4" />
+              <CalendarBlank className="w-4 h-4" weight="duotone" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-800 flex items-center gap-2">
@@ -189,7 +175,6 @@ export default function PendaftaranKasirPage() {
           </div>
 
           <div className="flex items-center flex-wrap gap-2">
-            {/* View Mode Toggle */}
             <div className="inline-flex rounded-lg bg-slate-200/80 p-0.5 text-xs font-medium min-h-[38px] items-center">
               <button
                 type="button"
@@ -215,28 +200,26 @@ export default function PendaftaranKasirPage() {
               </button>
             </div>
 
-            {/* Refresh Button */}
             <button
               type="button"
               onClick={fetchVisits}
               disabled={isLoadingVisits}
               className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-100 rounded-lg transition min-w-[38px] min-h-[38px] flex items-center justify-center"
               title="Perbarui data"
+              aria-label="Perbarui data kunjungan"
             >
-              <RefreshCw className={`w-4 h-4 ${isLoadingVisits ? 'animate-spin text-blue-600' : ''}`} />
+              <ArrowClockwise className={`w-4 h-4 ${isLoadingVisits ? 'animate-spin text-blue-600' : ''}`} weight="bold" />
             </button>
           </div>
         </div>
 
-        {/* Error Alert */}
         {errorMessage && (
           <div className="m-4 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-700">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        {/* Table Content */}
         <div className="overflow-x-auto w-full -mx-4 sm:mx-0 px-4 sm:px-0">
           <table className="w-full text-left text-xs text-slate-600">
             <thead className="bg-slate-50 text-slate-500 font-semibold border-b border-slate-200 select-none">
@@ -256,7 +239,7 @@ export default function PendaftaranKasirPage() {
               {isLoadingVisits ? (
                 <tr>
                   <td colSpan={9} className="py-12 text-center text-slate-400">
-                    <RefreshCw className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-500" />
+                    <ArrowClockwise className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-600" weight="bold" />
                     <span>Memuat data kunjungan dari database...</span>
                   </td>
                 </tr>
@@ -264,7 +247,7 @@ export default function PendaftaranKasirPage() {
                 <tr>
                   <td colSpan={9} className="py-16 text-center text-slate-400">
                     <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
-                      <Users className="w-6 h-6" />
+                      <Users className="w-6 h-6" weight="duotone" />
                     </div>
                     <p className="text-sm font-semibold text-slate-700">
                       {viewMode === 'today'
@@ -286,14 +269,12 @@ export default function PendaftaranKasirPage() {
 
                   return (
                     <tr key={visit.id} className="hover:bg-slate-50/80 transition">
-                      {/* Antrian */}
                       <td className="py-3 px-4 text-center">
                         <span className="font-mono font-bold text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md">
                           #{visit.nomor_antrian || '-'}
                         </span>
                       </td>
 
-                      {/* No RM & Pasien */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1.5">
                           <Badge variant="umum" className="font-mono">
@@ -305,7 +286,7 @@ export default function PendaftaranKasirPage() {
                         </div>
                         <div className="flex items-center gap-2 text-[11px] text-slate-500 mt-0.5">
                           <span className="flex items-center gap-0.5">
-                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" weight="duotone" />
                             {visit.pasien?.desa || '-'}
                           </span>
                           {visit.pasien?.usia !== undefined && visit.pasien?.usia !== null && (
@@ -317,10 +298,9 @@ export default function PendaftaranKasirPage() {
                         </div>
                       </td>
 
-                      {/* Waktu Periksa */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         <div className="flex items-center gap-1 text-[11px] text-slate-700 font-medium">
-                          <Clock className="w-3 h-3 text-slate-400" />
+                          <Clock className="w-3 h-3 text-slate-400" weight="duotone" />
                           <span>{visit.jam_periksa || '-'}</span>
                         </div>
                         <div className="text-[10px] text-slate-400">
@@ -328,19 +308,17 @@ export default function PendaftaranKasirPage() {
                         </div>
                       </td>
 
-                      {/* Dokter Pemeriksa */}
                       <td className="py-3 px-4">
                         <div className="flex items-center gap-1 text-slate-800 text-xs font-medium">
-                          <Stethoscope className="w-3.5 h-3.5 text-blue-500 shrink-0" />
+                          <Stethoscope className="w-3.5 h-3.5 text-blue-600 shrink-0" weight="duotone" />
                           <span>{visit.dokter?.nama || 'Dokter Jaga'}</span>
                         </div>
                       </td>
 
-                      {/* Jenis Pasien */}
                       <td className="py-3 px-4 whitespace-nowrap">
                         {visit.jenis_pasien === 'BPJS' ? (
                           <Badge variant="bpjs">
-                            <ShieldCheck className="w-3 h-3" />
+                            <ShieldCheck className="w-3 h-3" weight="duotone" />
                             BPJS
                           </Badge>
                         ) : (
@@ -350,14 +328,12 @@ export default function PendaftaranKasirPage() {
                         )}
                       </td>
 
-                      {/* Keluhan */}
                       <td className="py-3 px-4 max-w-xs">
                         <span className="text-[11px] text-slate-600 line-clamp-2" title={visit.keluhan_anamnesa || '-'}>
                           {visit.keluhan_anamnesa || '-'}
                         </span>
                       </td>
 
-                      {/* Total Biaya */}
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <span className="font-mono font-bold text-slate-900 text-xs">
                           {formatRupiah(totalBayar)}
@@ -369,21 +345,19 @@ export default function PendaftaranKasirPage() {
                         )}
                       </td>
 
-                      {/* Pembayaran */}
                       <td className="py-3 px-4 text-center whitespace-nowrap">
                         <Badge variant="lunas">
-                          <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                          <CheckCircle className="w-3 h-3 text-emerald-600" weight="duotone" />
                           {visit.jenis_pembayaran || 'Tunai'}
                         </Badge>
                       </td>
 
-                      {/* Aksi */}
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <Button
                           type="button"
                           variant="outline"
                           size="sm"
-                          leftIcon={<Receipt className="w-3.5 h-3.5 text-blue-600" />}
+                          leftIcon={<Receipt className="w-3.5 h-3.5 text-blue-600" weight="duotone" />}
                           onClick={() => {
                             setActiveReceiptVisit(visit);
                             setIsReceiptOpen(true);
@@ -402,7 +376,6 @@ export default function PendaftaranKasirPage() {
         </div>
       </Card>
 
-      {/* Modals */}
       <NewPatientModal
         isOpen={isNewPatientOpen}
         onClose={() => setIsNewPatientOpen(false)}
