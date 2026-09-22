@@ -3,26 +3,20 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   Stethoscope,
-  Calendar,
-  RefreshCw,
-  Users,
-  AlertCircle,
+  CalendarBlank,
+  ArrowClockwise,
+  WarningCircle,
   PlusCircle,
-  FileText,
-  UserCheck,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Visit } from '@/types/database';
 import { QueueList } from '@/components/rekam-medis/QueueList';
 import { ExaminationForm } from '@/components/rekam-medis/ExaminationForm';
 import { PatientHistoryTimeline } from '@/components/rekam-medis/PatientHistoryTimeline';
-import { Button } from '@/components/ui/Button';
-import { Input } from '@/components/ui/Input';
-import { formatDateIndo } from '@/lib/utils';
+import { Button } from '@/components/ui';
 
 export default function RekamMedisPage() {
-  // Today's date as YYYY-MM-DD
   const getTodayString = () => new Date().toISOString().split('T')[0];
 
   const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
@@ -52,7 +46,6 @@ export default function RekamMedisPage() {
       const visitList = (data as unknown as Visit[]) || [];
       setVisits(visitList);
 
-      // Preserve currently selected visit if it still exists in the refreshed list
       if (selectedVisit) {
         const found = visitList.find((v) => v.id === selectedVisit.id);
         if (found) {
@@ -63,7 +56,6 @@ export default function RekamMedisPage() {
           setSelectedVisit(null);
         }
       } else if (visitList.length > 0) {
-        // Auto-select first waiting patient or first patient in queue
         const firstWaiting = visitList.find(
           (v) => !v.kode_icd10 && !v.diagnosa_deskripsi && !v.terapi_obat
         );
@@ -87,7 +79,6 @@ export default function RekamMedisPage() {
 
   const handleSelectVisit = (visit: Visit) => {
     setSelectedVisit(visit);
-    // On mobile and tablet (< lg), smoothly scroll to the workstation form
     if (typeof window !== 'undefined' && window.innerWidth < 1024) {
       setTimeout(() => {
         document.getElementById('exam-workstation')?.scrollIntoView({ behavior: 'smooth' });
@@ -96,7 +87,6 @@ export default function RekamMedisPage() {
   };
 
   const handleSaveSuccess = (updatedVisit: Visit) => {
-    // Optimistically update visits state
     setVisits((prev) =>
       prev.map((v) => (v.id === updatedVisit.id ? updatedVisit : v))
     );
@@ -105,33 +95,30 @@ export default function RekamMedisPage() {
 
   return (
     <div className="space-y-6 min-w-0 w-full">
-      {/* Top Page Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl shrink-0">
-              <Stethoscope className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl font-bold text-slate-900 tracking-tight">
-                Rekam Medis & Ruang Periksa Dokter
-              </h1>
-              <p className="text-xs text-slate-500">
-                Pemeriksaan klinis, diagnosa instan ICD-10, resep obat, dan riwayat medis lampau pasien
-              </p>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="p-2.5 bg-blue-100 text-blue-700 rounded-2xl shrink-0">
+            <Stethoscope className="w-6 h-6" weight="duotone" />
+          </div>
+          <div>
+            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+              Rekam Medis & Ruang Periksa Dokter
+            </h1>
+            <p className="text-xs text-slate-500 mt-0.5">
+              Pemeriksaan klinis, diagnosa instan ICD-10, resep obat terstandarisasi, dan rekam medis lampau pasien
+            </p>
           </div>
         </div>
 
-        {/* Date Filter and Actions */}
         <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto">
           <div className="flex items-center gap-1.5 bg-white border border-slate-200 rounded-xl px-3 py-2 shadow-2xs min-h-[44px] flex-1 sm:flex-initial">
-            <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+            <CalendarBlank className="w-4 h-4 text-slate-400 shrink-0" weight="duotone" />
             <input
               type="date"
               value={selectedDate}
               onChange={(e) => setSelectedDate(e.target.value)}
-              className="text-xs font-medium text-slate-700 outline-none bg-transparent cursor-pointer w-full"
+              aria-label="Pilih tanggal periksa antrean"
+              className="text-xs font-medium text-slate-800 outline-none bg-transparent cursor-pointer w-full"
             />
           </div>
 
@@ -154,16 +141,15 @@ export default function RekamMedisPage() {
             title="Muat ulang antrean"
             aria-label="Muat ulang antrean pasien"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+            <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} weight="bold" />
           </Button>
         </div>
       </div>
 
-      {/* Global Error Banner */}
       {errorMessage && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
             <span>{errorMessage}</span>
           </div>
           <Button variant="outline" size="sm" onClick={fetchVisits} className="text-xs">
@@ -172,9 +158,7 @@ export default function RekamMedisPage() {
         </div>
       )}
 
-      {/* Master-Detail 2-Column Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-        {/* Left Column: Queue List (4 cols) */}
         <div className="lg:col-span-5 xl:col-span-4">
           <QueueList
             visits={visits}
@@ -185,32 +169,28 @@ export default function RekamMedisPage() {
           />
         </div>
 
-        {/* Right Column: Examination Form & Patient Past Timeline (8 cols) */}
         <div id="exam-workstation" className="lg:col-span-7 xl:col-span-8 space-y-6 scroll-mt-6">
           {selectedVisit ? (
             <>
-              {/* Active Patient Examination Form */}
               <ExaminationForm
                 key={selectedVisit.id}
                 visit={selectedVisit}
                 onSaveSuccess={handleSaveSuccess}
               />
 
-              {/* Patient Historical Visits Timeline */}
               <PatientHistoryTimeline
                 patientId={selectedVisit.pasien_id}
                 currentVisitId={selectedVisit.id}
               />
             </>
           ) : (
-            /* Empty Selection State */
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-2xs space-y-4">
-              <div className="w-16 h-16 rounded-full bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
-                <Stethoscope className="w-8 h-8" />
+            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs space-y-4">
+              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
+                <Stethoscope className="w-8 h-8" weight="duotone" />
               </div>
 
               <div className="max-w-md mx-auto space-y-1.5">
-                <h3 className="text-base font-bold text-slate-800">
+                <h3 className="text-base font-bold text-slate-900">
                   Belum Ada Pasien yang Dipilih
                 </h3>
                 <p className="text-xs text-slate-500 leading-relaxed">
@@ -221,8 +201,7 @@ export default function RekamMedisPage() {
               {visits.length === 0 && !isLoading && (
                 <div className="pt-2">
                   <Link href="/pendaftaran">
-                    <Button variant="primary" size="sm" className="text-xs gap-1.5 bg-blue-600 hover:bg-blue-700">
-                      <PlusCircle className="w-3.5 h-3.5" />
+                    <Button variant="primary" size="sm" leftIcon={<PlusCircle className="w-4 h-4" weight="duotone" />} className="text-xs min-h-[44px]">
                       Daftarkan Pasien di Loket
                     </Button>
                   </Link>

@@ -51,12 +51,13 @@ features:
     active_phase: requirements
 
 active:
-  feature_id: "F-004"
-  task_id: "TASK-007"
+  feature_id: "F-002"
+  task_id: "TASK-F002-UI"
   branch: "staging"
 
 blockers: []
 risks: []
 
-last_updated: "2026-09-19"
-last_verified_commit: "migration-verified"
+last_updated: "2026-09-22"
+last_verified_commit: "dfd87a5"
+

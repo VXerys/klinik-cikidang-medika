@@ -93,3 +93,10 @@ TASK-007 (End-to-End Verification & Quality Gate)
 - **Objective:** Run static analysis, type checking (`npx tsc --noEmit`), production build verification (`npm run build`), and context validation (`npm run context:validate`).
 - **Commands:** `npx tsc --noEmit`, `npm run build`, `npm run context:validate`
 - **Requirement References:** All acceptance criteria
+
+### [x] TASK-008 — Medical UI & Clinical Standardization (Phosphor Duotone, Vital Signs, Quick Presets, Toast)
+- **Objective:** Standardize `QueueList.tsx`, `ExaminationForm.tsx`, `Icd10QuickPicker.tsx`, and `PatientHistoryTimeline.tsx` with Phosphor Duotone + Health Icons, structured vital signs classification, popular prescription preset chips, Sonner toast feedback, and antislop-code hygiene.
+- **Target Files:** `src/components/rekam-medis/*`, `src/app/rekam-medis/page.tsx`
+- **Requirement References:** FR-001 through FR-006, Quality Locks, Anti-Slop Delivery Gate
+
+

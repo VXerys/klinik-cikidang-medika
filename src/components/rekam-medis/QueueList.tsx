@@ -1,9 +1,15 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Users, Search, RefreshCw, Clock, CheckCircle2, AlertCircle } from 'lucide-react';
+import {
+  Users,
+  MagnifyingGlass,
+  ArrowClockwise,
+  Clock,
+  CheckCircle,
+} from '@phosphor-icons/react';
 import type { Visit } from '@/types/database';
-import { Badge } from '@/components/ui/Badge';
+import { Badge } from '@/components/ui';
 import { cn } from '@/lib/utils';
 
 export interface QueueListProps {
@@ -24,17 +30,13 @@ export function QueueList({
   const [filterStatus, setFilterStatus] = useState<'all' | 'waiting' | 'done'>('waiting');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Helper to determine if a visit is completed
   const isVisitDone = (v: Visit) => Boolean(v.kode_icd10 || v.diagnosa_deskripsi || v.terapi_obat);
 
-  // Filter visits
   const filteredVisits = visits.filter((v) => {
-    // Status filter
     const done = isVisitDone(v);
     if (filterStatus === 'waiting' && done) return false;
     if (filterStatus === 'done' && !done) return false;
 
-    // Search filter
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase();
       const nameMatch = v.pasien?.nama?.toLowerCase().includes(q) || false;
@@ -50,13 +52,12 @@ export function QueueList({
   const doneCount = visits.filter((v) => isVisitDone(v)).length;
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col h-[400px] lg:h-[calc(100vh-140px)] min-h-0">
-      {/* Header Bar */}
+    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs flex flex-col h-[420px] lg:h-[calc(100vh-140px)] min-h-0">
       <div className="p-4 border-b border-slate-200 bg-slate-50/70 space-y-3 shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="p-1.5 bg-blue-100 text-blue-700 rounded-lg shrink-0">
-              <Users className="w-4 h-4" />
+            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl shrink-0">
+              <Users className="w-4 h-4" weight="duotone" />
             </div>
             <div>
               <h2 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
@@ -72,33 +73,32 @@ export function QueueList({
             type="button"
             onClick={onRefresh}
             disabled={isLoading}
-            className="p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition min-w-[36px] min-h-[36px] flex items-center justify-center"
+            className="p-2 text-slate-500 hover:text-slate-700 hover:bg-slate-200 rounded-lg transition min-w-[40px] min-h-[40px] flex items-center justify-center"
             title="Muat ulang antrean"
-            aria-label="Muat ulang antrean"
+            aria-label="Muat ulang antrean pasien"
           >
-            <RefreshCw className={cn('w-4 h-4', isLoading && 'animate-spin text-blue-600')} />
+            <ArrowClockwise className={cn('w-4 h-4', isLoading && 'animate-spin text-blue-600')} weight="bold" />
           </button>
         </div>
 
-        {/* Search in Queue */}
-        <div className="relative">
-          <Search className="w-3.5 h-3.5 absolute left-2.5 top-3 text-slate-400 pointer-events-none" />
+        <div className="relative flex items-center">
+          <MagnifyingGlass className="w-4 h-4 absolute left-3 text-slate-400 pointer-events-none" weight="duotone" />
           <input
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            placeholder="Cari nama atau No RM..."
-            className="w-full pl-8 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-lg outline-none focus:ring-2 focus:ring-blue-500 min-h-[38px]"
+            placeholder="Cari nama, No RM, atau desa..."
+            aria-label="Cari pasien dalam antrean"
+            className="w-full pl-9 pr-3 py-2 text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 min-h-[40px]"
           />
         </div>
 
-        {/* Filter Pills */}
-        <div className="flex rounded-lg bg-slate-200/80 p-0.5 text-[11px] font-medium min-h-[36px] items-center">
+        <div className="flex rounded-xl bg-slate-200/80 p-0.5 text-[11px] font-medium min-h-[38px] items-center">
           <button
             type="button"
             onClick={() => setFilterStatus('waiting')}
             className={cn(
-              'flex-1 py-1.5 text-center rounded-md transition flex items-center justify-center gap-1 min-h-[30px]',
+              'flex-1 py-1.5 text-center rounded-lg transition flex items-center justify-center gap-1.5 min-h-[32px]',
               filterStatus === 'waiting'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
@@ -114,7 +114,7 @@ export function QueueList({
             type="button"
             onClick={() => setFilterStatus('done')}
             className={cn(
-              'flex-1 py-1.5 text-center rounded-md transition flex items-center justify-center gap-1 min-h-[30px]',
+              'flex-1 py-1.5 text-center rounded-lg transition flex items-center justify-center gap-1.5 min-h-[32px]',
               filterStatus === 'done'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
@@ -130,7 +130,7 @@ export function QueueList({
             type="button"
             onClick={() => setFilterStatus('all')}
             className={cn(
-              'flex-1 py-1.5 text-center rounded-md transition min-h-[30px]',
+              'flex-1 py-1.5 text-center rounded-lg transition min-h-[32px]',
               filterStatus === 'all'
                 ? 'bg-white text-slate-900 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
@@ -141,18 +141,17 @@ export function QueueList({
         </div>
       </div>
 
-      {/* Queue List Content */}
       <div className="flex-1 overflow-y-auto divide-y divide-slate-100 p-2 space-y-1.5">
         {isLoading ? (
           <div className="p-8 text-center text-slate-400 space-y-2">
-            <RefreshCw className="w-5 h-5 animate-spin mx-auto text-blue-500" />
+            <ArrowClockwise className="w-5 h-5 animate-spin mx-auto text-blue-600" weight="bold" />
             <p className="text-xs">Memuat antrean pasien...</p>
           </div>
         ) : filteredVisits.length === 0 ? (
           <div className="p-8 text-center text-slate-400 space-y-2">
-            <Clock className="w-8 h-8 mx-auto text-slate-300" />
-            <p className="text-xs font-semibold text-slate-600">Tidak ada pasien dalam antrean</p>
-            <p className="text-[11px] text-slate-400">
+            <Clock className="w-8 h-8 mx-auto text-slate-300" weight="duotone" />
+            <p className="text-xs font-semibold text-slate-700">Tidak ada pasien dalam antrean</p>
+            <p className="text-[11px] text-slate-500">
               {filterStatus === 'waiting'
                 ? 'Seluruh pasien yang terdaftar sudah selesai diperiksa.'
                 : 'Belum ada pendaftaran pasien yang sesuai filter.'}
@@ -173,13 +172,13 @@ export function QueueList({
                 className={cn(
                   'p-3 rounded-xl border transition cursor-pointer select-none space-y-1.5',
                   isSelected
-                    ? 'border-blue-600 bg-blue-50/60 shadow-xs ring-1 ring-blue-500'
+                    ? 'border-blue-600 bg-blue-50/70 shadow-xs ring-1 ring-blue-500'
                     : 'border-slate-200 hover:border-slate-300 hover:bg-slate-50/60'
                 )}
               >
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5 min-w-0">
-                    <span className="font-mono font-bold text-xs bg-slate-100 text-slate-800 px-1.5 py-0.5 rounded shrink-0">
+                    <span className="font-mono font-bold text-xs bg-slate-100 text-slate-800 px-2 py-0.5 rounded-md shrink-0">
                       #{visit.nomor_antrian || '-'}
                     </span>
                     <span className="font-bold text-xs text-slate-900 truncate">
@@ -189,12 +188,12 @@ export function QueueList({
 
                   {done ? (
                     <Badge variant="lunas" className="shrink-0 text-[10px]">
-                      <CheckCircle2 className="w-3 h-3 text-emerald-600" />
+                      <CheckCircle className="w-3 h-3 text-emerald-600" weight="duotone" />
                       Selesai
                     </Badge>
                   ) : (
                     <Badge variant="pending" className="shrink-0 text-[10px]">
-                      <Clock className="w-3 h-3 text-amber-600" />
+                      <Clock className="w-3 h-3 text-amber-600" weight="duotone" />
                       Menunggu
                     </Badge>
                   )}
@@ -220,9 +219,8 @@ export function QueueList({
                   </Badge>
                 </div>
 
-                {/* Complaint preview */}
                 {visit.keluhan_anamnesa && (
-                  <p className="text-[10px] text-slate-600 line-clamp-1 bg-white/80 p-1 rounded border border-slate-100">
+                  <p className="text-[10px] text-slate-600 line-clamp-1 bg-white/80 p-1.5 rounded-lg border border-slate-100">
                     <span className="font-semibold text-slate-700">Keluhan: </span>
                     {visit.keluhan_anamnesa}
                   </p>
