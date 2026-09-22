@@ -4,13 +4,13 @@ import React from 'react';
 import Link from 'next/link';
 import {
   Wallet,
-  Building,
+  Buildings,
   ArrowUpRight,
   ArrowDownLeft,
   Coins,
-  ChevronRight,
+  CaretRight,
   Receipt,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { formatRupiah } from '@/lib/utils';
 import type { CashFlow } from '@/types/database';
 
@@ -49,7 +49,7 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
-              <Wallet className="w-5 h-5" />
+              <Wallet className="w-5 h-5 text-emerald-700" weight="duotone" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 tracking-tight">
@@ -65,7 +65,7 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
             className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1"
           >
             <span>Buku Kas</span>
-            <ChevronRight className="w-3.5 h-3.5" />
+            <CaretRight className="w-3.5 h-3.5" />
           </Link>
         </div>
 
@@ -75,7 +75,7 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
           <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200/80 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-slate-600 flex items-center gap-1.5">
-                <Coins className="w-3.5 h-3.5 text-amber-500" />
+                <Coins className="w-3.5 h-3.5 text-amber-500" weight="duotone" />
                 Kas Tunai Laci Loket
               </span>
               <span className="text-[10px] bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded font-bold">
@@ -94,7 +94,7 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
           <div className="p-3.5 rounded-xl bg-blue-50/50 border border-blue-100 space-y-1.5">
             <div className="flex items-center justify-between">
               <span className="text-[11px] font-semibold text-blue-900 flex items-center gap-1.5">
-                <Building className="w-3.5 h-3.5 text-blue-600" />
+                <Buildings className="w-3.5 h-3.5 text-blue-600" weight="duotone" />
                 Rekening Bank BRI
               </span>
               <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">
@@ -187,7 +187,7 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
           href="/buku-kas"
           className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-3 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-semibold transition min-h-[44px]"
         >
-          <Receipt className="w-3.5 h-3.5" />
+          <Receipt className="w-4 h-4" weight="duotone" />
           <span>Buka Pencatatan Kas Operasional Lengkap</span>
         </Link>
       </div>

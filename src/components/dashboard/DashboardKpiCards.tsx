@@ -4,12 +4,12 @@ import React from 'react';
 import {
   Users,
   CreditCard,
-  HeartHandshake,
+  Handshake,
   ArrowUpRight,
   Wallet,
-  TrendingUp,
-  AlertCircle,
-} from 'lucide-react';
+  TrendUp,
+  WarningCircle,
+} from '@phosphor-icons/react';
 import { formatRupiah } from '@/lib/utils';
 
 export interface DashboardKpiData {
@@ -52,7 +52,7 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
       title: 'Total Kunjungan',
       value: data.totalVisits.toLocaleString('id-ID'),
       subtitle: `${data.uniquePatients.toLocaleString('id-ID')} Pasien Terdaftar`,
-      subIcon: TrendingUp,
+      subIcon: TrendUp,
       subColor: 'text-emerald-600',
       icon: Users,
       iconBg: 'bg-blue-50 text-blue-600',
@@ -70,7 +70,7 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
       value: formatRupiah(data.bpjsRevenue),
       subtitle: 'Pencairan Klaim FKTP',
       subColor: 'text-slate-500',
-      icon: HeartHandshake,
+      icon: Handshake,
       iconBg: 'bg-teal-50 text-teal-600',
     },
     {
@@ -85,7 +85,7 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
       title: 'Saldo Kas Bersih',
       value: formatRupiah(data.netIncome),
       subtitle: data.netIncome >= 0 ? 'Surplus Arus Kas' : 'Defisit Arus Kas',
-      subIcon: data.netIncome >= 0 ? TrendingUp : AlertCircle,
+      subIcon: data.netIncome >= 0 ? TrendUp : WarningCircle,
       subColor: data.netIncome >= 0 ? 'text-emerald-600 font-medium' : 'text-rose-600 font-medium',
       icon: Wallet,
       iconBg: data.netIncome >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600',
@@ -109,7 +109,7 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
                   {card.title}
                 </span>
                 <div className={`p-2 rounded-xl shrink-0 ${card.iconBg}`}>
-                  <IconComponent className="w-4 h-4" />
+                  <IconComponent className="w-5 h-5" weight="duotone" />
                 </div>
               </div>
               <div className="text-xl sm:text-2xl font-bold text-slate-900 font-mono tracking-tight">
@@ -117,7 +117,7 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
               </div>
             </div>
             <div className={`flex items-center gap-1.5 text-xs mt-3.5 ${card.subColor}`}>
-              {SubIconComponent && <SubIconComponent className="w-3.5 h-3.5 shrink-0" />}
+              {SubIconComponent && <SubIconComponent className="w-3.5 h-3.5 shrink-0" weight="bold" />}
               <span className="truncate">{card.subtitle}</span>
             </div>
           </div>

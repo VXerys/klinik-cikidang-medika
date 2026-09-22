@@ -4,24 +4,24 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
-  LayoutDashboard,
+  House,
   UserPlus,
   Stethoscope,
+  Heartbeat,
   Wallet,
-  FileSpreadsheet,
-  Building2,
-  ChevronRight,
-  HeartPulse,
+  FileXls,
+  Buildings,
+  CaretRight,
   X,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 
 const menus = [
-  { href: '/', label: 'Dashboard Ringkasan', icon: LayoutDashboard },
+  { href: '/', label: 'Dashboard Ringkasan', icon: House },
   { href: '/pendaftaran', label: 'Loket & Kasir', icon: UserPlus },
   { href: '/rekam-medis', label: 'Pemeriksaan Dokter', icon: Stethoscope },
-  { href: '/program-khusus', label: 'Program Khusus Medis', icon: HeartPulse },
+  { href: '/program-khusus', label: 'Program Khusus Medis', icon: Heartbeat },
   { href: '/buku-kas', label: 'Buku Kas Operasional', icon: Wallet },
-  { href: '/laporan', label: 'Laporan & Ekspor Excel', icon: FileSpreadsheet },
+  { href: '/laporan', label: 'Laporan & Ekspor Excel', icon: FileXls },
 ];
 
 export interface SidebarProps {
@@ -52,10 +52,13 @@ export default function Sidebar({ isMobileOpen = false, onCloseMobile }: Sidebar
             }`}
           >
             <div className="flex items-center gap-3">
-              <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`} />
+              <Icon
+                className={`w-5 h-5 shrink-0 ${isActive ? 'text-white' : 'text-slate-400'}`}
+                weight="duotone"
+              />
               <span>{item.label}</span>
             </div>
-            {isActive && <ChevronRight className="w-4 h-4 text-blue-200 shrink-0" />}
+            {isActive && <CaretRight className="w-4 h-4 text-blue-200 shrink-0" weight="bold" />}
           </Link>
         );
       })}
@@ -78,7 +81,7 @@ export default function Sidebar({ isMobileOpen = false, onCloseMobile }: Sidebar
       <aside className="hidden lg:flex w-64 bg-slate-900 text-slate-100 flex-col shrink-0 min-h-screen border-r border-slate-800 select-none">
         <div className="p-5 border-b border-slate-800 flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-600/30 shrink-0">
-            <Building2 className="w-5 h-5" />
+            <Buildings className="w-5 h-5 text-white" weight="duotone" />
           </div>
           <div className="min-w-0">
             <h1 className="font-bold text-sm tracking-wide text-white leading-tight truncate">
@@ -113,7 +116,7 @@ export default function Sidebar({ isMobileOpen = false, onCloseMobile }: Sidebar
             <div className="p-4 border-b border-slate-800 flex items-center justify-between">
               <div className="flex items-center gap-3 min-w-0">
                 <div className="w-9 h-9 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-600/30 shrink-0">
-                  <Building2 className="w-5 h-5" />
+                  <Buildings className="w-5 h-5 text-white" weight="duotone" />
                 </div>
                 <div className="min-w-0">
                   <h2 className="font-bold text-sm tracking-wide text-white leading-tight truncate">

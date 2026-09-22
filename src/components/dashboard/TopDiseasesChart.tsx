@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Activity, Stethoscope } from 'lucide-react';
+import { Heartbeat, Stethoscope } from '@phosphor-icons/react';
 
 export interface DiseaseStat {
   code: string;
@@ -48,7 +48,7 @@ export function TopDiseasesChart({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-teal-50 text-teal-700 rounded-xl shrink-0">
-              <Activity className="w-4 h-4" />
+              <Heartbeat className="w-5 h-5 text-teal-700" weight="duotone" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900 tracking-tight">
@@ -66,7 +66,7 @@ export function TopDiseasesChart({
 
         {data.length === 0 ? (
           <div className="py-12 text-center text-slate-400 space-y-2">
-            <Stethoscope className="w-8 h-8 mx-auto text-slate-300" />
+            <Stethoscope className="w-8 h-8 mx-auto text-slate-300" weight="duotone" />
             <p className="text-xs">Tidak ada data diagnosa pada periode terpilih</p>
           </div>
         ) : (

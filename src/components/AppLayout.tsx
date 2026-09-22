@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import { usePathname } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
+import { CommandMenu } from '@/components/CommandMenu';
 
 export interface AppLayoutProps {
   children: React.ReactNode;
@@ -46,6 +47,9 @@ export default function AppLayout({ children }: AppLayoutProps) {
           </div>
         </main>
       </div>
+
+      {/* Global Command Palette (Ctrl+K) */}
+      <CommandMenu />
     </div>
   );
 }

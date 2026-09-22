@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Building, MapPin, ShieldCheck, User } from 'lucide-react';
+import { Buildings, MapPin, ShieldCheck, User } from '@phosphor-icons/react';
 
 export interface VillageStat {
   village: string;
@@ -47,7 +47,7 @@ export function VillageDistributionCard({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
           <div className="flex items-center gap-2">
             <div className="p-2 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-              <Building className="w-4 h-4" />
+              <Buildings className="w-5 h-5 text-blue-600" weight="duotone" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900 tracking-tight">
@@ -67,11 +67,11 @@ export function VillageDistributionCard({
         <div className="bg-slate-50 border border-slate-200/80 rounded-xl p-3 mb-4 space-y-2">
           <div className="flex justify-between items-center text-xs">
             <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-              <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+              <ShieldCheck className="w-4 h-4 text-teal-600" weight="duotone" />
               <span>BPJS: {bpjsCount.toLocaleString('id-ID')} ({bpjsPct.toFixed(1)}%)</span>
             </div>
             <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-              <User className="w-3.5 h-3.5 text-blue-600" />
+              <User className="w-4 h-4 text-blue-600" weight="duotone" />
               <span>Umum: {umumCount.toLocaleString('id-ID')} ({umumPct.toFixed(1)}%)</span>
             </div>
           </div>
@@ -92,7 +92,7 @@ export function VillageDistributionCard({
         {/* List Wilayah Desa */}
         {villages.length === 0 ? (
           <div className="py-8 text-center text-slate-400 space-y-2">
-            <MapPin className="w-8 h-8 mx-auto text-slate-300" />
+            <MapPin className="w-8 h-8 mx-auto text-slate-300" weight="duotone" />
             <p className="text-xs">Tidak ada data wilayah pada periode terpilih</p>
           </div>
         ) : (
@@ -103,7 +103,7 @@ export function VillageDistributionCard({
                 className="flex items-center justify-between p-2.5 rounded-xl bg-slate-50/70 border border-slate-100 hover:border-slate-200 transition text-xs"
               >
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                  <MapPin className="w-4 h-4 text-slate-400 shrink-0" weight="duotone" />
                   <span className="font-semibold text-slate-700 truncate">
                     Desa {v.village}
                   </span>

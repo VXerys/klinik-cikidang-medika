@@ -3,15 +3,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import {
-  UserCheck,
-  FileSpreadsheet,
+  UserPlus,
+  FileXls,
   Wallet,
   Stethoscope,
-  RefreshCw,
-  AlertCircle,
+  ArrowClockwise,
+  WarningCircle,
   Clock,
-  HeartPulse,
-} from 'lucide-react';
+  Heartbeat,
+} from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeRupiah } from '@/lib/utils';
 import {
@@ -400,7 +400,7 @@ export default function DashboardPage() {
             </h1>
             {lastRefreshed && (
               <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md font-mono">
-                <Clock className="w-3 h-3" />
+                <Clock className="w-3.5 h-3.5" weight="duotone" />
                 {lastRefreshed}
               </span>
             )}
@@ -415,7 +415,7 @@ export default function DashboardPage() {
             href="/pendaftaran"
             className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
           >
-            <UserCheck className="w-4 h-4 shrink-0" />
+            <UserPlus className="w-4 h-4 shrink-0" weight="duotone" />
             <span>+ Pasien Baru / Kasir</span>
           </Link>
 
@@ -423,7 +423,7 @@ export default function DashboardPage() {
             href="/program-khusus"
             className="inline-flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:outline-none"
           >
-            <HeartPulse className="w-4 h-4 shrink-0" />
+            <Heartbeat className="w-4 h-4 shrink-0" weight="duotone" />
             <span>Program Khusus</span>
           </Link>
 
@@ -431,7 +431,7 @@ export default function DashboardPage() {
             href="/buku-kas"
             className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
           >
-            <Wallet className="w-4 h-4 shrink-0 text-slate-500" />
+            <Wallet className="w-4 h-4 shrink-0 text-slate-500" weight="duotone" />
             <span>Buku Kas</span>
           </Link>
 
@@ -439,7 +439,7 @@ export default function DashboardPage() {
             href="/laporan"
             className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
           >
-            <FileSpreadsheet className="w-4 h-4 shrink-0" />
+            <FileXls className="w-4 h-4 shrink-0" weight="duotone" />
             <span>Laporan & Excel</span>
           </Link>
 
@@ -450,7 +450,7 @@ export default function DashboardPage() {
             title="Muat Ulang Data"
             className="inline-flex items-center justify-center p-2.5 min-h-[44px] min-w-[44px] bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-600 transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+            <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} weight="bold" />
           </button>
         </div>
       </div>
@@ -459,7 +459,7 @@ export default function DashboardPage() {
       {errorMessage && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
             <span>{errorMessage}</span>
           </div>
           <button

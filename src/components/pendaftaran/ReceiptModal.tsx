@@ -1,10 +1,11 @@
 'use client';
 
 import React, { useRef } from 'react';
-import { Printer, CheckCircle2 } from 'lucide-react';
+import { Printer, CheckCircle } from '@phosphor-icons/react';
+import { useReactToPrint } from 'react-to-print';
 import type { Visit } from '@/types/database';
 import { CLINIC_PROFILE } from '@/constants/clinic';
-import { Modal, Button, Badge } from '@/components/ui';
+import { Modal, Button } from '@/components/ui';
 import { formatRupiah } from '@/lib/utils';
 
 export interface ReceiptModalProps {
@@ -16,19 +17,22 @@ export interface ReceiptModalProps {
 export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
   const printRef = useRef<HTMLDivElement>(null);
 
-  if (!isOpen || !visit) return null;
-
-  const patientFullName = visit.pasien
+  const patientFullName = visit?.pasien
     ? [visit.pasien.gelar, visit.pasien.nama].filter(Boolean).join(' ')
     : 'Pasien';
 
-  const doctorName = visit.dokter?.nama || 'Dokter Jaga';
-  const receiptNo = `KUI-${visit.tanggal_periksa.replace(/-/g, '')}-${String(visit.nomor_antrian || '1').padStart(3, '0')}`;
-  const totalAmount = Number(visit.biaya_periksa || 0) + Number(visit.pendapatan_lain || 0);
+  const doctorName = visit?.dokter?.nama || 'Dokter Jaga';
+  const receiptNo = visit
+    ? `KUI-${visit.tanggal_periksa.replace(/-/g, '')}-${String(visit.nomor_antrian || '1').padStart(3, '0')}`
+    : 'KUI-000';
+  const totalAmount = Number(visit?.biaya_periksa || 0) + Number(visit?.pendapatan_lain || 0);
 
-  const handlePrint = () => {
-    window.print();
-  };
+  const handlePrint = useReactToPrint({
+    contentRef: printRef,
+    documentTitle: `${receiptNo}-${patientFullName.replace(/\s+/g, '_')}`,
+  });
+
+  if (!isOpen || !visit) return null;
 
   return (
     <Modal
@@ -37,7 +41,7 @@ export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
       title="Kuitansi Pembayaran Pasien"
       icon={
         <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
-          <Printer className="w-5 h-5" />
+          <Printer className="w-5 h-5 text-blue-700" weight="duotone" />
         </div>
       }
       maxWidth="lg"
@@ -156,7 +160,7 @@ export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
         {/* Payment Status & Method */}
         <div className="flex justify-between items-center px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-lg text-xs print:bg-transparent print:border-slate-300">
           <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
-            <CheckCircle2 className="w-4 h-4 text-emerald-600 print:hidden" />
+            <CheckCircle className="w-4 h-4 text-emerald-600 print:hidden" weight="duotone" />
             <span>STATUS: LUNAS</span>
           </div>
           <div className="text-slate-700 text-[11px]">
@@ -199,7 +203,7 @@ export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
         <Button
           type="button"
           variant="primary"
-          leftIcon={<Printer className="w-4 h-4" />}
+          leftIcon={<Printer className="w-4 h-4" weight="duotone" />}
           onClick={handlePrint}
           className="w-full sm:w-auto min-h-[44px]"
         >

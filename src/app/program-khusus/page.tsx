@@ -2,16 +2,13 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
-  Pill,
-  Scissors,
-  Calendar,
-  AlertTriangle,
   Plus,
-  RefreshCw,
-  Clock,
-  CheckCircle2,
-  AlertCircle,
-} from 'lucide-react';
+  ArrowClockwise,
+  WarningCircle,
+  CalendarCheck,
+  Scissors,
+} from '@phosphor-icons/react';
+import { Lungs, BandageAdhesive } from 'healthicons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
@@ -145,7 +142,7 @@ export default function ProgramKhususPage() {
             title="Muat Ulang"
             className="p-2.5 min-h-[44px] min-w-[44px] bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-600 transition disabled:opacity-50 flex items-center justify-center"
           >
-            <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} />
+            <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} weight="bold" />
           </button>
         </div>
       </div>
@@ -154,7 +151,7 @@ export default function ProgramKhususPage() {
       {errorMessage && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
             <span>{errorMessage}</span>
           </div>
           <button
@@ -178,7 +175,7 @@ export default function ProgramKhususPage() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Pill className="w-4 h-4" />
+          <Lungs className="w-4 h-4 text-rose-600" />
           <span>Kartu Kendali TBC ({tbcList.length})</span>
           {mangkirTbcCount > 0 && (
             <span className="bg-rose-500 text-white text-[10px] px-1.5 py-0.2 rounded-full font-extrabold animate-pulse">
@@ -196,7 +193,7 @@ export default function ProgramKhususPage() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Scissors className="w-4 h-4" />
+          <BandageAdhesive className="w-4 h-4 text-blue-600" />
           <span>Sirkumsisi & Foto Luka ({circumcisionList.length})</span>
         </button>
 
@@ -209,7 +206,7 @@ export default function ProgramKhususPage() {
               : 'text-slate-600 hover:text-slate-900'
           }`}
         >
-          <Calendar className="w-4 h-4" />
+          <CalendarCheck className="w-4 h-4 text-emerald-600" weight="duotone" />
           <span>Agenda Pos-Rawat ({postCareList.length})</span>
           {todayPostCareCount > 0 && (
             <span className="bg-emerald-600 text-white text-[10px] px-1.5 py-0.2 rounded-full font-bold">
@@ -245,7 +242,7 @@ export default function ProgramKhususPage() {
                 </div>
               ) : tbcList.length === 0 ? (
                 <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
-                  <Pill className="w-8 h-8 mx-auto mb-2 text-slate-300" />
+                  <Lungs className="w-8 h-8 mx-auto mb-2 text-rose-300" />
                   <p className="text-xs font-semibold">Belum ada pasien terdaftar di program TBC.</p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
                     Klik tombol &quot;+ Pasien TBC Baru&quot; untuk memulai kartu kendali.

@@ -2,15 +2,14 @@
 
 import React, { useState } from 'react';
 import {
-  AlertTriangle,
-  CheckCircle2,
-  Calendar,
-  Pill,
-  ChevronRight,
+  Warning,
+  CheckCircle,
+  CaretRight,
   User,
-  Activity,
+  Heartbeat,
   FileText,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
+import { Lungs } from 'healthicons-react';
 import { toast } from 'sonner';
 import type { TbcProgram } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
@@ -71,7 +70,7 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-slate-100">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-xl bg-rose-50 border border-rose-100 flex items-center justify-center text-rose-600 font-bold shrink-0">
-            <Pill className="w-5 h-5" />
+            <Lungs className="w-5 h-5 text-rose-600" />
           </div>
           <div>
             <div className="flex items-center gap-2">
@@ -91,12 +90,12 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
         <div className="flex items-center gap-2">
           {isMangkir ? (
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold bg-rose-100 text-rose-700 border border-rose-200 animate-pulse">
-              <AlertTriangle className="w-3.5 h-3.5" />
+              <Warning className="w-3.5 h-3.5" weight="duotone" />
               Mangkir Kontrol
             </span>
           ) : (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-semibold bg-emerald-50 text-emerald-700 border border-emerald-200">
-              <CheckCircle2 className="w-3.5 h-3.5" />
+              <CheckCircle className="w-3.5 h-3.5" weight="duotone" />
               {program.status_tbc}
             </span>
           )}
@@ -164,7 +163,7 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
       {/* Lab Dahak & Catatan Tambahan */}
       <div className="bg-slate-50 p-3 rounded-xl border border-slate-200/80 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 text-xs">
         <div className="flex items-center gap-2 text-slate-600">
-          <Activity className="w-4 h-4 text-slate-400 shrink-0" />
+          <Heartbeat className="w-4 h-4 text-slate-400 shrink-0" weight="duotone" />
           <span>
             Evaluasi BTA Terakhir: <strong className="text-slate-800">{program.hasil_dahak_akhir || 'Belum Periksa'}</strong>
           </span>
@@ -180,7 +179,7 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
           className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs transition self-end sm:self-auto focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
         >
           <span>Update Status</span>
-          <ChevronRight className="w-3.5 h-3.5" />
+          <CaretRight className="w-3.5 h-3.5" />
         </button>
       </div>
 

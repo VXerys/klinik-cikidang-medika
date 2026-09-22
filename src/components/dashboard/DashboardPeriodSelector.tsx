@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Calendar } from 'lucide-react';
+import { Calendar } from '@phosphor-icons/react';
 
 export type DashboardPeriod = 'this_month' | 'last_month' | 'this_year' | 'all';
 
@@ -26,7 +26,7 @@ export function DashboardPeriodSelector({
   return (
     <div className="flex flex-wrap items-center gap-2 bg-slate-100 p-1.5 rounded-2xl w-full sm:w-auto">
       <div className="hidden lg:flex items-center gap-1.5 px-2.5 text-xs text-slate-500 font-medium shrink-0">
-        <Calendar className="w-3.5 h-3.5" />
+        <Calendar className="w-4 h-4 text-slate-400" weight="duotone" />
         <span>Periode:</span>
       </div>
       <div className="grid grid-cols-2 sm:flex sm:flex-row gap-1.5 w-full sm:w-auto">

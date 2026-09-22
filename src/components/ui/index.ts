@@ -9,3 +9,4 @@ export * from './tabs';
 export * from './dropdown-menu';
 export * from './table';
 export * from './sonner';
+export * from './command';
