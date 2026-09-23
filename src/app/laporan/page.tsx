@@ -1,13 +1,13 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
-  Download,
-  FileSpreadsheet,
-  Layers,
-  AlertCircle,
-  RefreshCw,
-} from 'lucide-react';
+  DownloadSimple,
+  Stack,
+  WarningCircle,
+  ArrowClockwise,
+} from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import { normalizeRupiah } from '@/lib/utils';
 import {
@@ -52,7 +52,6 @@ export default function LaporanPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Fetch doctors list on mount
   useEffect(() => {
     async function loadDoctors() {
       try {
@@ -66,7 +65,6 @@ export default function LaporanPage() {
     loadDoctors();
   }, []);
 
-  // Fetch report data
   const fetchReportData = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -75,7 +73,6 @@ export default function LaporanPage() {
       const supabase = createClient();
       const pageSize = 1000;
 
-      // 1. Fetch Visits with joined patient & doctor info
       let allVisits: any[] = [];
       let visitPage = 0;
 
@@ -102,7 +99,6 @@ export default function LaporanPage() {
         visitPage++;
       }
 
-      // 2. Fetch Cash Flows
       let allFlows: any[] = [];
       let flowPage = 0;
 
@@ -125,7 +121,6 @@ export default function LaporanPage() {
         flowPage++;
       }
 
-      // 3. Format Visits Export Rows
       const formattedVisits: VisitExportRow[] = allVisits.map((v) => {
         const biaya = normalizeRupiah(Number(v.biaya_periksa) || 0);
         const lain = normalizeRupiah(Number(v.pendapatan_lain) || 0);
@@ -147,7 +142,6 @@ export default function LaporanPage() {
         };
       });
 
-      // 4. Format Cash Flows Export Rows
       const formattedFlows: CashFlowExportRow[] = allFlows.map((f) => ({
         tanggal: f.tanggal,
         jenis: f.jenis,
@@ -156,7 +150,6 @@ export default function LaporanPage() {
         keterangan: f.keterangan || '-',
       }));
 
-      // 5. Aggregate Morbidity ICD-10
       const morbMap: Record<string, { code: string; name: string; count: number }> = {};
       let validDiagCount = 0;
 
@@ -188,9 +181,10 @@ export default function LaporanPage() {
       setMorbidityData(formattedMorbidity);
     } catch (err) {
       console.error('Error loading report data:', err);
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Gagal memuat data laporan dari server.'
-      );
+      const msg =
+        err instanceof Error ? err.message : 'Gagal memuat data laporan dari server.';
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -200,8 +194,9 @@ export default function LaporanPage() {
     fetchReportData();
   }, [fetchReportData]);
 
-  // Preset Handler
-  const handlePresetChange = (preset: 'today' | 'this_month' | 'last_month' | 'this_year' | 'all') => {
+  const handlePresetChange = (
+    preset: 'today' | 'this_month' | 'last_month' | 'this_year' | 'all'
+  ) => {
     const now = new Date();
     const yr = now.getFullYear();
     const mo = now.getMonth();
@@ -229,34 +224,45 @@ export default function LaporanPage() {
     handlePresetChange('this_month');
     setJenisPasien('Semua');
     setDokterId('Semua');
+    toast.info('Filter laporan telah direset ke bulan ini.');
   };
 
-  // Export Handlers
   const handleExportActiveTab = () => {
-    const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
+    try {
+      const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
 
-    if (activeTab === 'kunjungan') {
-      exportVisitsToExcel(visitsData, dateRange);
-    } else if (activeTab === 'morbiditas') {
-      exportMorbidityToExcel(morbidityData, dateRange);
-    } else if (activeTab === 'buku_kas') {
-      exportCashFlowsToExcel(cashFlowData, dateRange);
+      if (activeTab === 'kunjungan') {
+        exportVisitsToExcel(visitsData, dateRange);
+        toast.success(`Laporan kunjungan (${visitsData.length} baris) berhasil diunduh.`);
+      } else if (activeTab === 'morbiditas') {
+        exportMorbidityToExcel(morbidityData, dateRange);
+        toast.success(`Laporan morbiditas ICD-10 (${morbidityData.length} baris) berhasil diunduh.`);
+      } else if (activeTab === 'buku_kas') {
+        exportCashFlowsToExcel(cashFlowData, dateRange);
+        toast.success(`Laporan arus kas (${cashFlowData.length} baris) berhasil diunduh.`);
+      }
+    } catch {
+      toast.error('Gagal mengunduh file Excel.');
     }
   };
 
   const handleExportFullWorkbook = () => {
-    const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
-    exportFullClinicWorkbook({
-      visits: visitsData,
-      flows: cashFlowData,
-      morbidity: morbidityData,
-      dateRange,
-    });
+    try {
+      const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
+      exportFullClinicWorkbook({
+        visits: visitsData,
+        flows: cashFlowData,
+        morbidity: morbidityData,
+        dateRange,
+      });
+      toast.success('Buku kerja konsolidasi lengkap (3 sheet) berhasil diunduh.');
+    } catch {
+      toast.error('Gagal membuat buku kerja konsolidasi Excel.');
+    }
   };
 
   return (
     <div className="space-y-6 min-w-0 w-full">
-      {/* Header with Title and Download Actions */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
@@ -268,35 +274,32 @@ export default function LaporanPage() {
         </div>
 
         <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
-          {/* Export Active Tab Button */}
           <button
             type="button"
             onClick={handleExportActiveTab}
             disabled={isLoading || (activeTab === 'kunjungan' && visitsData.length === 0)}
-            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
+            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-2xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
           >
-            <Download className="w-4 h-4 shrink-0 text-slate-500" />
+            <DownloadSimple weight="duotone" className="w-4 h-4 shrink-0 text-slate-500" />
             <span>Unduh Tab Ini (.xlsx)</span>
           </button>
 
-          {/* Export Full 3-Sheet Workbook (Recommended) */}
           <button
             type="button"
             onClick={handleExportFullWorkbook}
             disabled={isLoading || (visitsData.length === 0 && cashFlowData.length === 0)}
-            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
+            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-2xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
           >
-            <Layers className="w-4 h-4 shrink-0" />
+            <Stack weight="duotone" className="w-4 h-4 shrink-0" />
             <span>Unduh Rekap Lengkap (3 Sheet)</span>
           </button>
         </div>
       </div>
 
-      {/* Error Alert */}
       {errorMessage && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
+            <WarningCircle weight="duotone" className="w-4 h-4 shrink-0 text-rose-600" />
             <span>{errorMessage}</span>
           </div>
           <button
@@ -309,7 +312,6 @@ export default function LaporanPage() {
         </div>
       )}
 
-      {/* Filter Parameters Bar */}
       <ReportFilterBar
         startDate={startDate}
         endDate={endDate}
@@ -326,7 +328,6 @@ export default function LaporanPage() {
         isLoading={isLoading}
       />
 
-      {/* Report Tabs */}
       <ReportTabs
         activeTab={activeTab}
         onChangeTab={setActiveTab}
@@ -337,7 +338,6 @@ export default function LaporanPage() {
         }}
       />
 
-      {/* Interactive Preview Table */}
       <ReportPreviewTable
         activeTab={activeTab}
         visitsData={visitsData}

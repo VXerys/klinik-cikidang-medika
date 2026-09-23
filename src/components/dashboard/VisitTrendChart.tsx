@@ -2,12 +2,12 @@
 
 import React, { useState, useEffect } from 'react';
 import {
-  TrendingUp,
-  Calendar,
-  BarChart2,
+  TrendUp,
+  CalendarBlank,
+  ChartBar,
   Users,
-  Award,
-} from 'lucide-react';
+  Trophy,
+} from '@phosphor-icons/react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -51,7 +51,6 @@ export function VisitTrendChart({
 
   const currentData: TrendPoint[] = viewMode === 'daily' ? dailyData : monthlyData;
 
-  // Find peak point
   const peakPoint =
     currentData.length > 0
       ? currentData.reduce((max, p) => (p.total > max.total ? p : max), currentData[0])
@@ -66,7 +65,7 @@ export function VisitTrendChart({
       <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 animate-pulse">
         <div className="flex justify-between items-center">
           <div className="h-5 w-48 bg-slate-200 rounded"></div>
-          <div className="h-8 w-40 bg-slate-200 rounded-xl"></div>
+          <div className="h-10 w-48 bg-slate-200 rounded-xl"></div>
         </div>
         <div className="h-64 w-full bg-slate-100 rounded-xl"></div>
       </div>
@@ -75,11 +74,10 @@ export function VisitTrendChart({
 
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-      {/* Header & View Mode Switcher */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
-          <div className="p-2 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-            <TrendingUp className="w-5 h-5" />
+          <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
+            <TrendUp weight="duotone" className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-slate-900 tracking-tight">
@@ -91,34 +89,34 @@ export function VisitTrendChart({
           </div>
         </div>
 
-        {/* Dual View Toggle Buttons */}
         <div className="flex items-center p-1 bg-slate-100 rounded-xl self-start sm:self-auto border border-slate-200/80">
           <button
             type="button"
             onClick={() => setViewMode('daily')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[36px] ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
               viewMode === 'daily'
                 ? 'bg-white text-blue-700 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            14 Hari Terakhir
+            <CalendarBlank weight="duotone" className="w-3.5 h-3.5" />
+            <span>14 Hari Terakhir</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode('monthly')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[36px] ${
+            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
               viewMode === 'monthly'
                 ? 'bg-white text-blue-700 shadow-xs font-bold'
                 : 'text-slate-600 hover:text-slate-900'
             }`}
           >
-            12 Bulan Berjalan
+            <ChartBar weight="duotone" className="w-3.5 h-3.5" />
+            <span>12 Bulan Berjalan</span>
           </button>
         </div>
       </div>
 
-      {/* Summary Micro-Badges */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
         <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
           <span className="text-[10px] text-slate-400 font-medium block">Total Periode Ini</span>
@@ -150,7 +148,10 @@ export function VisitTrendChart({
 
         {peakPoint && (
           <div className="bg-amber-50/60 p-2.5 rounded-xl border border-amber-100">
-            <span className="text-[10px] text-amber-700 font-medium block">Puncak Pasien (Peak)</span>
+            <span className="text-[10px] text-amber-700 font-medium flex items-center gap-1">
+              <Trophy weight="duotone" className="w-3 h-3 text-amber-600" />
+              <span>Puncak Pasien (Peak)</span>
+            </span>
             <span className="text-sm font-bold text-amber-900 font-mono">
               {peakPoint.total} Pasien
             </span>
@@ -161,7 +162,6 @@ export function VisitTrendChart({
         )}
       </div>
 
-      {/* Recharts Chart Container */}
       <div className="w-full h-72 pt-2">
         {isMounted ? (
           <ResponsiveContainer width="100%" height="100%">
@@ -191,7 +191,7 @@ export function VisitTrendChart({
                     const umumVal = (payload[1]?.value as number) || 0;
                     const totVal = bpjsVal + umumVal;
                     return (
-                      <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl text-xs space-y-1.5 border border-slate-700">
+                      <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-xl text-xs space-y-1.5 border border-slate-700">
                         <div className="font-bold text-slate-200 border-b border-slate-700 pb-1">
                           {label}
                         </div>
@@ -243,3 +243,5 @@ export function VisitTrendChart({
     </div>
   );
 }
+
+export default VisitTrendChart;

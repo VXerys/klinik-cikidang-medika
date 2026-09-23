@@ -2,12 +2,12 @@
 
 import React, { useState, useMemo } from 'react';
 import {
-  Search,
-  ChevronLeft,
-  ChevronRight,
+  MagnifyingGlass,
+  CaretLeft,
+  CaretRight,
   FileText,
-  AlertCircle,
-} from 'lucide-react';
+  WarningCircle,
+} from '@phosphor-icons/react';
 import { formatRupiah } from '@/lib/utils';
 import type {
   VisitExportRow,
@@ -35,7 +35,6 @@ export function ReportPreviewTable({
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(15);
 
-  // 1. Filtered data based on active tab & search
   const filteredData = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
 
@@ -74,14 +73,12 @@ export function ReportPreviewTable({
     return [];
   }, [activeTab, visitsData, morbidityData, cashFlowData, searchQuery]);
 
-  // Pagination slicing
   const totalRows = filteredData.length;
   const totalPages = Math.max(1, Math.ceil(totalRows / pageSize));
   const safePage = Math.min(currentPage, totalPages);
   const startIndex = (safePage - 1) * pageSize;
   const pageRows = filteredData.slice(startIndex, startIndex + pageSize);
 
-  // Calculations for Summary Footer
   const visitsSummary = useMemo(() => {
     let totalBiaya = 0;
     let umumCount = 0;
@@ -132,10 +129,12 @@ export function ReportPreviewTable({
 
   return (
     <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden space-y-0">
-      {/* Header Bar: Search & Page size */}
       <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50">
         <div className="relative w-full sm:w-80">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
+          <MagnifyingGlass
+            weight="duotone"
+            className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+          />
           <input
             type="text"
             placeholder="Cari data pada tabel..."
@@ -156,7 +155,7 @@ export function ReportPreviewTable({
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="px-2.5 py-1.5 min-h-[36px] bg-white border border-slate-200 rounded-lg text-xs font-semibold focus-visible:outline-none"
+            className="px-3 py-2 min-h-[44px] bg-white border border-slate-200 rounded-xl text-xs font-semibold focus-visible:outline-none"
           >
             <option value={15}>15</option>
             <option value={25}>25</option>
@@ -166,11 +165,10 @@ export function ReportPreviewTable({
         </div>
       </div>
 
-      {/* Main Table Container with strict horizontal overflow protection */}
       <div className="overflow-x-auto w-full">
         {pageRows.length === 0 ? (
           <div className="py-16 text-center text-slate-400 space-y-2">
-            <FileText className="w-10 h-10 mx-auto text-slate-300" />
+            <WarningCircle weight="duotone" className="w-10 h-10 mx-auto text-slate-300" />
             <p className="text-sm font-semibold text-slate-600">Tidak ada data ditemukan</p>
             <p className="text-xs text-slate-400 max-w-sm mx-auto">
               Cobalah mengatur ulang parameter filter tanggal atau kata kunci pencarian.
@@ -178,19 +176,18 @@ export function ReportPreviewTable({
           </div>
         ) : (
           <table className="w-full text-left text-xs text-slate-600">
-            {/* Render Headers Based on Active Tab */}
             {activeTab === 'kunjungan' && (
               <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 select-none whitespace-nowrap">
                 <tr>
-                  <th className="py-3 px-3">No RM</th>
-                  <th className="py-3 px-3">Nama Pasien</th>
-                  <th className="py-3 px-3">L/P</th>
-                  <th className="py-3 px-3">Desa</th>
-                  <th className="py-3 px-3">Tanggal</th>
-                  <th className="py-3 px-3">Dokter</th>
-                  <th className="py-3 px-3">Diagnosa ICD-10</th>
-                  <th className="py-3 px-3">Jenis Pasien</th>
-                  <th className="py-3 px-3 text-right">Biaya Kasir</th>
+                  <th className="py-3.5 px-3">No RM</th>
+                  <th className="py-3.5 px-3">Nama Pasien</th>
+                  <th className="py-3.5 px-3">L/P</th>
+                  <th className="py-3.5 px-3">Desa</th>
+                  <th className="py-3.5 px-3">Tanggal</th>
+                  <th className="py-3.5 px-3">Dokter</th>
+                  <th className="py-3.5 px-3">Diagnosa ICD-10</th>
+                  <th className="py-3.5 px-3">Jenis Pasien</th>
+                  <th className="py-3.5 px-3 text-right">Biaya Kasir</th>
                 </tr>
               </thead>
             )}
@@ -198,11 +195,11 @@ export function ReportPreviewTable({
             {activeTab === 'morbiditas' && (
               <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 select-none whitespace-nowrap">
                 <tr>
-                  <th className="py-3 px-3 w-16 text-center">Peringkat</th>
-                  <th className="py-3 px-3">Kode ICD-10</th>
-                  <th className="py-3 px-3">Nama Diagnosa Medis</th>
-                  <th className="py-3 px-3 text-right">Jumlah Kasus</th>
-                  <th className="py-3 px-3 text-right">Persentase</th>
+                  <th className="py-3.5 px-3 w-16 text-center">Peringkat</th>
+                  <th className="py-3.5 px-3">Kode ICD-10</th>
+                  <th className="py-3.5 px-3">Nama Diagnosa Medis</th>
+                  <th className="py-3.5 px-3 text-right">Jumlah Kasus</th>
+                  <th className="py-3.5 px-3 text-right">Persentase</th>
                 </tr>
               </thead>
             )}
@@ -210,35 +207,34 @@ export function ReportPreviewTable({
             {activeTab === 'buku_kas' && (
               <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 select-none whitespace-nowrap">
                 <tr>
-                  <th className="py-3 px-3">Tanggal</th>
-                  <th className="py-3 px-3">Jenis</th>
-                  <th className="py-3 px-3">Kategori Arus Kas</th>
-                  <th className="py-3 px-3">Keterangan</th>
-                  <th className="py-3 px-3 text-right">Nominal (Rp)</th>
+                  <th className="py-3.5 px-3">Tanggal</th>
+                  <th className="py-3.5 px-3">Jenis</th>
+                  <th className="py-3.5 px-3">Kategori Arus Kas</th>
+                  <th className="py-3.5 px-3">Keterangan</th>
+                  <th className="py-3.5 px-3 text-right">Nominal (Rp)</th>
                 </tr>
               </thead>
             )}
 
-            {/* Render Rows Based on Active Tab */}
             <tbody className="divide-y divide-slate-100 whitespace-nowrap">
               {activeTab === 'kunjungan' &&
                 (pageRows as VisitExportRow[]).map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="py-2.5 px-3 font-mono font-bold text-blue-700">
+                    <td className="py-3 px-3 font-mono font-bold text-blue-700">
                       {row.no_rm}
                     </td>
-                    <td className="py-2.5 px-3 font-medium text-slate-900">
+                    <td className="py-3 px-3 font-medium text-slate-900">
                       {row.nama_pasien}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-500">{row.jenis_kelamin}</td>
-                    <td className="py-2.5 px-3">{row.desa}</td>
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
+                    <td className="py-3 px-3 text-slate-500">{row.jenis_kelamin}</td>
+                    <td className="py-3 px-3">{row.desa}</td>
+                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
                       {row.tanggal_periksa}
                     </td>
-                    <td className="py-2.5 px-3 font-medium text-slate-700">
+                    <td className="py-3 px-3 font-medium text-slate-700">
                       {row.nama_dokter}
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-3 px-3">
                       <span className="font-mono font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded text-[11px] mr-1.5">
                         {row.kode_icd10 || '-'}
                       </span>
@@ -246,7 +242,7 @@ export function ReportPreviewTable({
                         {row.diagnosa_deskripsi || '-'}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-3 px-3">
                       <span
                         className={`px-2 py-0.5 rounded-md font-semibold text-[10px] ${
                           row.jenis_pasien === 'BPJS'
@@ -257,7 +253,7 @@ export function ReportPreviewTable({
                         {row.jenis_pasien}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-semibold text-slate-900">
+                    <td className="py-3 px-3 text-right font-mono font-semibold text-slate-900">
                       {formatRupiah(row.total_biaya)}
                     </td>
                   </tr>
@@ -266,19 +262,19 @@ export function ReportPreviewTable({
               {activeTab === 'morbiditas' &&
                 (pageRows as MorbidityExportRow[]).map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="py-2.5 px-3 text-center font-mono font-bold text-slate-700">
+                    <td className="py-3 px-3 text-center font-mono font-bold text-slate-700">
                       #{row.rank}
                     </td>
-                    <td className="py-2.5 px-3 font-mono font-bold text-teal-700">
+                    <td className="py-3 px-3 font-mono font-bold text-teal-700">
                       {row.kode_icd10}
                     </td>
-                    <td className="py-2.5 px-3 font-medium text-slate-900">
+                    <td className="py-3 px-3 font-medium text-slate-900">
                       {row.diagnosa_deskripsi}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-900">
+                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
                       {row.jumlah_kasus.toLocaleString('id-ID')}
                     </td>
-                    <td className="py-2.5 px-3 text-right font-mono font-medium text-slate-600">
+                    <td className="py-3 px-3 text-right font-mono font-medium text-slate-600">
                       {row.persentase.toFixed(2)}%
                     </td>
                   </tr>
@@ -287,10 +283,10 @@ export function ReportPreviewTable({
               {activeTab === 'buku_kas' &&
                 (pageRows as CashFlowExportRow[]).map((row, idx) => (
                   <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="py-2.5 px-3 font-mono text-[11px] text-slate-500">
+                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
                       {row.tanggal}
                     </td>
-                    <td className="py-2.5 px-3">
+                    <td className="py-3 px-3">
                       <span
                         className={`px-2 py-0.5 rounded-md font-semibold text-[10px] ${
                           row.jenis === 'Masuk'
@@ -301,14 +297,14 @@ export function ReportPreviewTable({
                         {row.jenis}
                       </span>
                     </td>
-                    <td className="py-2.5 px-3 font-medium text-slate-800">
+                    <td className="py-3 px-3 font-medium text-slate-800">
                       {row.kategori}
                     </td>
-                    <td className="py-2.5 px-3 text-slate-500 truncate max-w-xs">
+                    <td className="py-3 px-3 text-slate-500 truncate max-w-xs">
                       {row.keterangan || '-'}
                     </td>
                     <td
-                      className={`py-2.5 px-3 text-right font-mono font-bold ${
+                      className={`py-3 px-3 text-right font-mono font-bold ${
                         row.jenis === 'Masuk' ? 'text-emerald-600' : 'text-rose-600'
                       }`}
                     >
@@ -321,7 +317,6 @@ export function ReportPreviewTable({
         )}
       </div>
 
-      {/* Aggregate Summary Footer */}
       <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
         <div className="flex flex-wrap items-center gap-4 text-slate-600 font-medium">
           <span>
@@ -372,7 +367,6 @@ export function ReportPreviewTable({
           )}
         </div>
 
-        {/* Pagination Navigation */}
         <div className="flex items-center gap-2 self-end md:self-auto">
           <span className="text-slate-500 text-[11px]">
             Halaman {safePage} dari {totalPages}
@@ -381,20 +375,24 @@ export function ReportPreviewTable({
             type="button"
             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={safePage <= 1}
-            className="p-2 min-h-[36px] min-w-[36px] bg-white border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-40 transition"
+            aria-label="Halaman sebelumnya"
+            className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 transition"
           >
-            <ChevronLeft className="w-4 h-4 text-slate-600" />
+            <CaretLeft weight="bold" className="w-4 h-4 text-slate-600" />
           </button>
           <button
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={safePage >= totalPages}
-            className="p-2 min-h-[36px] min-w-[36px] bg-white border border-slate-200 rounded-lg hover:bg-slate-100 disabled:opacity-40 transition"
+            aria-label="Halaman selanjutnya"
+            className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 transition"
           >
-            <ChevronRight className="w-4 h-4 text-slate-600" />
+            <CaretRight weight="bold" className="w-4 h-4 text-slate-600" />
           </button>
         </div>
       </div>
     </div>
   );
 }
+
+export default ReportPreviewTable;

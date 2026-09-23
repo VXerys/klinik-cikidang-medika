@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 import {
   UserPlus,
   FileXls,
@@ -377,9 +378,10 @@ export default function DashboardPage() {
       setLastRefreshed(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Terjadi kesalahan saat memuat data dashboard.'
-      );
+      const msg =
+        err instanceof Error ? err.message : 'Terjadi kesalahan saat memuat data dashboard.';
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
@@ -445,7 +447,10 @@ export default function DashboardPage() {
 
           <button
             type="button"
-            onClick={fetchDashboardData}
+            onClick={() => {
+              fetchDashboardData();
+              toast.info('Memperbarui data dashboard...');
+            }}
             disabled={isLoading}
             title="Muat Ulang Data"
             className="inline-flex items-center justify-center p-2.5 min-h-[44px] min-w-[44px] bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-600 transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"

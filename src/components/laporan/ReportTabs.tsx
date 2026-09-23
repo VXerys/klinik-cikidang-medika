@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import { Users, Activity, Wallet } from 'lucide-react';
+import { Users, Heartbeat, Wallet } from '@phosphor-icons/react';
 
 export type ReportTabType = 'kunjungan' | 'morbiditas' | 'buku_kas';
 
@@ -16,9 +16,14 @@ interface ReportTabsProps {
 }
 
 export function ReportTabs({ activeTab, onChangeTab, counts }: ReportTabsProps) {
-  const tabs: { id: ReportTabType; label: string; icon: React.ElementType; countKey?: keyof NonNullable<typeof counts> }[] = [
+  const tabs: {
+    id: ReportTabType;
+    label: string;
+    icon: React.ElementType;
+    countKey?: keyof NonNullable<typeof counts>;
+  }[] = [
     { id: 'kunjungan', label: 'Rekap Kunjungan Pasien', icon: Users, countKey: 'kunjungan' },
-    { id: 'morbiditas', label: '10 Besar Penyakit (ICD-10)', icon: Activity, countKey: 'morbiditas' },
+    { id: 'morbiditas', label: '10 Besar Penyakit (ICD-10)', icon: Heartbeat, countKey: 'morbiditas' },
     { id: 'buku_kas', label: 'Arus Kas Operasional', icon: Wallet, countKey: 'buku_kas' },
   ];
 
@@ -40,7 +45,7 @@ export function ReportTabs({ activeTab, onChangeTab, counts }: ReportTabsProps) 
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100 bg-white border border-slate-200 sm:border-transparent'
             }`}
           >
-            <IconComponent className="w-4 h-4 shrink-0" />
+            <IconComponent weight="duotone" className="w-4 h-4 shrink-0" />
             <span>{tab.label}</span>
             {count !== undefined && (
               <span
@@ -57,3 +62,5 @@ export function ReportTabs({ activeTab, onChangeTab, counts }: ReportTabsProps) 
     </div>
   );
 }
+
+export default ReportTabs;

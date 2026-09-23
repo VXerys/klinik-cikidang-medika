@@ -51,8 +51,8 @@ features:
     active_phase: requirements
 
 active:
-  feature_id: "F-003"
-  task_id: "TASK-008"
+  feature_id: "F-004"
+  task_id: "TASK-008-UI-EXCEL"
   branch: "staging"
 
 blockers: []

@@ -20,7 +20,7 @@ export function DashboardPeriodSelector({
     { id: 'this_month', label: 'Bulan Ini' },
     { id: 'last_month', label: 'Bulan Lalu' },
     { id: 'this_year', label: 'Tahun 2026' },
-    { id: 'all', label: 'Semua Data (2024–2026)' },
+    { id: 'all', label: 'Semua Data (2024 - 2026)' },
   ];
 
   return (

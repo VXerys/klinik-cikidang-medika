@@ -1,9 +1,9 @@
 ---
 id: F-004-TASKS
 feature: F-004
-status: draft
+status: approved
 owner: "Developer"
-last_updated: "2026-09-19"
+last_updated: "2026-09-23"
 last_verified_commit: unverified
 related:
   - "requirements.md"
@@ -105,3 +105,15 @@ TASK-001 (Excel Export Utility: src/lib/excel.ts)
   - `npm run build`
   - `npm run context:validate`
 - **Requirement References:** All functional and non-functional requirements
+
+### [x] TASK-008 — Executive Dashboard & Report Center UI Standardization (Phosphor Duotone, Recharts, Sonner Toast, Anti-Slop)
+- **Objective:** Standardize visual design across `/` and `/laporan` by migrating remaining `lucide-react` icons to `@phosphor-icons/react` (`weight="duotone"`), polishing Recharts custom tooltip, adding Sonner toast notifications on Excel exports and data refresh, ensuring min 44x44px touch targets, and enforcing anti-slop code hygiene.
+- **Target Files:**
+  - `src/components/dashboard/VisitTrendChart.tsx`
+  - `src/components/dashboard/DashboardPeriodSelector.tsx`
+  - `src/components/laporan/ReportFilterBar.tsx`
+  - `src/components/laporan/ReportTabs.tsx`
+  - `src/components/laporan/ReportPreviewTable.tsx`
+  - `src/app/laporan/page.tsx`
+  - `src/app/page.tsx`
+- **Requirement References:** FR-001, FR-002, FR-003, FR-005, FR-006, FR-007, AC-005.1, AC-006.1
