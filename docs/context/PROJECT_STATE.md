@@ -18,22 +18,20 @@ Until then, verify project state directly from approved specs, Git, and `docs/ha
 <!-- GENERATED:GIT_FACTS:START -->
 ## Generated Git Facts
 
-- Refreshed at: 2026-09-23T04:08:49.080Z
+- Refreshed at: 2026-09-23T05:30:40.771Z
 - Branch: `staging`
-- HEAD: `81829a8`
+- HEAD: `7777bb2`
 - Worktree:
 
 ```text
-M docs/context/state.yaml
- M docs/handoff/current.md
-?? docs/handoff/archive/2026-09-18-f-001-task-setup-scaffold.md
+M scripts/run-dev.mjs
 ```
 
 Recent commits:
 
+- `7777bb2` feat(env): add dual staging and production dev runner scripts
+- `bbc95e7` feat(F-006): upgrade program khusus photo ecosystem and expand dashboard charts
+- `d46d2a6` docs(context): refresh project state, sync verified commit 81829a8, and archive handoff
 - `81829a8` feat(dashboard-laporan): standardize dashboard charts and report center with Phosphor duotone icons and Sonner toast
 - `161d9d3` feat(buku-kas): standardize financial UI with Zod validation, Sonner toast, and Phosphor duotone icons
-- `2532664` feat(rekam-medis): implement structured vital signs, prescription presets, Sonner toast, and Phosphor duotone icons
-- `dfd87a5` fix(layout): optimize Plus Jakarta Sans as native variable font to prevent dev server font download aborts
-- `7c284e2` feat(pendaftaran): standardize medical UI with Zod validation, instant feedback, and Phosphor duotone icons
 <!-- GENERATED:GIT_FACTS:END -->
