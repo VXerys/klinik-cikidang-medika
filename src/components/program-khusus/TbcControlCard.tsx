@@ -12,6 +12,7 @@ import {
 import { Lungs } from 'healthicons-react';
 import { toast } from 'sonner';
 import type { TbcProgram } from '@/types/database';
+import { Modal } from '@/components/ui/Modal';
 import { createClient } from '@/lib/supabase/client';
 
 interface TbcControlCardProps {
@@ -184,99 +185,99 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
       </div>
 
       {/* Modal Update Status */}
-      {showUpdateModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-xs">
-          <div className="bg-white w-full max-w-md rounded-2xl border border-slate-200 shadow-xl p-5 space-y-4">
-            <h4 className="text-sm font-bold text-slate-900">
-              Perbarui Kendali TBC - {program.pasien?.nama}
-            </h4>
-
-            <div className="space-y-3 text-xs">
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Progres Bulan Ke:
-                </label>
-                <select
-                  value={currentMonth}
-                  onChange={(e) => setCurrentMonth(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                >
-                  {[1, 2, 3, 4, 5, 6].map((m) => (
-                    <option key={m} value={m}>
-                      Bulan ke-{m} ({m <= 2 ? 'Fase Intensif 4FDC' : 'Fase Lanjutan 2FDC'})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Status Pengobatan TBC:
-                </label>
-                <select
-                  value={statusTbc}
-                  onChange={(e) => setStatusTbc(e.target.value as any)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                >
-                  <option value="Dalam Pengobatan">Dalam Pengobatan</option>
-                  <option value="Sembuh">Sembuh (BTA Negatif)</option>
-                  <option value="Pengobatan Lengkap">Pengobatan Lengkap</option>
-                  <option value="Mangkir">Mangkir (Drop Out)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Hasil Uji Dahak BTA:
-                </label>
-                <select
-                  value={dahakResult}
-                  onChange={(e) => setDahakResult(e.target.value)}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                >
-                  <option value="Belum Periksa">Belum Periksa</option>
-                  <option value="Negatif (-)">Negatif (-)</option>
-                  <option value="Positif (+)">Positif (+)</option>
-                  <option value="Positif (++)">Positif (++)</option>
-                  <option value="Positif (+++)">Positif (+++)</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block font-semibold text-slate-700 mb-1">
-                  Catatan Klinis / Evaluasi:
-                </label>
-                <textarea
-                  value={notes}
-                  onChange={(e) => setNotes(e.target.value)}
-                  placeholder="Misal: Pasien teratur minum OAT, keluhan batuk berkurang..."
-                  rows={2}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"
-                />
-              </div>
+      <Modal
+        isOpen={showUpdateModal}
+        onClose={() => setShowUpdateModal(false)}
+        title={`Perbarui Kendali TBC - ${program.pasien?.nama || 'Pasien'}`}
+        description="Pembaruan progres kohort bulanan, hasil BTA, dan catatan klinis"
+        maxWidth="md"
+      >
+        <div className="p-5 space-y-4 text-xs">
+          <div className="space-y-3">
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Progres Bulan Ke:
+              </label>
+              <select
+                value={currentMonth}
+                onChange={(e) => setCurrentMonth(Number(e.target.value))}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px]"
+              >
+                {[1, 2, 3, 4, 5, 6].map((m) => (
+                  <option key={m} value={m}>
+                    Bulan ke-{m} ({m <= 2 ? 'Fase Intensif 4FDC' : 'Fase Lanjutan 2FDC'})
+                  </option>
+                ))}
+              </select>
             </div>
 
-            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
-              <button
-                type="button"
-                onClick={() => setShowUpdateModal(false)}
-                disabled={isUpdating}
-                className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition min-h-[44px]"
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Status Pengobatan TBC:
+              </label>
+              <select
+                value={statusTbc}
+                onChange={(e) => setStatusTbc(e.target.value as any)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px]"
               >
-                Batal
-              </button>
-              <button
-                type="button"
-                onClick={handleUpdate}
-                disabled={isUpdating}
-                className="px-4 py-2 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition min-h-[44px] focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
+                <option value="Dalam Pengobatan">Dalam Pengobatan</option>
+                <option value="Sembuh">Sembuh (BTA Negatif)</option>
+                <option value="Pengobatan Lengkap">Pengobatan Lengkap</option>
+                <option value="Mangkir">Mangkir (Drop Out)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Hasil Uji Dahak BTA:
+              </label>
+              <select
+                value={dahakResult}
+                onChange={(e) => setDahakResult(e.target.value)}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px]"
               >
-                {isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}
-              </button>
+                <option value="Belum Periksa">Belum Periksa</option>
+                <option value="Negatif (-)">Negatif (-)</option>
+                <option value="Positif (+)">Positif (+)</option>
+                <option value="Positif (++)">Positif (++)</option>
+                <option value="Positif (+++)">Positif (+++)</option>
+              </select>
+            </div>
+
+            <div>
+              <label className="block font-semibold text-slate-700 mb-1">
+                Catatan Klinis / Evaluasi:
+              </label>
+              <textarea
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Contoh: Pasien teratur minum OAT, keluhan batuk berkurang..."
+                rows={2}
+                className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"
+              />
             </div>
           </div>
+
+          <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+            <button
+              type="button"
+              onClick={() => setShowUpdateModal(false)}
+              disabled={isUpdating}
+              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition min-h-[44px]"
+            >
+              Batal
+            </button>
+            <button
+              type="button"
+              onClick={handleUpdate}
+              disabled={isUpdating}
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition min-h-[44px] flex items-center justify-center focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none shadow-xs"
+            >
+              {isUpdating ? 'Menyimpan...' : 'Simpan Perubahan'}
+            </button>
+          </div>
         </div>
-      )}
+      </Modal>
     </div>
   );
 }

@@ -5,6 +5,7 @@ import {
   TrendUp,
   CalendarBlank,
   ChartBar,
+  ChartLine,
   Users,
   Trophy,
 } from '@phosphor-icons/react';
@@ -12,6 +13,8 @@ import {
   ResponsiveContainer,
   BarChart,
   Bar,
+  AreaChart,
+  Area,
   XAxis,
   YAxis,
   Tooltip,
@@ -43,6 +46,7 @@ export function VisitTrendChart({
   isLoading,
 }: VisitTrendChartProps) {
   const [viewMode, setViewMode] = useState<'daily' | 'monthly'>('daily');
+  const [chartType, setChartType] = useState<'bar' | 'area'>('bar');
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -74,7 +78,8 @@ export function VisitTrendChart({
 
   return (
     <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-100">
+      {/* Header with Dual Switchers */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-2 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
           <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
             <TrendUp weight="duotone" className="w-5 h-5" />
@@ -89,34 +94,68 @@ export function VisitTrendChart({
           </div>
         </div>
 
-        <div className="flex items-center p-1 bg-slate-100 rounded-xl self-start sm:self-auto border border-slate-200/80">
-          <button
-            type="button"
-            onClick={() => setViewMode('daily')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
-              viewMode === 'daily'
-                ? 'bg-white text-blue-700 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <CalendarBlank weight="duotone" className="w-3.5 h-3.5" />
-            <span>14 Hari Terakhir</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setViewMode('monthly')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
-              viewMode === 'monthly'
-                ? 'bg-white text-blue-700 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
-            }`}
-          >
-            <ChartBar weight="duotone" className="w-3.5 h-3.5" />
-            <span>12 Bulan Berjalan</span>
-          </button>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Chart Type Toggle: Batang vs Area Halus */}
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => setChartType('bar')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+                chartType === 'bar'
+                  ? 'bg-white text-blue-700 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Tampilan grafik batang bertumpuk"
+            >
+              <ChartBar weight="duotone" className="w-4 h-4" />
+              <span>Batang</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setChartType('area')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+                chartType === 'area'
+                  ? 'bg-white text-blue-700 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+              title="Tampilan kurva area halus"
+            >
+              <ChartLine weight="duotone" className="w-4 h-4" />
+              <span>Kurva Area</span>
+            </button>
+          </div>
+
+          {/* Time View Switcher: Harian vs Bulanan */}
+          <div className="flex items-center p-1 bg-slate-100 rounded-xl border border-slate-200/80">
+            <button
+              type="button"
+              onClick={() => setViewMode('daily')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+                viewMode === 'daily'
+                  ? 'bg-white text-blue-700 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <CalendarBlank weight="duotone" className="w-3.5 h-3.5" />
+              <span>14 Hari</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('monthly')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+                viewMode === 'monthly'
+                  ? 'bg-white text-blue-700 shadow-xs font-bold'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <TrendUp weight="duotone" className="w-3.5 h-3.5" />
+              <span>12 Bulan</span>
+            </button>
+          </div>
         </div>
       </div>
 
+      {/* KPI Stat Cards */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
         <div className="bg-slate-50 p-2.5 rounded-xl border border-slate-100">
           <span className="text-[10px] text-slate-400 font-medium block">Total Periode Ini</span>
@@ -162,77 +201,107 @@ export function VisitTrendChart({
         )}
       </div>
 
+      {/* Chart Viewport */}
       <div className="w-full h-72 pt-2">
-        {isMounted ? (
+        {isMounted && currentData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={currentData}
-              margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
-            >
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
-              <XAxis
-                dataKey="label"
-                tick={{ fontSize: 11, fill: '#64748B' }}
-                axisLine={{ stroke: '#CBD5E1' }}
-                tickLine={false}
-                angle={viewMode === 'daily' ? -45 : 0}
-                textAnchor={viewMode === 'daily' ? 'end' : 'middle'}
-                height={viewMode === 'daily' ? 45 : 30}
-              />
-              <YAxis
-                tick={{ fontSize: 11, fill: '#64748B' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <Tooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const bpjsVal = (payload[0]?.value as number) || 0;
-                    const umumVal = (payload[1]?.value as number) || 0;
-                    const totVal = bpjsVal + umumVal;
-                    return (
-                      <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-xl text-xs space-y-1.5 border border-slate-700">
-                        <div className="font-bold text-slate-200 border-b border-slate-700 pb-1">
-                          {label}
-                        </div>
-                        <div className="flex justify-between gap-4 text-emerald-400">
-                          <span>BPJS:</span>
-                          <span className="font-mono font-bold">{bpjsVal} pasien</span>
-                        </div>
-                        <div className="flex justify-between gap-4 text-blue-400">
-                          <span>Umum:</span>
-                          <span className="font-mono font-bold">{umumVal} pasien</span>
-                        </div>
-                        <div className="flex justify-between gap-4 font-bold text-white border-t border-slate-700 pt-1">
-                          <span>Total:</span>
-                          <span className="font-mono">{totVal} pasien</span>
-                        </div>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend
-                verticalAlign="top"
-                align="right"
-                wrapperStyle={{ paddingBottom: '10px', fontSize: '11px' }}
-              />
-              <Bar
-                dataKey="bpjs"
-                name="Pasien BPJS"
-                stackId="visits"
-                fill="#10B981"
-                radius={[0, 0, 0, 0]}
-              />
-              <Bar
-                dataKey="umum"
-                name="Pasien Umum"
-                stackId="visits"
-                fill="#2563EB"
-                radius={[4, 4, 0, 0]}
-              />
-            </BarChart>
+            {chartType === 'bar' ? (
+              <BarChart
+                data={currentData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: '#64748B' }}
+                  axisLine={{ stroke: '#CBD5E1' }}
+                  tickLine={false}
+                  angle={viewMode === 'daily' ? -45 : 0}
+                  textAnchor={viewMode === 'daily' ? 'end' : 'middle'}
+                  height={viewMode === 'daily' ? 45 : 30}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#64748B' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip content={<CustomVisitTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  align="right"
+                  wrapperStyle={{ paddingBottom: '10px', fontSize: '11px' }}
+                />
+                <Bar
+                  dataKey="bpjs"
+                  name="Pasien BPJS"
+                  stackId="visits"
+                  fill="#10B981"
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="umum"
+                  name="Pasien Umum"
+                  stackId="visits"
+                  fill="#2563EB"
+                  radius={[4, 4, 0, 0]}
+                />
+              </BarChart>
+            ) : (
+              <AreaChart
+                data={currentData}
+                margin={{ top: 10, right: 10, left: -20, bottom: 20 }}
+              >
+                <defs>
+                  <linearGradient id="colorBpjs" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#10B981" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#10B981" stopOpacity={0.02} />
+                  </linearGradient>
+                  <linearGradient id="colorUmum" x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="5%" stopColor="#2563EB" stopOpacity={0.4} />
+                    <stop offset="95%" stopColor="#2563EB" stopOpacity={0.02} />
+                  </linearGradient>
+                </defs>
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#E2E8F0" />
+                <XAxis
+                  dataKey="label"
+                  tick={{ fontSize: 11, fill: '#64748B' }}
+                  axisLine={{ stroke: '#CBD5E1' }}
+                  tickLine={false}
+                  angle={viewMode === 'daily' ? -45 : 0}
+                  textAnchor={viewMode === 'daily' ? 'end' : 'middle'}
+                  height={viewMode === 'daily' ? 45 : 30}
+                />
+                <YAxis
+                  tick={{ fontSize: 11, fill: '#64748B' }}
+                  axisLine={false}
+                  tickLine={false}
+                />
+                <Tooltip content={<CustomVisitTooltip />} />
+                <Legend
+                  verticalAlign="top"
+                  align="right"
+                  wrapperStyle={{ paddingBottom: '10px', fontSize: '11px' }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="bpjs"
+                  name="Pasien BPJS"
+                  stroke="#10B981"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#colorBpjs)"
+                />
+                <Area
+                  type="monotone"
+                  dataKey="umum"
+                  name="Pasien Umum"
+                  stroke="#2563EB"
+                  strokeWidth={2.5}
+                  fillOpacity={1}
+                  fill="url(#colorUmum)"
+                />
+              </AreaChart>
+            )}
           </ResponsiveContainer>
         ) : (
           <div className="w-full h-full flex items-center justify-center text-xs text-slate-400">
@@ -242,6 +311,34 @@ export function VisitTrendChart({
       </div>
     </div>
   );
+}
+
+function CustomVisitTooltip({ active, payload, label }: any) {
+  if (active && payload && payload.length) {
+    const bpjsVal = (payload.find((p: any) => p.dataKey === 'bpjs')?.value as number) || 0;
+    const umumVal = (payload.find((p: any) => p.dataKey === 'umum')?.value as number) || 0;
+    const totVal = bpjsVal + umumVal;
+    return (
+      <div className="bg-slate-900 text-white p-3 rounded-2xl shadow-xl text-xs space-y-1.5 border border-slate-700">
+        <div className="font-bold text-slate-200 border-b border-slate-700 pb-1">
+          {label}
+        </div>
+        <div className="flex justify-between gap-4 text-emerald-400">
+          <span>BPJS:</span>
+          <span className="font-mono font-bold">{bpjsVal} pasien</span>
+        </div>
+        <div className="flex justify-between gap-4 text-blue-400">
+          <span>Umum:</span>
+          <span className="font-mono font-bold">{umumVal} pasien</span>
+        </div>
+        <div className="flex justify-between gap-4 font-bold text-white border-t border-slate-700 pt-1">
+          <span>Total:</span>
+          <span className="font-mono">{totVal} pasien</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
 }
 
 export default VisitTrendChart;

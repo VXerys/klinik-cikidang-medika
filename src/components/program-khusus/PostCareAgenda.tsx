@@ -1,7 +1,13 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Calendar, CheckCircle2, Clock, AlertTriangle, User, ChevronRight } from 'lucide-react';
+import {
+  CalendarBlank,
+  CheckCircle,
+  Clock,
+  Warning,
+  CircleNotch,
+} from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import type { PostCare } from '@/types/database';
 import { createClient } from '@/lib/supabase/client';
@@ -27,7 +33,6 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
   const upcomingList = records.filter(
     (r) => r.tanggal_kontrol_berikutnya > todayStr && r.status_kontrol !== 'Sudah Kontrol'
   );
-  const completedList = records.filter((r) => r.status_kontrol === 'Sudah Kontrol');
 
   const handleMarkComplete = async (id: string) => {
     setUpdatingId(id);
@@ -60,7 +65,7 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
     return (
       <div className="space-y-3 animate-pulse">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-20 bg-slate-100 rounded-2xl"></div>
+          <div key={i} className="h-20 bg-slate-100 rounded-2xl border border-slate-200" />
         ))}
       </div>
     );
@@ -68,7 +73,7 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
 
   return (
     <div className="space-y-4">
-      {/* Sub-tabs */}
+      {/* Sub-tabs Filter */}
       <div className="flex flex-wrap items-center gap-2 border-b border-slate-200 pb-3">
         <button
           type="button"
@@ -79,7 +84,7 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
           }`}
         >
-          <Clock className="w-3.5 h-3.5" />
+          <Clock weight="duotone" className="w-4 h-4" />
           <span>Jadwal Hari Ini ({todayList.length})</span>
         </button>
 
@@ -92,7 +97,7 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
           }`}
         >
-          <AlertTriangle className="w-3.5 h-3.5 text-rose-500" />
+          <Warning weight="duotone" className="w-4 h-4" />
           <span>Terlewat / Overdue ({overdueList.length})</span>
         </button>
 
@@ -105,7 +110,7 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
               : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
           }`}
         >
-          <Calendar className="w-3.5 h-3.5" />
+          <CalendarBlank weight="duotone" className="w-4 h-4" />
           <span>Mendatang ({upcomingList.length})</span>
         </button>
       </div>
@@ -113,8 +118,13 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
       {/* List Items */}
       {activeList.length === 0 ? (
         <div className="p-8 text-center bg-white rounded-2xl border border-dashed border-slate-300 text-slate-500">
-          <CheckCircle2 className="w-8 h-8 mx-auto mb-2 text-emerald-400" />
-          <p className="text-xs font-semibold">Tidak ada agenda kontrol pada kategori ini.</p>
+          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-2xl w-fit mx-auto mb-2.5">
+            <CheckCircle weight="duotone" className="w-7 h-7" />
+          </div>
+          <p className="text-xs font-bold text-slate-800">Tidak ada agenda kontrol pada kategori ini</p>
+          <p className="text-[11px] text-slate-500 mt-0.5">
+            Semua pasien pada kategori ini telah selesai diperiksa atau belum ada jadwal masuk.
+          </p>
         </div>
       ) : (
         <div className="space-y-3">
@@ -135,7 +145,7 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
                 </div>
 
                 <div className="text-xs text-slate-600">
-                  <span className="text-slate-400">Jadwal Kontrol: </span>
+                  <span className="text-slate-500">Jadwal Kontrol: </span>
                   <strong
                     className={
                       filterTab === 'overdue'
@@ -160,7 +170,7 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
                   </p>
                 )}
                 {item.keluhan_lanjutan && (
-                  <p className="text-[11px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded inline-block">
+                  <p className="text-[11px] text-amber-800 bg-amber-50 px-2 py-0.5 rounded-lg border border-amber-200 inline-block">
                     Keluhan: {item.keluhan_lanjutan}
                   </p>
                 )}
@@ -173,7 +183,11 @@ export function PostCareAgenda({ records, onRefresh, isLoading }: PostCareAgenda
                   disabled={updatingId === item.id}
                   className="inline-flex items-center gap-1.5 px-3.5 py-2 min-h-[44px] bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-xs transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
                 >
-                  <CheckCircle2 className="w-4 h-4" />
+                  {updatingId === item.id ? (
+                    <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <CheckCircle weight="duotone" className="w-4 h-4" />
+                  )}
                   <span>{updatingId === item.id ? 'Memproses...' : 'Tandai Sudah Kontrol'}</span>
                 </button>
               </div>

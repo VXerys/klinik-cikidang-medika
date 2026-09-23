@@ -1,15 +1,17 @@
 ---
 id: F-006-DESIGN
 feature: F-006
+title: "Technical Design: Register Program Khusus & Ekosistem Foto Medis"
 status: approved
-owner: Developer
-last_updated: "2026-09-21"
+owner: "Developer / dr. Ovan"
+last_updated: "2026-09-23"
 last_verified_commit: unverified
 related:
   - "requirements.md"
   - "../../architecture/overview.md"
   - "../../architecture/data-model.md"
   - "../../architecture/security.md"
+  - "../../runbooks/staging-database-setup.md"
 ---
 
 # Technical Design: F-006 Register Program Khusus Medis
@@ -18,71 +20,63 @@ related:
 
 Modul **Register Program Khusus Medis** (`/program-khusus`) mengimplementasikan pemantauan terstruktur untuk 3 program klinis prioritas dr. Ovan:
 1. **Kartu Kendali TBC 6 Bulan**: Pemantauan kepatuhan minum OAT (Fase Intensif 4FDC dan Fase Lanjutan 2FDC), evaluasi dahak mikroskopis BTA, dan peringatan otomatis jika pasien mangkir > 7 hari.
-2. **Layanan Sirkumsisi (Sunat) Modern**: Pencatatan tindakan bedah minor (metode Laser/Kauter, Klamp, Konvensional), jadwal kontrol H+3 dan H+7 lepas klamp, serta unggah dokumentasi foto evaluasi luka dengan kompresi otomatis sisi klien ke WebP (< 300KB) via hybrid storage adapter (`src/lib/storage.ts`).
-3. **Agenda Pasien Pos-Rawat**: Pencatatan jadwal kontrol berkala pasien pasca opname atau tindakan medis serta pelacakan keluhan lanjutan.
-
-Sistem juga menyediakan **Clinical Surveillance Alert Widget** yang terintegrasi langsung di Dashboard Eksekutif (`/`) untuk mendeteksi pasien berisiko tinggi tanpa mengharuskan dokter membuka sub-menu terlebih dahulu.
+2. **Layanan Sirkumsisi Modern & Ekosistem Foto Medis**: Pencatatan tindakan bedah minor (Laser/Kauter, Klamp, Konvensional), input foto medis fleksibel (kamera langsung smartphone `capture="environment"` atau galeri berkas), kompresi otomatis sisi klien ke WebP (< 300KB) dengan umpan balik visual, thumbnail visual pada kartu riwayat, dan penampil gambar **HD Lightbox Zoom Modal**.
+3. **Agenda Pasien Pos-Rawat**: Pencatatan jadwal kontrol berkala pasien pasca rawat jalan/inap serta filter cepat (Hari Ini, Overdue, Riwayat Selesai).
 
 ---
 
-## 2. Component Inventory
+## 2. Component Inventory & Responsibilities
 
 | Component | Path | Responsibility |
 |---|---|---|
-| **ProgramKhususPage** | `src/app/program-khusus/page.tsx` | Main container page with tab switcher (`TBC 6 Bulan`, `Sirkumsisi / Sunat`, `Pasien Pos-Rawat`) and quick stats summary. |
-| **TbcControlCard** | `src/components/program-khusus/TbcControlCard.tsx` | 6-month visual progression card (Bulan 1-6), BTA lab status, next appointment schedule, and defection alert flag. |
-| **NewTbcModal** | `src/components/program-khusus/NewTbcModal.tsx` | Modal form to enroll a patient into the 6-month TBC program with patient search autocomplete. |
-| **CircumcisionList** | `src/components/program-khusus/CircumcisionList.tsx` | Table and card view of circumcision records with operator, method, wound condition, and photo viewer. |
-| **NewCircumcisionModal** | `src/components/program-khusus/NewCircumcisionModal.tsx` | Modal form to record circumcision procedure and upload pre/post evaluation photos (auto WebP compressed). |
-| **PostCareAgenda** | `src/components/program-khusus/PostCareAgenda.tsx` | Schedule calendar/list of post-hospitalization and post-op follow-ups categorized into Today, Overdue, and Upcoming. |
-| **NewPostCareModal** | `src/components/program-khusus/NewPostCareModal.tsx` | Modal form to schedule a post-care patient follow-up. |
-| **ClinicalAlertWidget** | `src/components/dashboard/ClinicalAlertWidget.tsx` | Executive dashboard alert banner displaying count of defaulting TBC patients and pending wound checks. |
+| **ProgramKhususPage** | `src/app/program-khusus/page.tsx` | Kontainer utama tab switcher (`TBC 6 Bulan`, `Sirkumsisi / Sunat`, `Pasien Pos-Rawat`), filter status, dan ringkasan metrik cepat. |
+| **NewCircumcisionModal** | `src/components/program-khusus/NewCircumcisionModal.tsx` | Modal input tindakan sirkumsisi dengan 2 opsi unggah foto (kamera langsung vs galeri), kompresi WebP instan dengan rasio ukuran, dan validasi data. |
+| **CircumcisionList** | `src/components/program-khusus/CircumcisionList.tsx` | Kartu riwayat tindakan sirkumsisi menampilkan thumbnail visual foto luka, badge metode, status luka, dan pemicu HD Lightbox Zoom Modal. |
+| **TbcControlCard** | `src/components/program-khusus/TbcControlCard.tsx` | Visualisasi 6 blok fase pengobatan (Bulan 1-6), status BTA, jadwal kontrol, dan lencana merah jika status Mangkir. |
+| **NewTbcModal** | `src/components/program-khusus/NewTbcModal.tsx` | Formulir pendaftaran pasien ke kohort TBC dengan autocomplete master pasien. |
+| **PostCareAgenda** | `src/components/program-khusus/PostCareAgenda.tsx` | Daftar agenda kontrol pos-rawat dengan tab Hari Ini, Overdue, dan Riwayat Selesai. |
+| **NewPostCareModal** | `src/components/program-khusus/NewPostCareModal.tsx` | Formulir penjadwalan kontrol lanjutan pos-rawat. |
 
 ---
 
-## 3. Data Flow Architecture
+## 3. Architecture: Medical Photo Lifecycle & Privacy
 
 ```text
-[Dokter / Tim Medis]
-        │
-        ├──► Buka Tab TBC ──► Pilih Pasien ──► Tanggal Mulai & Regimen OAT
-        │         │
-        │         ▼
-        │    [public.tbc_programs] ──► Auto Status: Mangkir jika Today > Tgl Kontrol + 7
-        │
-        ├──► Buka Tab Sirkumsisi ──► Form Tindakan ──► Ambil Foto Luka
-        │         │
-        │         ├──► [compressImageToWebP] (Canvas HTML5 < 300KB)
-        │         └──► [uploadMedicalPhoto] ──► Supabase Storage ('medical-photos')
-        │                   │
-        │                   ▼
-        │              [public.circumcisions] (Simpan URL/Path Privat)
-        │
-        └──► Buka Tab Pos-Rawat ──► Catat Tgl Kontrol Berikutnya
-                  │
-                  ▼
-             [public.post_cares] ──► Status: Menunggu / Sudah Kontrol / Mangkir
+[Operator / Dokter]
+       │
+       ├──► Klik Opsi 1: "Ambil Foto (Kamera)" ──► input[capture="environment"] (HP/Tablet)
+       │    atau
+       ├──► Klik Opsi 2: "Pilih dari Galeri"   ──► input[type="file"] (Laptop/Desktop)
+       │
+       ▼
+[Canvas HTML5 Client-Side Compression]
+       │
+       ├── Reduksi dimensi maksimal 1600px
+       ├── Iteratif kompresi WebP (kualitas 0.85 -> 0.3) hingga ukuran < 300KB
+       └── Render Badge Info: "Ukuran Asli: X MB -> Kompresi: Y KB (WebP)"
+       │
+       ▼
+[Upload Hybrid Storage Adapter (src/lib/storage.ts)]
+       │
+       ├── Primary: Supabase Storage ('medical-photos' private bucket)
+       └── Fallback: Cloudinary Free Tier (jika kuota storage Supabase penuh)
+       │
+       ▼
+[Tersimpan di PostgreSQL (public.circumcisions)]
+       │
+       ▼
+[Tampilan Daftar Riwayat (CircumcisionList)]
+       │
+       ├── Render Thumbnail Medis Privat (Signed URL 1 Jam)
+       └── Klik Thumbnail ──► Buka HD Lightbox Zoom Modal
 ```
 
 ---
 
-## 4. Business Logic & Invariants
+## 4. Keamanan & Staging Environment
 
-1. **Defection Detection (TBC Mangkir)**:
-   - Pasien dinyatakan `Mangkir Kontrol` jika `status_tbc = 'Dalam Pengobatan'` DAN `tanggal_mulai + interval bulan` terlewati lebih dari 7 hari tanpa pembaruan catatan obat.
-   - Peringatan warna merah berkedip ditampilkan di antarmuka.
-2. **Circumcision Photo Privacy**:
-   - Foto luka anak/dewasa tidak boleh disimpan di bucket publik.
-   - Bucket `medical-photos` di Supabase Storage bertipe private; akses pembacaan dilakukan via `getSignedMedicalPhotoUrl` (berlaku 1 jam).
-   - Ukuran unggah maksimum dibatasi 300KB (WebP) sisi klien sebelum transmisi jaringan untuk menghemat bandwidth faskes.
-3. **Post-Care Classification**:
-   - `Hari Ini`: Pasien yang harus kontrol pada tanggal kalender aktif.
-   - `Terlewat (Overdue)`: Tanggal kontrol sudah lewat dan belum ditandai `Sudah Kontrol`.
-   - `Mendatang`: Jadwal kontrol > besok.
-
----
-
-## 5. Security & RBAC Enforcement
-
-- **Pencatatan & Unggah Foto**: Terbuka untuk dokter pemeriksa dan paramedis bertugas.
-- **Data PII & Foto Medis**: Foto medis diklasifikasikan sebagai data SENSITIF (R-10). Akses URL publik langsung dicegah.
+1. **Privasi Rekam Medis (HIPAA / Permenkes 24/2022)**:
+   - Seluruh foto disimpan pada bucket privat tanpa akses publik langsung.
+   - Panggilan tampilan foto menggunakan `getSignedMedicalPhotoUrl` yang menghasilkan token kedaluwarsa 3600 detik (1 jam).
+2. **Isolasi Database Staging**:
+   - Pengujian fitur baru sirkumsisi dan foto dapat diarahkan ke instance staging terpisah mengacu pada [`docs/runbooks/staging-database-setup.md`](../../runbooks/staging-database-setup.md).

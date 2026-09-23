@@ -78,13 +78,15 @@ export async function compressImageToWebP(file: File, maxSizeBytes: number = 300
  * Upload foto medis ke Supabase Storage (Default) atau Cloudinary (Fallback jika kuota penuh)
  */
 export async function uploadMedicalPhoto(
-  file: File,
+  file: File | Blob,
   pasienId: string,
   tindakanId: string,
   preferredProvider: StorageProvider = 'supabase'
 ): Promise<UploadPhotoResult> {
-  // 1. Kompres gambar sebelum upload
-  const compressedBlob = await compressImageToWebP(file);
+  const compressedBlob =
+    file.type === 'image/webp' && file.size <= 300 * 1024
+      ? file
+      : await compressImageToWebP(file as File);
   const timestamp = Date.now();
   const filename = `${pasienId}/${tindakanId}_${timestamp}.webp`;
 
@@ -158,6 +160,10 @@ export async function getSignedMedicalPhotoUrl(
   path: string,
   provider: StorageProvider = 'supabase'
 ): Promise<string> {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
   if (provider === 'supabase') {
     const supabase = createClient();
     const { data, error } = await supabase.storage

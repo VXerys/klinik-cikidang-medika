@@ -46,13 +46,13 @@ features:
   - id: F-006
     name: Register Program Khusus (TBC, Sunat + Foto, Pos-Rawat)
     track: engineering
-    status: in_progress
+    status: completed
     spec_path: docs/specs/F-006-program-khusus
-    active_phase: requirements
+    active_phase: completed
 
 active:
-  feature_id: "F-004"
-  task_id: "TASK-008-UI-EXCEL"
+  feature_id: "F-006"
+  task_id: "TASK-013-DELIVERY-GATE"
   branch: "staging"
 
 blockers: []

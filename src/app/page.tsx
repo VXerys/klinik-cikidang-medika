@@ -7,7 +7,6 @@ import {
   UserPlus,
   FileXls,
   Wallet,
-  Stethoscope,
   ArrowClockwise,
   WarningCircle,
   Clock,
@@ -41,6 +40,15 @@ import {
   type MonthlyTrendPoint,
 } from '@/components/dashboard/VisitTrendChart';
 import {
+  FinancialTrendChart,
+  type DailyFinancialPoint,
+  type MonthlyFinancialPoint,
+} from '@/components/dashboard/FinancialTrendChart';
+import {
+  PaymentDistributionChart,
+  type PaymentDistributionData,
+} from '@/components/dashboard/PaymentDistributionChart';
+import {
   CashLiquidityCard,
   type CashLiquidityData,
 } from '@/components/dashboard/CashLiquidityCard';
@@ -68,7 +76,6 @@ export default function DashboardPage() {
   const [umumCount, setUmumCount] = useState(0);
   const [lastRefreshed, setLastRefreshed] = useState<string>('');
 
-  // New Clinical Alerts & Trend States
   const [clinicalAlerts, setClinicalAlerts] = useState<ClinicalAlertCounts>({
     mangkirTbc: 0,
     todayPostCare: 0,
@@ -78,6 +85,20 @@ export default function DashboardPage() {
 
   const [dailyTrends, setDailyTrends] = useState<DailyTrendPoint[]>([]);
   const [monthlyTrends, setMonthlyTrends] = useState<MonthlyTrendPoint[]>([]);
+
+  const [dailyFinances, setDailyFinances] = useState<DailyFinancialPoint[]>([]);
+  const [monthlyFinances, setMonthlyFinances] = useState<MonthlyFinancialPoint[]>([]);
+
+  const [paymentDistribution, setPaymentDistribution] = useState<PaymentDistributionData>({
+    bpjsCount: 0,
+    umumCount: 0,
+    bpjsRevenue: 0,
+    umumRevenue: 0,
+    tunaiCount: 0,
+    transferCount: 0,
+    tunaiRevenue: 0,
+    transferRevenue: 0,
+  });
 
   const [cashLiquidity, setCashLiquidity] = useState<CashLiquidityData>({
     laciCash: 0,
@@ -97,7 +118,6 @@ export default function DashboardPage() {
       const supabase = createClient();
       const todayStr = new Date().toISOString().split('T')[0];
 
-      // Determine date filters based on selected period
       const now = new Date();
       const currentYear = now.getFullYear();
       const currentMonth = now.getMonth();
@@ -169,7 +189,7 @@ export default function DashboardPage() {
         flowPage++;
       }
 
-      // 4. Fetch Clinical Alerts Data (TBC, Post-care, Circumcisions)
+      // 4. Fetch Clinical Alerts Data
       const { data: tbcData } = await supabase
         .from('tbc_programs')
         .select('id, status_tbc, bulan_ke, tanggal_mulai');
@@ -178,21 +198,46 @@ export default function DashboardPage() {
         .from('post_cares')
         .select('id, tanggal_kontrol_berikutnya, status_kontrol');
 
-      const sevenDaysAgoStr = new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0];
-      const { data: circData } = await supabase
+      const { count: recentCircCount } = await supabase
         .from('circumcisions')
-        .select('id, tanggal_tindakan')
-        .gte('tanggal_tindakan', sevenDaysAgoStr);
+        .select('id', { count: 'exact', head: true })
+        .gte(
+          'tanggal_tindakan',
+          new Date(Date.now() - 7 * 86400000).toISOString().split('T')[0]
+        );
 
-      // Process clinical alerts
-      const mangkirTbc = (tbcData || []).filter((t) => t.status_tbc === 'Mangkir').length;
-      const todayPostCare = (postCareData || []).filter(
-        (p) => p.tanggal_kontrol_berikutnya === todayStr && p.status_kontrol !== 'Sudah Kontrol'
-      ).length;
-      const overduePostCare = (postCareData || []).filter(
-        (p) => p.tanggal_kontrol_berikutnya < todayStr && p.status_kontrol !== 'Sudah Kontrol'
-      ).length;
-      const recentCircumcision = (circData || []).length;
+      let mangkirTbc = 0;
+      if (tbcData) {
+        tbcData.forEach((t) => {
+          if (t.status_tbc === 'Mangkir') {
+            mangkirTbc++;
+          } else if (t.status_tbc === 'Dalam Pengobatan' && t.tanggal_mulai) {
+            const startD = new Date(t.tanggal_mulai);
+            const monthsPassed =
+              (now.getFullYear() - startD.getFullYear()) * 12 +
+              (now.getMonth() - startD.getMonth());
+            if (monthsPassed > (t.bulan_ke || 1)) {
+              mangkirTbc++;
+            }
+          }
+        });
+      }
+
+      let todayPostCare = 0;
+      let overduePostCare = 0;
+      if (postCareData) {
+        postCareData.forEach((p) => {
+          if (p.status_kontrol !== 'Sudah Kontrol') {
+            if (p.tanggal_kontrol_berikutnya === todayStr) {
+              todayPostCare++;
+            } else if (p.tanggal_kontrol_berikutnya < todayStr) {
+              overduePostCare++;
+            }
+          }
+        });
+      }
+
+      const recentCircumcision = recentCircCount || 0;
 
       setClinicalAlerts({
         mangkirTbc,
@@ -201,28 +246,48 @@ export default function DashboardPage() {
         recentCircumcision,
       });
 
-      // 5. Client-side rapid aggregation
+      // 5. Data Aggregation
       let bpjsVisits = 0;
       let umumVisits = 0;
       let umumRev = 0;
       let tunaiRev = 0;
       let tfRev = 0;
+      let tunaiVisits = 0;
+      let tfVisits = 0;
 
       const diseaseMap: Record<string, { code: string; name: string; count: number }> = {};
       const villageMap: Record<string, number> = {};
       const dailyMap: Record<string, { bpjs: number; umum: number }> = {};
       const monthlyMap: Record<string, { bpjs: number; umum: number }> = {};
+      const dailyFinanceMap: Record<string, { cashIn: number; cashOut: number }> = {};
+      const monthlyFinanceMap: Record<string, { cashIn: number; cashOut: number }> = {};
       let diagnosisTotalCount = 0;
 
       allVisits.forEach((v) => {
-        const tgl = v.tanggal_periksa; // YYYY-MM-DD
-        const monthKey = tgl ? tgl.substring(0, 7) : ''; // YYYY-MM
+        const tgl = v.tanggal_periksa;
+        const monthKey = tgl ? tgl.substring(0, 7) : '';
 
         if (!dailyMap[tgl]) {
           dailyMap[tgl] = { bpjs: 0, umum: 0 };
         }
         if (monthKey && !monthlyMap[monthKey]) {
           monthlyMap[monthKey] = { bpjs: 0, umum: 0 };
+        }
+
+        if (!dailyFinanceMap[tgl]) {
+          dailyFinanceMap[tgl] = { cashIn: 0, cashOut: 0 };
+        }
+        if (monthKey && !monthlyFinanceMap[monthKey]) {
+          monthlyFinanceMap[monthKey] = { cashIn: 0, cashOut: 0 };
+        }
+
+        const biaya = normalizeRupiah(Number(v.biaya_periksa) || 0);
+        const lain = normalizeRupiah(Number(v.pendapatan_lain) || 0);
+        const totalRev = biaya + lain;
+
+        dailyFinanceMap[tgl].cashIn += totalRev;
+        if (monthKey) {
+          monthlyFinanceMap[monthKey].cashIn += totalRev;
         }
 
         if (v.jenis_pasien === 'BPJS') {
@@ -233,16 +298,14 @@ export default function DashboardPage() {
           umumVisits++;
           dailyMap[tgl].umum++;
           if (monthKey) monthlyMap[monthKey].umum++;
-
-          const biaya = normalizeRupiah(Number(v.biaya_periksa) || 0);
-          const lain = normalizeRupiah(Number(v.pendapatan_lain) || 0);
-          const totalRev = biaya + lain;
           umumRev += totalRev;
 
           if (v.jenis_pembayaran === 'TF' || v.jenis_pembayaran === 'Transfer') {
             tfRev += totalRev;
+            tfVisits++;
           } else {
             tunaiRev += totalRev;
+            tunaiVisits++;
           }
         }
 
@@ -264,7 +327,44 @@ export default function DashboardPage() {
         villageMap[formattedDesa] = (villageMap[formattedDesa] || 0) + 1;
       });
 
-      // Format 14-day daily trends (take last 14 available dates sorted)
+      // Process Cash Flows
+      let bpjsCapitation = 0;
+      let expenses = 0;
+      let bankSetoran = 0;
+
+      allFlows.forEach((f) => {
+        const nom = normalizeRupiah(Number(f.nominal) || 0);
+        const tglFlow = f.tanggal;
+        const monthKeyFlow = tglFlow ? tglFlow.substring(0, 7) : '';
+
+        if (!dailyFinanceMap[tglFlow]) {
+          dailyFinanceMap[tglFlow] = { cashIn: 0, cashOut: 0 };
+        }
+        if (monthKeyFlow && !monthlyFinanceMap[monthKeyFlow]) {
+          monthlyFinanceMap[monthKeyFlow] = { cashIn: 0, cashOut: 0 };
+        }
+
+        if (f.jenis === 'Masuk' && f.kategori?.includes('Kapitasi')) {
+          bpjsCapitation += nom;
+          dailyFinanceMap[tglFlow].cashIn += nom;
+          if (monthKeyFlow) monthlyFinanceMap[monthKeyFlow].cashIn += nom;
+        } else if (f.jenis === 'Masuk' && !f.kategori?.includes('Setor Tunai')) {
+          dailyFinanceMap[tglFlow].cashIn += nom;
+          if (monthKeyFlow) monthlyFinanceMap[monthKeyFlow].cashIn += nom;
+        }
+
+        if (f.jenis === 'Masuk' && f.kategori?.includes('Setor Tunai')) {
+          bankSetoran += nom;
+        }
+
+        if (f.jenis === 'Keluar') {
+          expenses += nom;
+          dailyFinanceMap[tglFlow].cashOut += nom;
+          if (monthKeyFlow) monthlyFinanceMap[monthKeyFlow].cashOut += nom;
+        }
+      });
+
+      // Format 14-day daily visit trends
       const sortedDailyDates = Object.keys(dailyMap).sort();
       const last14Dates = sortedDailyDates.slice(-14);
       const formattedDailyTrends: DailyTrendPoint[] = last14Dates.map((d) => {
@@ -281,7 +381,7 @@ export default function DashboardPage() {
         };
       });
 
-      // Format 12-month trends
+      // Format 12-month visit trends
       const sortedMonths = Object.keys(monthlyMap).sort();
       const last12Months = sortedMonths.slice(-12);
       const formattedMonthlyTrends: MonthlyTrendPoint[] = last12Months.map((m) => {
@@ -298,32 +398,43 @@ export default function DashboardPage() {
         };
       });
 
-      // Process Cash Flows
-      let bpjsCapitation = 0;
-      let expenses = 0;
-      let bankSetoran = 0;
-
-      allFlows.forEach((f) => {
-        const nom = normalizeRupiah(Number(f.nominal) || 0);
-        if (f.jenis === 'Masuk' && f.kategori?.includes('Kapitasi')) {
-          bpjsCapitation += nom;
-        }
-        if (f.jenis === 'Masuk' && f.kategori?.includes('Setor Tunai')) {
-          bankSetoran += nom;
-        }
-        if (f.jenis === 'Keluar') {
-          expenses += nom;
-        }
+      // Format 14-day daily financial trends
+      const formattedDailyFinances: DailyFinancialPoint[] = last14Dates.map((d) => {
+        const fin = dailyFinanceMap[d] || { cashIn: 0, cashOut: 0 };
+        const dateObj = new Date(d);
+        const dayName = dateObj.toLocaleDateString('id-ID', { weekday: 'short' });
+        const dayNum = dateObj.getDate();
+        return {
+          date: d,
+          label: `${dayName} ${dayNum}`,
+          cashIn: fin.cashIn,
+          cashOut: fin.cashOut,
+          netIncome: fin.cashIn - fin.cashOut,
+        };
       });
 
+      // Format 12-month financial trends
+      const formattedMonthlyFinances: MonthlyFinancialPoint[] = last12Months.map((m) => {
+        const fin = monthlyFinanceMap[m] || { cashIn: 0, cashOut: 0 };
+        const [y, mo] = m.split('-');
+        const dateObj = new Date(Number(y), Number(mo) - 1, 1);
+        const monthLabel = dateObj.toLocaleDateString('id-ID', { month: 'short' });
+        return {
+          month: m,
+          label: `${monthLabel} ${y}`,
+          cashIn: fin.cashIn,
+          cashOut: fin.cashOut,
+          netIncome: fin.cashIn - fin.cashOut,
+        };
+      });
+
+      // Liquidity calculations
       const netCash = umumRev + bpjsCapitation - expenses;
       const totalLoketRevenue = tunaiRev + tfRev;
       const cashRatioPct =
         totalLoketRevenue > 0 ? Math.round((tunaiRev / totalLoketRevenue) * 100) : 80;
       const tfRatioPct = 100 - cashRatioPct;
 
-      // Real liquidity calculation:
-      // Kas Laci = Tunai Loket - Setoran Bank
       const laciEstimated = Math.max(0, tunaiRev - bankSetoran);
       const bankEstimated = bpjsCapitation + tfRev + bankSetoran;
 
@@ -375,6 +486,20 @@ export default function DashboardPage() {
       setUmumCount(umumVisits);
       setDailyTrends(formattedDailyTrends);
       setMonthlyTrends(formattedMonthlyTrends);
+      setDailyFinances(formattedDailyFinances);
+      setMonthlyFinances(formattedMonthlyFinances);
+
+      setPaymentDistribution({
+        bpjsCount: bpjsVisits,
+        umumCount: umumVisits,
+        bpjsRevenue: bpjsCapitation,
+        umumRevenue: umumRev,
+        tunaiCount: tunaiVisits,
+        transferCount: tfVisits,
+        tunaiRevenue: tunaiRev,
+        transferRevenue: tfRev,
+      });
+
       setLastRefreshed(new Date().toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' }));
     } catch (err) {
       console.error('Error fetching dashboard data:', err);
@@ -442,7 +567,7 @@ export default function DashboardPage() {
             className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
           >
             <FileXls className="w-4 h-4 shrink-0" weight="duotone" />
-            <span>Laporan & Excel</span>
+            <span>Laporan &amp; Excel</span>
           </Link>
 
           <button
@@ -477,7 +602,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Clinical Surveillance Alert Widget (Q2 - Opsi A) */}
+      {/* Clinical Surveillance Alert Widget */}
       <ClinicalAlertWidget alerts={clinicalAlerts} isLoading={isLoading} />
 
       {/* Period Filter Bar */}
@@ -495,18 +620,40 @@ export default function DashboardPage() {
       {/* 5 Executive KPI Cards */}
       <DashboardKpiCards data={kpiData} isLoading={isLoading} />
 
-      {/* Recharts Visit Trend Visualization (Q1 - Opsi C) */}
-      <VisitTrendChart
-        dailyData={dailyTrends}
-        monthlyData={monthlyTrends}
-        isLoading={isLoading}
-      />
+      {/* 2-Column Primary Trend Visualizations: Kunjungan & Arus Kas */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <VisitTrendChart
+          dailyData={dailyTrends}
+          monthlyData={monthlyTrends}
+          isLoading={isLoading}
+        />
+        <FinancialTrendChart
+          dailyData={dailyFinances}
+          monthlyData={monthlyFinances}
+          isLoading={isLoading}
+        />
+      </div>
 
-      {/* 2-Column Analytics Visualizations: Morbidity & Cash Liquidity */}
+      {/* 2-Column Analytics Visualizations: Morbiditas & Distribusi Pembayaran */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <TopDiseasesChart
           data={topDiseases}
           totalDiagnoses={totalDiagnoses}
+          isLoading={isLoading}
+        />
+        <PaymentDistributionChart
+          data={paymentDistribution}
+          isLoading={isLoading}
+        />
+      </div>
+
+      {/* 2-Column Demographics & Cash Liquidity */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <VillageDistributionCard
+          villages={villageStats}
+          totalPatients={kpiData.totalVisits}
+          bpjsCount={bpjsCount}
+          umumCount={umumCount}
           isLoading={isLoading}
         />
         <CashLiquidityCard
@@ -514,15 +661,6 @@ export default function DashboardPage() {
           isLoading={isLoading}
         />
       </div>
-
-      {/* Demographics & Regional Catchment */}
-      <VillageDistributionCard
-        villages={villageStats}
-        totalPatients={kpiData.totalVisits}
-        bpjsCount={bpjsCount}
-        umumCount={umumCount}
-        isLoading={isLoading}
-      />
     </div>
   );
 }
