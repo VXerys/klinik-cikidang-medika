@@ -3,7 +3,7 @@ id: F-003-TASKS
 feature: F-003
 status: approved
 owner: "Developer"
-last_updated: "2026-09-19"
+last_updated: "2026-09-23"
 last_verified_commit: unverified
 related:
   - "requirements.md"
@@ -91,3 +91,13 @@ TASK-007 (End-to-End Verification & Quality Gate)
 - **Objective:** Run static analysis, type checking (`npx tsc --noEmit`), production build verification (`npm run build`), and context validation (`npm run context:validate`).
 - **Commands:** `npx tsc --noEmit`, `npm run build`, `npm run context:validate`
 - **Requirement References:** All acceptance criteria
+
+### [x] TASK-008 — Financial UI & Zod Validation Standardization (Phosphor Duotone, Toast, Anti-Slop)
+- **Objective:** Upgrade all `/buku-kas` UI components and forms with Zod validation schema, inline field error states, Phosphor Duotone icons, Sonner toast notifications, responsive touch targets (min 44x44px), and antislop-code hygiene.
+- **Target Files:**
+  - `src/components/buku-kas/AddCashFlowModal.tsx`
+  - `src/components/buku-kas/CashFlowSummaryCards.tsx`
+  - `src/components/buku-kas/CashFlowTable.tsx`
+  - `src/components/buku-kas/CashReconciliationCard.tsx`
+  - `src/app/buku-kas/page.tsx`
+- **Requirement References:** FR-001, FR-002, FR-003, FR-004, FR-005, FR-006, AC-001.1, AC-002.1, AC-004.1

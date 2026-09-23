@@ -1,27 +1,28 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import { toast } from 'sonner';
 import {
   Wallet,
-  PlusCircle,
-  Calendar,
-  RefreshCw,
-  AlertCircle,
+  CalendarBlank,
+  ArrowClockwise,
+  WarningCircle,
   ArrowDownLeft,
   ArrowUpRight,
-} from 'lucide-react';
+} from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
-import type { CashFlow, Visit } from '@/types/database';
+import type { CashFlow } from '@/types/database';
 import { MONTH_NAMES_ID } from '@/constants/clinic';
 import { CashFlowSummaryCards } from '@/components/buku-kas/CashFlowSummaryCards';
 import { CashReconciliationCard } from '@/components/buku-kas/CashReconciliationCard';
 import { CashFlowTable } from '@/components/buku-kas/CashFlowTable';
 import { AddCashFlowModal } from '@/components/buku-kas/AddCashFlowModal';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 
 export default function BukuKasPage() {
   const currentDate = new Date();
-  const currentMonth = currentDate.getMonth() + 1; // 1 - 12
+  const currentMonth = currentDate.getMonth() + 1;
   const currentYear = currentDate.getFullYear();
   const todayStr = currentDate.toISOString().split('T')[0];
 
@@ -32,16 +33,13 @@ export default function BukuKasPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
-  // Reconciliation state
   const [todayCashVisitsTotal, setTodayCashVisitsTotal] = useState(0);
   const [todayCashVisitsCount, setTodayCashVisitsCount] = useState(0);
   const [todayCashDepositsTotal, setTodayCashDepositsTotal] = useState(0);
 
-  // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalType, setModalType] = useState<'Masuk' | 'Keluar'>('Masuk');
 
-  // 1. Fetch Monthly Cash Flows
   const fetchCashFlows = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -66,20 +64,19 @@ export default function BukuKasPage() {
       setCashFlows((data as unknown as CashFlow[]) || []);
     } catch (err) {
       console.error('Error fetching cash flows:', err);
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Gagal memuat mutasi buku kas dari database.'
-      );
+      const msg =
+        err instanceof Error ? err.message : 'Gagal memuat mutasi buku kas dari database.';
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsLoading(false);
     }
   }, [selectedMonth, selectedYear]);
 
-  // 2. Fetch Today's Cash Reconciliation
   const fetchReconciliation = useCallback(async () => {
     try {
       const supabase = createClient();
 
-      // Query today's cash visits
       const { data: visitsData, error: visitsError } = await supabase
         .from('visits')
         .select('biaya_periksa, pendapatan_lain')
@@ -97,7 +94,6 @@ export default function BukuKasPage() {
         setTodayCashVisitsCount(visitsData.length);
       }
 
-      // Query today's cash deposits in cash flow
       const { data: flowData, error: flowError } = await supabase
         .from('cash_flows')
         .select('nominal')
@@ -121,7 +117,6 @@ export default function BukuKasPage() {
     fetchReconciliation();
   }, [fetchReconciliation]);
 
-  // Calculations for Summary Cards
   const totalMasuk = cashFlows
     .filter((cf) => cf.jenis === 'Masuk')
     .reduce((acc, cf) => acc + (Number(cf.nominal) || 0), 0);
@@ -136,47 +131,53 @@ export default function BukuKasPage() {
     .filter((cf) => cf.kategori === 'Setor Tunai')
     .reduce((acc, cf) => acc + (Number(cf.nominal) || 0), 0);
 
-  // Handlers
   const handleOpenModal = (type: 'Masuk' | 'Keluar') => {
     setModalType(type);
     setIsModalOpen(true);
   };
 
   const handleCashFlowAdded = (newFlow: CashFlow) => {
-    // If the new flow belongs to the currently viewed month and year, add optimistically
     const [flowYear, flowMonth] = newFlow.tanggal.split('-').map(Number);
     if (flowYear === selectedYear && flowMonth === selectedMonth) {
       setCashFlows((prev) => [newFlow, ...prev]);
     }
-    // Refresh reconciliation if it affects today
     if (newFlow.tanggal === todayStr) {
       fetchReconciliation();
     }
   };
 
   const handleDeleteCashFlow = async (id: string) => {
-    const supabase = createClient();
-    const { error } = await supabase.from('cash_flows').delete().eq('id', id);
+    try {
+      const supabase = createClient();
+      const { error } = await supabase.from('cash_flows').delete().eq('id', id);
 
-    if (error) {
-      alert(`Gagal menghapus transaksi: ${error.message}`);
-      return;
+      if (error) {
+        toast.error(`Gagal menghapus transaksi: ${error.message}`);
+        return;
+      }
+
+      setCashFlows((prev) => prev.filter((cf) => cf.id !== id));
+      fetchReconciliation();
+    } catch {
+      toast.error('Terjadi kesalahan saat menghapus transaksi kas.');
     }
+  };
 
-    setCashFlows((prev) => prev.filter((cf) => cf.id !== id));
+  const handleManualRefresh = () => {
+    fetchCashFlows();
     fetchReconciliation();
+    toast.info('Memperbarui data mutasi kas...');
   };
 
   const selectedMonthName = MONTH_NAMES_ID[selectedMonth - 1];
 
   return (
     <div className="space-y-6">
-      {/* 1. Page Header with Controls */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
-              <Wallet className="w-5 h-5" />
+            <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
+              <Wallet weight="duotone" className="w-5 h-5" />
             </div>
             <div>
               <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
@@ -189,7 +190,6 @@ export default function BukuKasPage() {
           </div>
         </div>
 
-        {/* Action Buttons */}
         <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
           <Button
             type="button"
@@ -197,7 +197,7 @@ export default function BukuKasPage() {
             size="md"
             onClick={() => handleOpenModal('Masuk')}
             className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold min-h-[44px]"
-            leftIcon={<ArrowDownLeft className="w-4 h-4" />}
+            leftIcon={<ArrowDownLeft weight="bold" className="w-4 h-4" />}
           >
             + Kas Masuk (Pemasukan)
           </Button>
@@ -208,26 +208,24 @@ export default function BukuKasPage() {
             size="md"
             onClick={() => handleOpenModal('Keluar')}
             className="bg-rose-600 hover:bg-rose-700 text-white font-bold min-h-[44px]"
-            leftIcon={<ArrowUpRight className="w-4 h-4" />}
+            leftIcon={<ArrowUpRight weight="bold" className="w-4 h-4" />}
           >
             + Kas Keluar (Pengeluaran)
           </Button>
         </div>
       </div>
 
-      {/* 2. Month & Year Filter Bar */}
       <div className="p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <Calendar className="w-4 h-4 text-blue-600" />
+            <CalendarBlank weight="duotone" className="w-4 h-4 text-blue-600" />
             Periode Laporan:
           </span>
 
-          {/* Month Selector */}
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="px-3 py-1.5 min-h-[38px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {MONTH_NAMES_ID.map((name, idx) => (
               <option key={name} value={idx + 1}>
@@ -236,11 +234,10 @@ export default function BukuKasPage() {
             ))}
           </select>
 
-          {/* Year Selector */}
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-3 py-1.5 min-h-[38px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {[2024, 2025, 2026, 2027].map((yr) => (
               <option key={yr} value={yr}>
@@ -258,7 +255,7 @@ export default function BukuKasPage() {
               setSelectedYear(currentYear);
             }}
             disabled={selectedMonth === currentMonth && selectedYear === currentYear}
-            className="text-xs font-semibold"
+            className="text-xs font-semibold min-h-[44px]"
           >
             Bulan Ini
           </Button>
@@ -269,33 +266,36 @@ export default function BukuKasPage() {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => {
-              fetchCashFlows();
-              fetchReconciliation();
-            }}
+            onClick={handleManualRefresh}
             disabled={isLoading}
-            className="text-xs"
+            className="text-xs min-h-[44px] min-w-[44px]"
             title="Muat ulang mutasi kas"
           >
-            <RefreshCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+            <ArrowClockwise
+              weight="bold"
+              className={cn('w-4 h-4', isLoading && 'animate-spin')}
+            />
           </Button>
         </div>
       </div>
 
-      {/* Global Error Banner */}
       {errorMessage && (
         <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <WarningCircle weight="duotone" className="w-5 h-5 shrink-0 text-rose-600" />
             <span>{errorMessage}</span>
           </div>
-          <Button variant="outline" size="sm" onClick={fetchCashFlows} className="text-xs">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchCashFlows}
+            className="text-xs min-h-[38px]"
+          >
             Coba Lagi
           </Button>
         </div>
       )}
 
-      {/* 3. Financial KPI Summary Cards */}
       <CashFlowSummaryCards
         totalMasuk={totalMasuk}
         totalKeluar={totalKeluar}
@@ -305,7 +305,6 @@ export default function BukuKasPage() {
         isLoading={isLoading}
       />
 
-      {/* 4. Cashier Daily Reconciliation Card */}
       <CashReconciliationCard
         todayCashVisitsTotal={todayCashVisitsTotal}
         todayCashVisitsCount={todayCashVisitsCount}
@@ -313,14 +312,12 @@ export default function BukuKasPage() {
         onOpenSetorTunai={() => handleOpenModal('Masuk')}
       />
 
-      {/* 5. Mutation Records Table */}
       <CashFlowTable
         cashFlows={cashFlows}
         isLoading={isLoading}
         onDelete={handleDeleteCashFlow}
       />
 
-      {/* 6. Add Cash Flow Modal */}
       <AddCashFlowModal
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}

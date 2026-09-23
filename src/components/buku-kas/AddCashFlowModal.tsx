@@ -1,17 +1,18 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { z } from 'zod';
+import { toast } from 'sonner';
 import {
   ArrowDownLeft,
   ArrowUpRight,
-  Calendar,
+  CalendarBlank,
   Tag,
-  DollarSign,
-  FileText,
-  Save,
-  AlertCircle,
-  Loader2,
-} from 'lucide-react';
+  CurrencyCircleDollar,
+  FloppyDisk,
+  WarningCircle,
+  CircleNotch,
+} from '@phosphor-icons/react';
 import { Modal } from '@/components/ui/Modal';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
@@ -20,6 +21,20 @@ import { CASH_FLOW_CATEGORIES } from '@/constants/clinic';
 import { createClient } from '@/lib/supabase/client';
 import type { CashFlow } from '@/types/database';
 import { formatRupiah, cn } from '@/lib/utils';
+
+const cashFlowSchema = z.object({
+  tanggal: z.string().trim().min(1, 'Tanggal transaksi wajib diisi.'),
+  jenis: z.enum(['Masuk', 'Keluar'], {
+    message: 'Jenis transaksi wajib dipilih.',
+  }),
+  kategori: z.string().trim().min(1, 'Kategori mutasi kas wajib dipilih.'),
+  nominal: z.number().positive('Nominal kas wajib bernilai lebih dari Rp 0.'),
+  keterangan: z.string().trim().optional().nullable(),
+});
+
+type CashFlowFormErrors = Partial<
+  Record<'tanggal' | 'jenis' | 'kategori' | 'nominal' | 'keterangan', string>
+>;
 
 export interface AddCashFlowModalProps {
   isOpen: boolean;
@@ -44,30 +59,32 @@ export function AddCashFlowModal({
   const [keterangan, setKeterangan] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<CashFlowFormErrors>({});
 
-  // Sync initial type whenever modal opens
   useEffect(() => {
     if (isOpen) {
       setJenis(initialType);
       const defaultCategories =
         initialType === 'Masuk' ? CASH_FLOW_CATEGORIES.masuk : CASH_FLOW_CATEGORIES.keluar;
-      setKategori(defaultCategories[0]);
+      setKategori(defaultCategories[0] || '');
       setTanggal(getTodayString());
       setNominalDisplay('');
       setNominalRaw(0);
       setKeterangan('');
       setErrorMessage(null);
+      setFieldErrors({});
     }
   }, [isOpen, initialType]);
 
-  // When switching jenis, reset kategori to the first category of that type
   const handleJenisChange = (newJenis: 'Masuk' | 'Keluar') => {
     setJenis(newJenis);
     const options = newJenis === 'Masuk' ? CASH_FLOW_CATEGORIES.masuk : CASH_FLOW_CATEGORIES.keluar;
-    setKategori(options[0]);
+    setKategori(options[0] || '');
+    if (fieldErrors.jenis) {
+      setFieldErrors((prev) => ({ ...prev, jenis: undefined }));
+    }
   };
 
-  // Format currency display while typing
   const handleNominalChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const rawVal = e.target.value.replace(/\D/g, '');
     if (!rawVal) {
@@ -79,21 +96,36 @@ export function AddCashFlowModal({
     const num = parseInt(rawVal, 10);
     setNominalRaw(num);
     setNominalDisplay(new Intl.NumberFormat('id-ID').format(num));
+    if (fieldErrors.nominal) {
+      setFieldErrors((prev) => ({ ...prev, nominal: undefined }));
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (!nominalRaw || nominalRaw <= 0) {
-      setErrorMessage('Nominal kas wajib diisi dan bernilai lebih dari Rp 0.');
+    const parseResult = cashFlowSchema.safeParse({
+      tanggal,
+      jenis,
+      kategori,
+      nominal: nominalRaw,
+      keterangan: keterangan.trim() || null,
+    });
+
+    if (!parseResult.success) {
+      const errors: CashFlowFormErrors = {};
+      parseResult.error.issues.forEach((issue) => {
+        const field = issue.path[0] as keyof CashFlowFormErrors;
+        if (field && !errors[field]) {
+          errors[field] = issue.message;
+        }
+      });
+      setFieldErrors(errors);
+      toast.error('Mohon periksa input formulir transaksi kas.');
       return;
     }
 
-    if (!kategori) {
-      setErrorMessage('Kategori mutasi kas wajib dipilih.');
-      return;
-    }
-
+    setFieldErrors({});
     setIsSubmitting(true);
     setErrorMessage(null);
 
@@ -102,26 +134,29 @@ export function AddCashFlowModal({
       const { data, error } = await supabase
         .from('cash_flows')
         .insert({
-          tanggal,
-          jenis,
-          kategori,
-          nominal: nominalRaw,
-          keterangan: keterangan.trim() || null,
+          tanggal: parseResult.data.tanggal,
+          jenis: parseResult.data.jenis,
+          kategori: parseResult.data.kategori,
+          nominal: parseResult.data.nominal,
+          keterangan: parseResult.data.keterangan || null,
         })
         .select()
         .single();
 
       if (error) throw error;
 
+      toast.success(
+        `Mutasi kas ${jenis === 'Masuk' ? 'masuk' : 'keluar'} sebesar ${formatRupiah(nominalRaw)} berhasil disimpan.`
+      );
+
       if (onSuccess && data) {
         onSuccess(data as CashFlow);
       }
       onClose();
     } catch (err) {
-      console.error('Error inserting cash flow:', err);
-      setErrorMessage(
-        err instanceof Error ? err.message : 'Gagal menyimpan transaksi kas ke database.'
-      );
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan transaksi kas ke database.';
+      setErrorMessage(msg);
+      toast.error(msg);
     } finally {
       setIsSubmitting(false);
     }
@@ -142,12 +177,11 @@ export function AddCashFlowModal({
       <form onSubmit={handleSubmit} className="p-4 sm:p-6 space-y-4">
         {errorMessage && (
           <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
-            <AlertCircle className="w-4 h-4 shrink-0" />
+            <WarningCircle weight="duotone" className="w-4 h-4 shrink-0 text-rose-600" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        {/* 1. Transaction Type Toggle */}
         <div className="space-y-1.5">
           <label className="block text-xs font-semibold text-slate-700">
             Jenis Transaksi Mutasi <span className="text-rose-500">*</span>
@@ -163,7 +197,7 @@ export function AddCashFlowModal({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
               )}
             >
-              <ArrowDownLeft className="w-4 h-4 text-emerald-600" />
+              <ArrowDownLeft weight="duotone" className="w-4 h-4 text-emerald-600" />
               <span>Kas Masuk (+)</span>
             </button>
 
@@ -177,43 +211,60 @@ export function AddCashFlowModal({
                   : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'
               )}
             >
-              <ArrowUpRight className="w-4 h-4 text-rose-600" />
+              <ArrowUpRight weight="duotone" className="w-4 h-4 text-rose-600" />
               <span>Kas Keluar (-)</span>
             </button>
           </div>
+          {fieldErrors.jenis && (
+            <p className="text-[11px] text-rose-600 font-medium pl-1">{fieldErrors.jenis}</p>
+          )}
         </div>
 
-        {/* 2. Tanggal Transaksi */}
         <div>
           <Input
             label="Tanggal Transaksi"
             type="date"
             requiredIndicator
             value={tanggal}
-            onChange={(e) => setTanggal(e.target.value)}
-            leftElement={<Calendar className="w-4 h-4" />}
+            onChange={(e) => {
+              setTanggal(e.target.value);
+              if (fieldErrors.tanggal) {
+                setFieldErrors((prev) => ({ ...prev, tanggal: undefined }));
+              }
+            }}
+            leftElement={<CalendarBlank weight="duotone" className="w-4 h-4 text-slate-500" />}
           />
+          {fieldErrors.tanggal && (
+            <p className="text-[11px] text-rose-600 font-medium mt-1 pl-1">{fieldErrors.tanggal}</p>
+          )}
         </div>
 
-        {/* 3. Kategori Mutasi */}
         <div>
           <Select
             label="Kategori Kas"
             requiredIndicator
             value={kategori}
-            onChange={(e) => setKategori(e.target.value)}
+            onChange={(e) => {
+              setKategori(e.target.value);
+              if (fieldErrors.kategori) {
+                setFieldErrors((prev) => ({ ...prev, kategori: undefined }));
+              }
+            }}
             options={categoryOptions}
           />
+          {fieldErrors.kategori && (
+            <p className="text-[11px] text-rose-600 font-medium mt-1 pl-1">{fieldErrors.kategori}</p>
+          )}
         </div>
 
-        {/* 4. Nominal Mutasi */}
         <div className="space-y-1">
           <label className="block text-xs font-semibold text-slate-700">
             Nominal Transaksi (Rp) <span className="text-rose-500">*</span>
           </label>
           <div className="relative flex items-center">
-            <span className="absolute left-3 text-xs font-bold text-slate-400 select-none">
-              Rp
+            <span className="absolute left-3 text-xs font-bold text-slate-400 select-none flex items-center gap-1">
+              <CurrencyCircleDollar weight="duotone" className="w-4 h-4 text-slate-400" />
+              <span>Rp</span>
             </span>
             <input
               type="text"
@@ -221,17 +272,24 @@ export function AddCashFlowModal({
               placeholder="0"
               value={nominalDisplay}
               onChange={handleNominalChange}
-              className="w-full py-2.5 pl-10 pr-3 min-h-[44px] text-sm font-mono font-bold bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className={cn(
+                'w-full py-2.5 pl-14 pr-3 min-h-[44px] text-sm font-mono font-bold bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition',
+                fieldErrors.nominal
+                  ? 'border-rose-300 focus:ring-rose-500'
+                  : 'border-slate-300 focus:ring-blue-500 focus:border-transparent'
+              )}
             />
           </div>
-          {nominalRaw > 0 && (
+          {fieldErrors.nominal ? (
+            <p className="text-[11px] text-rose-600 font-medium pl-1">{fieldErrors.nominal}</p>
+          ) : nominalRaw > 0 ? (
             <p className="text-[11px] font-mono text-slate-500 pl-1">
-              Terbaca: <span className="font-semibold text-slate-800">{formatRupiah(nominalRaw)}</span>
+              Terbaca:{' '}
+              <span className="font-semibold text-slate-800">{formatRupiah(nominalRaw)}</span>
             </p>
-          )}
+          ) : null}
         </div>
 
-        {/* 5. Catatan Keterangan */}
         <div className="space-y-1">
           <label className="block text-xs font-semibold text-slate-700">
             Keterangan / Rincian Transaksi
@@ -245,7 +303,6 @@ export function AddCashFlowModal({
           />
         </div>
 
-        {/* 6. Action Buttons */}
         <div className="pt-3 border-t border-slate-100 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
           <Button
             type="button"
@@ -253,7 +310,7 @@ export function AddCashFlowModal({
             size="md"
             onClick={onClose}
             disabled={isSubmitting}
-            className="w-full sm:w-auto"
+            className="w-full sm:w-auto min-h-[44px]"
           >
             Batal
           </Button>
@@ -263,14 +320,16 @@ export function AddCashFlowModal({
             size="md"
             disabled={isSubmitting}
             className={cn(
-              'w-full sm:w-auto font-bold text-white shadow-sm',
-              jenis === 'Masuk' ? 'bg-emerald-600 hover:bg-emerald-700' : 'bg-rose-600 hover:bg-rose-700'
+              'w-full sm:w-auto font-bold text-white shadow-xs min-h-[44px]',
+              jenis === 'Masuk'
+                ? 'bg-emerald-600 hover:bg-emerald-700'
+                : 'bg-rose-600 hover:bg-rose-700'
             )}
             leftIcon={
               isSubmitting ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
               ) : (
-                <Save className="w-4 h-4" />
+                <FloppyDisk weight="duotone" className="w-4 h-4" />
               )
             }
           >

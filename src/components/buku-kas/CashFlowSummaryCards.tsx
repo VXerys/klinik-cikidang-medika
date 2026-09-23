@@ -1,7 +1,13 @@
 'use client';
 
 import React from 'react';
-import { ArrowDownLeft, ArrowUpRight, Wallet, Banknote, Loader2 } from 'lucide-react';
+import {
+  ArrowDownLeft,
+  ArrowUpRight,
+  Wallet,
+  Bank,
+  CircleNotch,
+} from '@phosphor-icons/react';
 import { formatRupiah, cn } from '@/lib/utils';
 import { Card } from '@/components/ui/Card';
 
@@ -49,7 +55,7 @@ export function CashFlowSummaryCards({
     },
     {
       title: 'Saldo Kas Bersih',
-      subtitle: `Pemasukan - Pengeluaran`,
+      subtitle: 'Pemasukan - Pengeluaran',
       amount: saldoBersih,
       icon: Wallet,
       color: 'blue',
@@ -62,7 +68,7 @@ export function CashFlowSummaryCards({
       title: 'Setor Tunai ke Bank',
       subtitle: `Rekap Setor Kasir (${monthName})`,
       amount: totalSetorTunai,
-      icon: Banknote,
+      icon: Bank,
       color: 'indigo',
       textColor: 'text-indigo-700',
       bgColor: 'bg-indigo-50',
@@ -76,7 +82,10 @@ export function CashFlowSummaryCards({
       {cards.map((item, idx) => {
         const Icon = item.icon;
         return (
-          <Card key={idx} className="p-4 sm:p-5 flex flex-col justify-between space-y-3 relative overflow-hidden">
+          <Card
+            key={idx}
+            className="p-4 sm:p-5 flex flex-col justify-between space-y-3 relative overflow-hidden"
+          >
             <div className="flex items-start justify-between">
               <div>
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-500 block">
@@ -86,19 +95,31 @@ export function CashFlowSummaryCards({
                   {item.subtitle}
                 </span>
               </div>
-              <div className={cn('p-2.5 rounded-xl border shrink-0', item.bgColor, item.borderColor, item.iconColor)}>
-                <Icon className="w-5 h-5" />
+              <div
+                className={cn(
+                  'p-2.5 rounded-xl border shrink-0',
+                  item.bgColor,
+                  item.borderColor,
+                  item.iconColor
+                )}
+              >
+                <Icon weight="duotone" className="w-5 h-5" />
               </div>
             </div>
 
             <div className="pt-1">
               {isLoading ? (
                 <div className="flex items-center gap-2 text-slate-400 py-1">
-                  <Loader2 className="w-4 h-4 animate-spin" />
+                  <CircleNotch weight="bold" className="w-4 h-4 animate-spin text-blue-500" />
                   <span className="text-xs">Menghitung...</span>
                 </div>
               ) : (
-                <div className={cn('text-xl sm:text-2xl font-bold font-mono tracking-tight', item.textColor)}>
+                <div
+                  className={cn(
+                    'text-xl sm:text-2xl font-bold font-mono tracking-tight',
+                    item.textColor
+                  )}
+                >
                   {formatRupiah(item.amount)}
                 </div>
               )}
