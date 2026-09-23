@@ -16,12 +16,15 @@ import {
   ArrowCounterClockwise,
   Thermometer,
   Plus,
+  ShareNetwork,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import type { Visit } from '@/types/database';
+import type { Visit, Doctor } from '@/types/database';
 import { Button, Badge, Input } from '@/components/ui';
 import { Icd10QuickPicker } from '@/components/rekam-medis/Icd10QuickPicker';
+import { SuratSakitModal } from '@/components/rekam-medis/SuratSakitModal';
+import { SuratRujukanModal } from '@/components/rekam-medis/SuratRujukanModal';
 import { POPULAR_PRESCRIPTIONS, formatPrescriptionItem } from '@/constants/prescriptions';
 import { cn, formatDateIndo } from '@/lib/utils';
 
@@ -56,6 +59,24 @@ export function ExaminationForm({
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
+  // Modal SKS & Rujukan
+  const [isSuratSakitOpen, setIsSuratSakitOpen] = useState(false);
+  const [isSuratRujukanOpen, setIsSuratRujukanOpen] = useState(false);
+  const [doctorsList, setDoctorsList] = useState<Doctor[]>([]);
+
+  useEffect(() => {
+    async function loadDoctors() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.from('doctors').select('*').eq('aktif', true);
+        if (data) setDoctorsList(data as Doctor[]);
+      } catch (e) {
+        console.error('Failed to load doctors list:', e);
+      }
+    }
+    loadDoctors();
+  }, []);
+
   useEffect(() => {
     setKeluhan(visit.keluhan_anamnesa || '');
     setKodeIcd10(visit.kode_icd10 || '');
@@ -67,6 +88,33 @@ export function ExaminationForm({
     setLabHasil(visit.lab_hasil || '');
     setErrorMessage(null);
   }, [visit.id]);
+
+  // Evaluasi riwayat alergi obat
+  const patientAllergy = visit.pasien?.riwayat_alergi;
+  const hasAllergy = Boolean(
+    patientAllergy &&
+      patientAllergy.trim() !== '' &&
+      patientAllergy.trim().toLowerCase() !== 'tidak ada' &&
+      patientAllergy.trim().toLowerCase() !== '-'
+  );
+
+  // Deteksi pencocokan allergen reaktif saat meresepkan terapi
+  const matchedAllergen = useMemo(() => {
+    if (!hasAllergy || !patientAllergy || !terapiObat.trim()) return null;
+    const allergenWords = patientAllergy
+      .toLowerCase()
+      .split(/[,;\/\s]+/)
+      .map((w) => w.trim())
+      .filter((w) => w.length >= 3);
+
+    const lowerTherapy = terapiObat.toLowerCase();
+    for (const allergen of allergenWords) {
+      if (lowerTherapy.includes(allergen)) {
+        return allergen;
+      }
+    }
+    return null;
+  }, [hasAllergy, patientAllergy, terapiObat]);
 
   const bloodPressureClassification = useMemo(() => {
     const s = parseInt(sistol, 10);
@@ -187,10 +235,11 @@ export function ExaminationForm({
   const isFinished = Boolean(visit.kode_icd10 && visit.diagnosa_deskripsi);
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className={cn('bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden', className)}
-    >
+    <>
+      <form
+        onSubmit={handleSubmit}
+        className={cn('bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden', className)}
+      >
       <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70">
         <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
           <div className="space-y-1">
@@ -237,17 +286,50 @@ export function ExaminationForm({
                 </>
               )}
             </div>
+
+            {hasAllergy && (
+              <div className="mt-2 inline-flex items-center gap-2 rounded-lg border border-red-300 bg-red-50 px-3 py-1.5 text-xs font-bold text-red-700">
+                <WarningCircle className="h-4 w-4 shrink-0 text-red-600" weight="fill" />
+                <span>PERINGATAN ALERGI OBAT: {patientAllergy}</span>
+              </div>
+            )}
           </div>
 
-          <div className="sm:text-right shrink-0">
-            <span className="text-[11px] text-slate-400 block">Tanggal Kunjungan</span>
-            <span className="text-xs font-semibold text-slate-700 flex items-center sm:justify-end gap-1">
-              <CalendarBlank className="w-3.5 h-3.5 text-slate-400" weight="duotone" />
-              {formatDateIndo(visit.tanggal_periksa)}
-            </span>
-            {visit.jam_periksa && (
-              <span className="text-[11px] text-slate-500 block">pukul {visit.jam_periksa} WIB</span>
-            )}
+          <div className="flex flex-col sm:items-end gap-2 shrink-0">
+            <div className="sm:text-right">
+              <span className="text-[11px] text-slate-400 block">Tanggal Kunjungan</span>
+              <span className="text-xs font-semibold text-slate-700 flex items-center sm:justify-end gap-1">
+                <CalendarBlank className="w-3.5 h-3.5 text-slate-400" weight="duotone" />
+                {formatDateIndo(visit.tanggal_periksa)}
+              </span>
+              {visit.jam_periksa && (
+                <span className="text-[11px] text-slate-500 block">pukul {visit.jam_periksa} WIB</span>
+              )}
+            </div>
+
+            {/* Tombol Terbitkan Surat Sakit & Rujukan */}
+            <div className="flex items-center gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSuratSakitOpen(true)}
+                className="gap-1.5 text-xs text-teal-700 border-teal-300 bg-teal-50/50 hover:bg-teal-100 min-h-[36px]"
+              >
+                <FileText className="w-4 h-4 text-teal-600" weight="duotone" />
+                <span>Surat Sakit</span>
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsSuratRujukanOpen(true)}
+                className="gap-1.5 text-xs text-blue-700 border-blue-300 bg-blue-50/50 hover:bg-blue-100 min-h-[36px]"
+              >
+                <ShareNetwork className="w-4 h-4 text-blue-600" weight="duotone" />
+                <span>Rujukan</span>
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -427,13 +509,32 @@ export function ExaminationForm({
             </div>
           </div>
 
+          {matchedAllergen && (
+            <div className="p-3 bg-red-50 border-2 border-red-500 rounded-xl text-red-900 text-xs flex items-start gap-2 animate-pulse">
+              <WarningCircle className="w-5 h-5 text-red-600 shrink-0 mt-0.5" weight="fill" />
+              <div>
+                <span className="font-extrabold uppercase tracking-wide block text-red-900">
+                  PERINGATAN BAHAYA: ALERGI OBAT TERDETEKSI!
+                </span>
+                <span className="text-red-800">
+                  Resep mengandung kata kunci: <strong className="underline decoration-red-600">{matchedAllergen}</strong>. Pasien tercatat memiliki riwayat alergi terhadap obat ini ({patientAllergy}). Mohon ganti dengan obat alternatif!
+                </span>
+              </div>
+            </div>
+          )}
+
           <textarea
             rows={3}
             value={terapiObat}
             onChange={(e) => setTerapiObat(e.target.value)}
             placeholder="Contoh: Paracetamol 500mg 3x1 tab prn demam, Amoxicillin 500mg 3x1 tab (habiskan), Antasida DOEN 3x1 cth ac"
             aria-label="Rincian terapi obat dan resep medis"
-            className="w-full text-xs font-mono rounded-xl border border-slate-300 p-3 focus:outline-none focus:ring-2 focus:ring-emerald-600 focus:border-emerald-600 text-slate-900 placeholder:text-slate-400 leading-relaxed bg-emerald-50/20"
+            className={cn(
+              "w-full text-xs font-mono rounded-xl border p-3 focus:outline-none focus:ring-2 leading-relaxed",
+              matchedAllergen
+                ? "border-red-500 bg-red-50/40 text-red-950 focus:ring-red-500 focus:border-red-500"
+                : "border-slate-300 bg-emerald-50/20 text-slate-900 focus:ring-emerald-600 focus:border-emerald-600"
+            )}
           />
         </div>
 
@@ -523,7 +624,36 @@ export function ExaminationForm({
         </div>
       </div>
     </form>
-  );
+
+    {/* Modal Cetak Surat Keterangan Sakit (SKS) */}
+    {patient && (
+      <SuratSakitModal
+        isOpen={isSuratSakitOpen}
+        onClose={() => setIsSuratSakitOpen(false)}
+        visit={visit}
+        patient={patient}
+        doctors={doctorsList}
+      />
+    )}
+
+    {/* Modal Cetak Surat Rujukan Pasien Eksternal */}
+    {patient && (
+      <SuratRujukanModal
+        isOpen={isSuratRujukanOpen}
+        onClose={() => setIsSuratRujukanOpen(false)}
+        visit={visit}
+        patient={patient}
+        doctors={doctorsList}
+        vitalSigns={{
+          td: sistol && diastol ? `${sistol}/${diastol}` : undefined,
+          nadi: nadi || undefined,
+          suhu: suhu || undefined,
+          beratBadan: beratBadan || undefined,
+        }}
+      />
+    )}
+  </>
+);
 }
 
 export default ExaminationForm;

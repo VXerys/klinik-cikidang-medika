@@ -7,6 +7,8 @@ import {
   UserPlus,
   X,
   MapPin,
+  NotePencil,
+  ShieldWarning,
 } from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
@@ -14,6 +16,7 @@ import { cn } from '@/lib/utils';
 
 export interface PatientSearchAutocompleteProps {
   onSelectPatient: (patient: Patient) => void;
+  onEditPatient?: (patient: Patient) => void;
   onAddNewPatient: () => void;
   className?: string;
   placeholder?: string;
@@ -22,6 +25,7 @@ export interface PatientSearchAutocompleteProps {
 
 export function PatientSearchAutocomplete({
   onSelectPatient,
+  onEditPatient,
   onAddNewPatient,
   className,
   placeholder = 'Cari pasien berdasarkan Nama, No RM, atau Desa...',
@@ -58,7 +62,7 @@ export function PatientSearchAutocomplete({
 
         const { data, error } = await supabase
           .from('patients')
-          .select('id, no_rm, gelar, nama, jenis_kelamin, tanggal_lahir, usia, desa, alamat, no_ktp, no_bpjs, created_at')
+          .select('*')
           .or(`nama.ilike.%${cleanQuery}%,no_rm.ilike.%${cleanQuery}%,desa.ilike.%${cleanQuery}%`)
           .order('nama', { ascending: true })
           .limit(10);
@@ -257,11 +261,37 @@ export function PatientSearchAutocomplete({
                               </span>
                             </>
                           )}
+                          {patient.riwayat_alergi &&
+                            patient.riwayat_alergi.trim() !== '' &&
+                            patient.riwayat_alergi.trim().toLowerCase() !== 'tidak ada' && (
+                              <>
+                                <span>•</span>
+                                <span className="bg-red-50 text-red-700 px-1.5 py-0.5 rounded font-bold border border-red-200 text-[10px] inline-flex items-center gap-0.5">
+                                  <ShieldWarning className="w-3 h-3 text-red-600" weight="fill" />
+                                  Alergi: {patient.riwayat_alergi}
+                                </span>
+                              </>
+                            )}
                         </div>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-700">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {onEditPatient && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsOpen(false);
+                              onEditPatient(patient);
+                            }}
+                            className="px-2 py-1 rounded text-[11px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200 transition inline-flex items-center gap-1"
+                            title="Edit data pasien"
+                          >
+                            <NotePencil className="w-3 h-3 text-slate-500" weight="bold" />
+                            <span>Edit</span>
+                          </button>
+                        )}
+                        <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition">
                           Pilih
                         </span>
                       </div>

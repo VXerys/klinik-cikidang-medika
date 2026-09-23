@@ -13,11 +13,14 @@ import {
   Stethoscope,
   ShieldCheck,
   WarningCircle,
+  NotePencil,
 } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient, Visit } from '@/types/database';
 import { PatientSearchAutocomplete } from '@/components/pendaftaran/PatientSearchAutocomplete';
 import { NewPatientModal } from '@/components/pendaftaran/NewPatientModal';
+import { EditPatientModal } from '@/components/pendaftaran/EditPatientModal';
 import { RegisterVisitModal } from '@/components/pendaftaran/RegisterVisitModal';
 import { ReceiptModal } from '@/components/pendaftaran/ReceiptModal';
 import { Button, Badge, Card } from '@/components/ui';
@@ -30,6 +33,8 @@ export default function PendaftaranKasirPage() {
   const [viewMode, setViewMode] = useState<'today' | 'recent'>('today');
 
   const [isNewPatientOpen, setIsNewPatientOpen] = useState(false);
+  const [isEditPatientOpen, setIsEditPatientOpen] = useState(false);
+  const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
   const [isRegisterVisitOpen, setIsRegisterVisitOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
 
@@ -95,6 +100,16 @@ export default function PendaftaranKasirPage() {
     setIsNewPatientOpen(true);
   };
 
+  const handleEditPatient = (patient: Patient) => {
+    setPatientToEdit(patient);
+    setIsEditPatientOpen(true);
+  };
+
+  const handlePatientUpdated = (updatedPatient: Patient) => {
+    fetchVisits();
+    toast.success(`Data pasien ${updatedPatient.nama} berhasil diperbarui.`);
+  };
+
   const handlePatientCreated = (newPatient: Patient) => {
     setSelectedPatient(newPatient);
     setIsRegisterVisitOpen(true);
@@ -150,6 +165,7 @@ export default function PendaftaranKasirPage() {
 
         <PatientSearchAutocomplete
           onSelectPatient={handleSelectPatient}
+          onEditPatient={handleEditPatient}
           onAddNewPatient={handleAddNewPatient}
           placeholder="Cari pasien lama (contoh: Siti, 020103545, atau Pangkalan)..."
         />
@@ -353,19 +369,34 @@ export default function PendaftaranKasirPage() {
                       </td>
 
                       <td className="py-3 px-4 text-right whitespace-nowrap">
-                        <Button
-                          type="button"
-                          variant="outline"
-                          size="sm"
-                          leftIcon={<Receipt className="w-3.5 h-3.5 text-blue-600" weight="duotone" />}
-                          onClick={() => {
-                            setActiveReceiptVisit(visit);
-                            setIsReceiptOpen(true);
-                          }}
-                          className="min-h-[36px]"
-                        >
-                          Kuitansi
-                        </Button>
+                        <div className="flex items-center justify-end gap-1.5">
+                          {visit.pasien && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              leftIcon={<NotePencil className="w-3.5 h-3.5 text-slate-500" weight="bold" />}
+                              onClick={() => handleEditPatient(visit.pasien!)}
+                              className="min-h-[36px] text-xs text-slate-600 hover:text-slate-900"
+                              title="Edit biodata pasien"
+                            >
+                              Edit
+                            </Button>
+                          )}
+                          <Button
+                            type="button"
+                            variant="outline"
+                            size="sm"
+                            leftIcon={<Receipt className="w-3.5 h-3.5 text-blue-600" weight="duotone" />}
+                            onClick={() => {
+                              setActiveReceiptVisit(visit);
+                              setIsReceiptOpen(true);
+                            }}
+                            className="min-h-[36px]"
+                          >
+                            Kuitansi
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   );
@@ -380,6 +411,16 @@ export default function PendaftaranKasirPage() {
         isOpen={isNewPatientOpen}
         onClose={() => setIsNewPatientOpen(false)}
         onPatientCreated={handlePatientCreated}
+      />
+
+      <EditPatientModal
+        isOpen={isEditPatientOpen}
+        onClose={() => {
+          setIsEditPatientOpen(false);
+          setPatientToEdit(null);
+        }}
+        patient={patientToEdit}
+        onPatientUpdated={handlePatientUpdated}
       />
 
       <RegisterVisitModal

@@ -7,9 +7,11 @@ export const CLINIC_PROFILE = {
   name: 'Klinik Pratama Cikidang Medika',
   shortName: 'Klinik Cikidang Medika',
   tagline: 'Layanan Kesehatan Terpadu Masyarakat Cikidang',
-  address: 'Jl. Raya Cikidang KM. 01, Kec. Cikidang, Kab. Sukabumi, Jawa Barat',
-  phone: '0857-2090-xxxx',
+  address: 'Jl. Raya Cikidang KM. 01, Kec. Cikidang, Kab. Sukabumi, Jawa Barat 43367',
+  phone: '0857-2090-0012',
+  email: 'klinik.cikidangmedika@gmail.com',
   license: '503/012/K-PRATAMA/DPMPTSP/2024',
+  faskesCode: '0122B004',
 } as const;
 
 export const DESA_OPTIONS = [

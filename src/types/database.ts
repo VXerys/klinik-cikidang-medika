@@ -10,6 +10,9 @@ export type Patient = {
   alamat?: string;
   no_ktp?: string;
   no_bpjs?: string;
+  riwayat_alergi?: string;
+  no_telepon?: string;
+  pekerjaan?: string;
   created_at: string;
 };
 

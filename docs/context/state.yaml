@@ -49,15 +49,22 @@ features:
     status: completed
     spec_path: docs/specs/F-006-program-khusus
     active_phase: completed
+  - id: F-007
+    name: Fitur Klinis & Administrasi Pasien (SKS, Rujukan, Alergi, Edit Pasien)
+    track: engineering
+    status: completed
+    spec_path: docs/specs/F-007-fitur-klinis-administrasi-pasien
+    active_phase: completed
 
 active:
-  feature_id: "F-006"
-  task_id: "TASK-013-DELIVERY-GATE"
+  feature_id: "F-007"
+  task_id: "TASK-007-DELIVERY-GATE"
   branch: "staging"
 
 blockers: []
 risks: []
 
 last_updated: "2026-09-23"
-last_verified_commit: "81829a8"
+last_verified_commit: "9a59997"
+
 

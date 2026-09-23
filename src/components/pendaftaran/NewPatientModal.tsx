@@ -39,6 +39,9 @@ const patientSchema = z.object({
     })
     .optional()
     .nullable(),
+  noTelepon: z.string().trim().optional().nullable(),
+  pekerjaan: z.string().trim().optional().nullable(),
+  riwayatAlergi: z.string().trim().default('Tidak Ada'),
 });
 
 export interface NewPatientModalProps {
@@ -64,6 +67,9 @@ export function NewPatientModal({
   const [alamat, setAlamat] = useState('');
   const [noKtp, setNoKtp] = useState('');
   const [noBpjs, setNoBpjs] = useState('');
+  const [noTelepon, setNoTelepon] = useState('');
+  const [pekerjaan, setPekerjaan] = useState('');
+  const [riwayatAlergi, setRiwayatAlergi] = useState('Tidak Ada');
 
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingRm, setIsGeneratingRm] = useState(false);
@@ -86,6 +92,9 @@ export function NewPatientModal({
     setAlamat('');
     setNoKtp('');
     setNoBpjs('');
+    setNoTelepon('');
+    setPekerjaan('');
+    setRiwayatAlergi('Tidak Ada');
     setErrorMessage(null);
     setFieldErrors({});
 
@@ -152,6 +161,9 @@ export function NewPatientModal({
       alamat: alamat || null,
       noKtp: noKtp || null,
       noBpjs: noBpjs || null,
+      noTelepon: noTelepon.trim() || null,
+      pekerjaan: pekerjaan.trim() || null,
+      riwayatAlergi: riwayatAlergi.trim() || 'Tidak Ada',
     });
 
     if (!parseResult.success) {
@@ -184,6 +196,9 @@ export function NewPatientModal({
         alamat: validData.alamat || null,
         no_ktp: validData.noKtp || null,
         no_bpjs: validData.noBpjs || null,
+        no_telepon: validData.noTelepon || null,
+        pekerjaan: validData.pekerjaan || null,
+        riwayat_alergi: validData.riwayatAlergi || 'Tidak Ada',
       };
 
       const { data, error } = await supabase
@@ -367,6 +382,34 @@ export function NewPatientModal({
             value={alamat}
             onChange={(e) => setAlamat(e.target.value)}
             placeholder="Contoh: Kp. Cigadog RT 02/01"
+          />
+        </div>
+
+        {/* Telepon & Pekerjaan */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <Input
+            label="Nomor Telepon / WA (Opsional)"
+            type="tel"
+            value={noTelepon}
+            onChange={(e) => setNoTelepon(e.target.value)}
+            placeholder="Contoh: 0812-3456-7890"
+          />
+          <Input
+            label="Pekerjaan Pasien (Opsional)"
+            value={pekerjaan}
+            onChange={(e) => setPekerjaan(e.target.value)}
+            placeholder="Contoh: Karyawan Pabrik / Petani"
+          />
+        </div>
+
+        {/* Riwayat Alergi Obat */}
+        <div className="pt-2 border-t border-slate-100">
+          <Input
+            label="Riwayat Alergi Obat (Patient Drug Safety)"
+            value={riwayatAlergi}
+            onChange={(e) => setRiwayatAlergi(e.target.value)}
+            placeholder="Contoh: Amoxicillin, Paracetamol, Penicillin (Default: Tidak Ada)"
+            helperText="Diisi 'Tidak Ada' jika pasien tidak memiliki riwayat alergi obat."
           />
         </div>
 
