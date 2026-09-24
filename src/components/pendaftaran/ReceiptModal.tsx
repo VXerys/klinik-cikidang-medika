@@ -98,6 +98,14 @@ export function ReceiptModal({ isOpen, onClose, visit }: ReceiptModalProps) {
             <span className="text-slate-500">Dokter Pemeriksa:</span>
             <span className="font-semibold text-slate-800">{doctorName}</span>
           </div>
+          {visit.kode_icd10 && (
+            <div className="col-span-2 pt-1 border-t border-slate-200 print:border-slate-300 flex justify-between items-start text-[11px]">
+              <span className="text-slate-500 shrink-0">Diagnosa ICD-10:</span>
+              <span className="font-semibold text-slate-800 text-right truncate max-w-[280px]">
+                {visit.kode_icd10} {visit.diagnosa_deskripsi ? `(${visit.diagnosa_deskripsi})` : ''}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Itemized Billing Breakdown */}

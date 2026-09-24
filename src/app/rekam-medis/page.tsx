@@ -7,6 +7,7 @@ import {
   ArrowClockwise,
   WarningCircle,
   PlusCircle,
+  CheckCircle,
 } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
@@ -49,16 +50,18 @@ export default function RekamMedisPage() {
         const found = visitList.find((v) => v.id === selectedVisit.id);
         if (found) {
           setSelectedVisit(found);
-        } else if (visitList.length > 0) {
-          setSelectedVisit(visitList[0]);
         } else {
-          setSelectedVisit(null);
+          // If previously selected visit is no longer in list, find next waiting
+          const firstWaiting = visitList.find(
+            (v) => v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
+          );
+          setSelectedVisit(firstWaiting || null);
         }
       } else if (visitList.length > 0) {
         const firstWaiting = visitList.find(
-          (v) => !v.kode_icd10 && !v.diagnosa_deskripsi && !v.terapi_obat
+          (v) => v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
         );
-        setSelectedVisit(firstWaiting || visitList[0]);
+        setSelectedVisit(firstWaiting || null);
       } else {
         setSelectedVisit(null);
       }
@@ -85,12 +88,32 @@ export default function RekamMedisPage() {
     }
   };
 
-  const handleSaveSuccess = (updatedVisit: Visit) => {
-    setVisits((prev) =>
-      prev.map((v) => (v.id === updatedVisit.id ? updatedVisit : v))
-    );
-    setSelectedVisit(updatedVisit);
+  const handleSaveSuccess = (updatedVisit: Visit, isHandover?: boolean) => {
+    setVisits((prev) => {
+      const nextList = prev.map((v) => (v.id === updatedVisit.id ? updatedVisit : v));
+
+      if (isHandover) {
+        // Find next waiting patient in the queue
+        const remainingWaiting = nextList.filter(
+          (v) => v.id !== updatedVisit.id && v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
+        );
+        if (remainingWaiting.length > 0) {
+          setSelectedVisit(remainingWaiting[0]);
+        } else {
+          // Queue is clear! Set selectedVisit to null to show clean standby state
+          setSelectedVisit(null);
+        }
+      } else {
+        setSelectedVisit(updatedVisit);
+      }
+
+      return nextList;
+    });
   };
+
+  const hasWaitingPatients = visits.some(
+    (v) => v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
+  );
 
   return (
     <div className="space-y-6 min-w-0 w-full">
@@ -104,7 +127,7 @@ export default function RekamMedisPage() {
               Rekam Medis & Ruang Periksa Dokter
             </h1>
             <p className="text-xs text-slate-500 mt-0.5">
-              Pemeriksaan klinis, diagnosa instan ICD-10, resep obat terstandarisasi, dan rekam medis lampau pasien
+              Pemeriksaan klinis terpadu, multi-diagnosa ICD-10, resep obat apotek, dan riwayat medis lampau
             </p>
           </div>
         </div>
@@ -176,28 +199,53 @@ export default function RekamMedisPage() {
               onSaveSuccess={handleSaveSuccess}
             />
           ) : (
-            <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs space-y-4">
-              <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
-                <Stethoscope className="w-8 h-8" weight="duotone" />
-              </div>
+            <div className="bg-white rounded-2xl border border-slate-200 p-8 sm:p-12 text-center shadow-xs space-y-4">
+              {visits.length > 0 && !hasWaitingPatients ? (
+                // Standby state saat semua antrean dokter selesai diperiksa
+                <>
+                  <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-100">
+                    <CheckCircle className="w-8 h-8" weight="duotone" />
+                  </div>
 
-              <div className="max-w-md mx-auto space-y-1.5">
-                <h3 className="text-base font-bold text-slate-900">
-                  Belum Ada Pasien yang Dipilih
-                </h3>
-                <p className="text-xs text-slate-500 leading-relaxed">
-                  Pilih salah satu pasien di daftar antrean sebelah kiri untuk membuka lembar pemeriksaan dokter, riwayat rekam medis terdahulu, dan penginputan diagnosa.
-                </p>
-              </div>
+                  <div className="max-w-md mx-auto space-y-1.5">
+                    <h3 className="text-base font-bold text-slate-900">
+                      Semua Pasien Hari Ini Selesai Diperiksa
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Tidak ada antrean pasien yang sedang menunggu ruang dokter saat ini. Seluruh data rekam medis pasien telah berhasil diteruskan ke loket kasir & farmasi.
+                    </p>
+                  </div>
 
-              {visits.length === 0 && !isLoading && (
-                <div className="pt-2">
-                  <Link href="/pendaftaran">
-                    <Button variant="primary" size="sm" leftIcon={<PlusCircle className="w-4 h-4" weight="duotone" />} className="text-xs min-h-[44px]">
-                      Daftarkan Pasien di Loket
-                    </Button>
-                  </Link>
-                </div>
+                  <p className="text-[11px] text-slate-400">
+                    Klik tab &quot;Selesai&quot; pada daftar antrean sebelah kiri jika dokter ingin meninjau kembali rekam medis pasien yang telah selesai.
+                  </p>
+                </>
+              ) : (
+                // Standby state saat belum memilih pasien atau belum ada pasien
+                <>
+                  <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">
+                    <Stethoscope className="w-8 h-8" weight="duotone" />
+                  </div>
+
+                  <div className="max-w-md mx-auto space-y-1.5">
+                    <h3 className="text-base font-bold text-slate-900">
+                      Belum Ada Pasien yang Dipilih
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed">
+                      Pilih salah satu pasien di daftar antrean sebelah kiri untuk membuka lembar pemeriksaan dokter, riwayat rekam medis terdahulu, dan penginputan diagnosa.
+                    </p>
+                  </div>
+
+                  {visits.length === 0 && !isLoading && (
+                    <div className="pt-2">
+                      <Link href="/pendaftaran">
+                        <Button variant="primary" size="sm" leftIcon={<PlusCircle className="w-4 h-4" weight="duotone" />} className="text-xs min-h-[44px]">
+                          Daftarkan Pasien di Loket
+                        </Button>
+                      </Link>
+                    </div>
+                  )}
+                </>
               )}
             </div>
           )}

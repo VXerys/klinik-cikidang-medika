@@ -83,9 +83,49 @@ TASK-001 (Linear State Machine & Database Types)
 - **Design Reference:** Section 3
 
 ### [x] TASK-006 — End-to-End Verification & Quality Gate
-- **Objective:** Run full verification across the entire workspace:
-  - TypeScript type check: `npx tsc --noEmit`
-  - Context documentation check: `node scripts/context/validate-context.mjs`
-  - Next.js production build: `npm run build`
-  - Verify zero card redundancy in `/pendaftaran` and smooth tabbed UX in `/rekam-medis`.
-- **Target:** All automated checks pass with 0 errors.
+- **Objective:** Run full verification across the entire workspace.
+- **Status:** Completed.
+
+### [x] TASK-007 — Multi-Diagnosis ICD-10 Selection & Fix Duplicate Inputs
+- **Objective:** Support multiple ICD-10 diagnoses (primary + secondary) with removable badges, eliminate duplicated header and input boxes in Tab 2.
+- **Target Files:**
+  - `src/components/rekam-medis/Icd10QuickPicker.tsx`
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+- **Requirement References:** FR-002, FR-005, AC-005.1-AC-005.4
+- **Status:** Completed.
+
+### [x] TASK-008 — Smart Drug Search & Quick Signa Chips
+- **Objective:** Provide instant search across 50+ common outpatient clinic drugs with default signa, plus one-click signa chips for doctors.
+- **Target Files:**
+  - `src/constants/prescriptions.ts`
+  - `src/components/rekam-medis/MedicineQuickSearch.tsx`
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+- **Requirement References:** FR-006, AC-006.1-AC-006.4
+- **Status:** Completed.
+
+### [x] TASK-009 — Step-Scoped Action Bar (Handover Only on Final Tab)
+- **Objective:** Restrict "Selesai Periksa & Kirim ke Kasir" to Tab 3 (Resep & Kasir). Earlier tabs only display navigation buttons to prevent accidental doctor clicks.
+- **Target File:**
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+- **Requirement References:** FR-003, AC-003.1-AC-003.3
+- **Status:** Completed.
+
+### [x] TASK-010 — Fix Workstation Completion State & Queue Auto-Advance
+- **Objective:** Automatically advance to the next waiting patient upon handover, or cleanly close the workstation and show the standby empty state if no patients remain waiting.
+- **Target File:**
+  - `src/app/rekam-medis/page.tsx`
+- **Requirement References:** FR-007, AC-007.1-AC-007.3
+- **Status:** Completed.
+
+### [x] TASK-011 — Kasir & Kuitansi Multi-Diagnosis Display
+- **Objective:** Ensure all selected diagnoses are clearly rendered in the payment modal and printed official receipts.
+- **Target Files:**
+  - `src/components/pendaftaran/PaymentModal.tsx`
+  - `src/components/pendaftaran/ReceiptModal.tsx`
+- **Requirement References:** FR-005, AC-005.5
+- **Status:** Completed.
+
+### [x] TASK-012 — End-to-End Verification & Quality Gate
+- **Objective:** Run type check, context validation, and Next.js production build.
+- **Target Files:** Entire repository.
+- **Status:** Completed (tsc 0 error, validate-context 0 error, build 9/9 routes passed).

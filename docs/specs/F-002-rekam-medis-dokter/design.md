@@ -90,7 +90,7 @@ sequenceDiagram
 
 ## 3. Desain Komponen: Tabbed Clinical Workspace
 
-Untuk mengatasi formulir yang memanjang ke bawah (>1.500px), komponen `ExaminationForm.tsx` dirombak menjadi **Tabbed Clinical Workspace** dengan tinggi kartu yang terkontrol ($\le 600\text{px}$) dan bilah tombol aksi menempel di bawah (*sticky footer*).
+Untuk mengatasi formulir yang memanjang ke bawah (>1.500px), komponen `ExaminationForm.tsx` dirombak menjadi **Tabbed Clinical Workspace** dengan tinggi kartu yang terkontrol ($\le 600\text{px}$) dan bilah navigasi dinamis berjenjang (*step-scoped bottom action bar*).
 
 ```text
 src/components/rekam-medis/
@@ -99,11 +99,14 @@ src/components/rekam-medis/
 │    │    └── Action Shortcuts (+TBC, +Sunat, Surat Sakit, Surat Rujukan)
 │    ├── ClinicalTabNav (Tab 1: Anamnesa & TTV | Tab 2: Diagnosa & Tindakan | Tab 3: Resep & Kasir | Tab 4: Riwayat Lampau)
 │    ├── TabContent:
-│    │    ├── TabAnamnesaTtv (Keluhan lanjutan, Sistol/Diastol, Nadi, Suhu, BB/TB)
-│    │    ├── TabDiagnosaTindakan (Quick-pick ICD-10 8 chip, Search ICD-10, Tindakan Medis, Lab)
-│    │    ├── TabResepKasir (Template resep cepat, aturan pakai, rincian biaya kasir)
+│    │    ├── TabAnamnesaTtv (Keluhan lanjutan, Sistol/Diastol dengan klasifikasi JNC-7/AHA, Nadi, Suhu, BB/TB, BMI)
+│    │    ├── TabDiagnosaTindakan (Multi-Diagnosa ICD-10 dengan status Utama/Sekunder, 8 chip cepat, search autocomplete, deteksi TBC/Sunat)
+│    │    ├── TabResepKasir (Pencarian obat 50+ katalog, chip aturan pakai/signa instan, textarea resep, rincian biaya kasir)
 │    │    └── TabRiwayatLampau (Linimasa kunjungan lampau pasien terintegrasi langsung)
-│    └── StickyDoctorFooter (Navigasi Sebelumnya/Lanjut, Simpan Draft, dan "Selesai Periksa & Kirim ke Kasir")
+│    └── StepScopedDoctorFooter:
+│         ├── Tab 1 & Tab 2: [Sebelumnya] [Lanjut ke Tab Berikutnya >] [Simpan Draft] (Mencegah salah klik selesai)
+│         ├── Tab 3 (Langkah Final): [Sebelumnya] [Simpan Draft] [Selesai Periksa & Kirim ke Kasir] (Primer Hijau)
+│         └── Tab 4: [Kembali ke Form Periksa]
 ```
 
 ### Visual Layout Mockup:
@@ -120,13 +123,21 @@ src/components/rekam-medis/
 +---------------------------------------------------------------------------------------+
 |  (Konten aktif sesuai Tab yang dipilih - tinggi terkontrol 450px - 550px)             |
 |                                                                                       |
-|  * Tab 1: Tekanan Darah, Nadi, Suhu, Berat/Tinggi, Anamnesa Lanjutan                  |
-|  * Tab 2: 8 Chip ICD-10, Autocomplete ICD-10, Tindakan Medis (Hecting, Nebu, dll)   |
-|  * Tab 3: Resep Obat Populer, Dosis/Signa, Rincian Biaya untuk Kasir                 |
+|  * Tab 1: Tekanan Darah, Nadi, Suhu, Berat/Tinggi, BMI, Anamnesa Lanjutan             |
+|  * Tab 2: Multi-Diagnosa ICD-10:                                                      |
+|           Daftar Terpilih: [J00 - ISPA (Utama)] [K30 - Dispepsia (Sekunder) (x)]      |
+|           8 Chip Cepat | Kotak Pencarian ICD-10 | Tindakan Medis & Lab                |
+|  * Tab 3: Resep Obat & Kasir:                                                         |
+|           Kotak Pencarian Obat (Katalog 50+ obat)                                     |
+|           Pintasan Signa: [3x1 pc] [2x1 pc] [1x1 malam] [3x1 ac] [prn nyeri]          |
+|           Textarea Terapi Obat & Aturan Pakai                                         |
+|           Rincian Estimasi Biaya Kasir (Biaya Periksa + Biaya Tindakan Tambahan)      |
 |  * Tab 4: Riwayat Kunjungan Lampau Pasien (Tanpa perlu scroll ke bawah)               |
 |                                                                                       |
 +---------------------------------------------------------------------------------------+
-|  [< Tab Sebelumnya]   [Tab Selanjutnya >]   |   [Draft]  [ Selesai & Kirim ke Kasir ] |
+|  Bilah Aksi Terkontrol:                                                               |
+|  Tab 1 & 2: [< Sebelumnya]  [Simpan Draft]  [Lanjut ke Diagnosa/Resep >]              |
+|  Tab 3    : [< Sebelumnya]  [Simpan Draft]  [ Selesai Periksa & Kirim ke Kasir ]      |
 +---------------------------------------------------------------------------------------+
 ```
 

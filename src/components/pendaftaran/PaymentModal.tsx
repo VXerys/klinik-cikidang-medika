@@ -212,10 +212,26 @@ export function PaymentModal({
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
               <div>
-                <span className="text-[10px] text-slate-500 uppercase font-bold block">Diagnosa ICD-10</span>
-                <span className="font-medium text-slate-800">
-                  {visit.kode_icd10 ? `${visit.kode_icd10} - ${visit.diagnosa_deskripsi}` : 'Belum diisi dokter'}
-                </span>
+                <span className="text-[10px] text-slate-500 uppercase font-bold block mb-1">Diagnosa Klinis (ICD-10)</span>
+                {visit.kode_icd10 ? (
+                  <div className="flex flex-wrap gap-1">
+                    {visit.kode_icd10.split(',').map((code, idx) => {
+                      const trimmedCode = code.trim();
+                      const desc = visit.diagnosa_deskripsi?.split(';')[idx]?.trim() || '';
+                      return (
+                        <span
+                          key={trimmedCode + idx}
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[11px] text-slate-800"
+                        >
+                          <span className="font-mono font-bold text-blue-700">{trimmedCode}</span>
+                          {desc && <span className="text-slate-600 truncate max-w-[150px]">{desc}</span>}
+                        </span>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <span className="font-medium text-slate-500 italic">Belum diisi dokter</span>
+                )}
               </div>
               <div>
                 <span className="text-[10px] text-slate-500 uppercase font-bold block">Tindakan Medis</span>

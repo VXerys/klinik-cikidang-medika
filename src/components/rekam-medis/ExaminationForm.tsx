@@ -31,22 +31,33 @@ import { createClient } from '@/lib/supabase/client';
 import type { Visit, Doctor } from '@/types/database';
 import { DEFAULT_TARIFFS } from '@/constants/clinic';
 import { Button, Badge, Input } from '@/components/ui';
-import { Icd10QuickPicker } from '@/components/rekam-medis/Icd10QuickPicker';
+import { Icd10QuickPicker, type DiagnosisItem } from '@/components/rekam-medis/Icd10QuickPicker';
+import { MedicineQuickSearch } from '@/components/rekam-medis/MedicineQuickSearch';
 import { SuratSakitModal } from '@/components/rekam-medis/SuratSakitModal';
 import { SuratRujukanModal } from '@/components/rekam-medis/SuratRujukanModal';
 import { NewTbcModal } from '@/components/program-khusus/NewTbcModal';
 import { NewCircumcisionModal } from '@/components/program-khusus/NewCircumcisionModal';
 import { PatientHistoryTimeline } from '@/components/rekam-medis/PatientHistoryTimeline';
-import { POPULAR_PRESCRIPTIONS, formatPrescriptionItem } from '@/constants/prescriptions';
 import { cn, formatDateIndo, formatRupiah } from '@/lib/utils';
 
 export interface ExaminationFormProps {
   visit: Visit;
-  onSaveSuccess?: (updatedVisit: Visit) => void;
+  onSaveSuccess?: (updatedVisit: Visit, isHandover?: boolean) => void;
   className?: string;
 }
 
 type ClinicalTab = 'anamnesa' | 'diagnosa' | 'resep' | 'riwayat';
+
+function parseInitialDiagnoses(codesStr?: string | null, descStr?: string | null): DiagnosisItem[] {
+  if (!codesStr || !codesStr.trim()) return [];
+  const codes = codesStr.split(',').map((c) => c.trim().toUpperCase()).filter(Boolean);
+  const descs = descStr ? descStr.split(';').map((d) => d.trim()).filter(Boolean) : [];
+  return codes.map((code, idx) => ({
+    code,
+    name: descs[idx] || descs[0] || code,
+    isPrimary: idx === 0,
+  }));
+}
 
 export function ExaminationForm({
   visit,
@@ -56,8 +67,9 @@ export function ExaminationForm({
   const [activeTab, setActiveTab] = useState<ClinicalTab>('anamnesa');
 
   const [keluhan, setKeluhan] = useState('');
-  const [kodeIcd10, setKodeIcd10] = useState('');
-  const [diagnosaDeskripsi, setDiagnosaDeskripsi] = useState('');
+  const [diagnoses, setDiagnoses] = useState<DiagnosisItem[]>(() =>
+    parseInitialDiagnoses(visit.kode_icd10, visit.diagnosa_deskripsi)
+  );
   const [terapiObat, setTerapiObat] = useState('');
   const [tindakan, setTindakan] = useState('');
   const [keteranganTindakan, setKeteranganTindakan] = useState('');
@@ -107,8 +119,7 @@ export function ExaminationForm({
 
   useEffect(() => {
     setKeluhan(visit.keluhan_anamnesa || '');
-    setKodeIcd10(visit.kode_icd10 || '');
-    setDiagnosaDeskripsi(visit.diagnosa_deskripsi || '');
+    setDiagnoses(parseInitialDiagnoses(visit.kode_icd10, visit.diagnosa_deskripsi));
     setTerapiObat(visit.terapi_obat || '');
     setTindakan(visit.tindakan || '');
     setKeteranganTindakan(visit.keterangan_tindakan || '');
@@ -176,20 +187,26 @@ export function ExaminationForm({
     return bmi.toFixed(1);
   }, [beratBadan, tinggiBadan]);
 
+  // Serialized representations for PostgreSQL storage
+  const serializedCodes = useMemo(() => {
+    const sorted = [...diagnoses].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+    return sorted.map((d) => d.code).join(', ');
+  }, [diagnoses]);
+
+  const serializedDescriptions = useMemo(() => {
+    const sorted = [...diagnoses].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+    return sorted.map((d) => d.name).join('; ');
+  }, [diagnoses]);
+
   const isTbDiagnosis = useMemo(() => {
-    const text = `${kodeIcd10} ${diagnosaDeskripsi}`.toLowerCase();
+    const text = `${serializedCodes} ${serializedDescriptions}`.toLowerCase();
     return text.includes('a15') || text.includes('a16') || text.includes('tbc') || text.includes('tuberkulosis');
-  }, [kodeIcd10, diagnosaDeskripsi]);
+  }, [serializedCodes, serializedDescriptions]);
 
   const isCircumcisionDiagnosis = useMemo(() => {
-    const text = `${tindakan} ${diagnosaDeskripsi} ${keteranganTindakan}`.toLowerCase();
+    const text = `${tindakan} ${serializedDescriptions} ${keteranganTindakan}`.toLowerCase();
     return text.includes('sunat') || text.includes('sirkum') || text.includes('khitan') || text.includes('fimosis') || text.includes('n47');
-  }, [tindakan, diagnosaDeskripsi, keteranganTindakan]);
-
-  const handleIcd10Change = (code: string, desc: string) => {
-    setKodeIcd10(code);
-    setDiagnosaDeskripsi(desc);
-  };
+  }, [tindakan, serializedDescriptions, keteranganTindakan]);
 
   const handleAppendVitalSigns = () => {
     const parts: string[] = [];
@@ -220,18 +237,9 @@ export function ExaminationForm({
     toast.success('Hasil TTV disalin ke catatan anamnesa.');
   };
 
-  const handleAddPrescriptionPreset = (preset: (typeof POPULAR_PRESCRIPTIONS)[number]) => {
-    const itemString = formatPrescriptionItem(preset);
-    setTerapiObat((prev) => {
-      if (!prev || !prev.trim()) return itemString;
-      return `${prev.trim()}\n${itemString}`;
-    });
-    toast.success(`Resep "${preset.name}" ditambahkan.`);
-  };
-
   const handleSave = async (isCompleteHandover: boolean) => {
-    if (isCompleteHandover && (!kodeIcd10.trim() || !diagnosaDeskripsi.trim())) {
-      setErrorMessage('Diagnosa ICD-10 wajib diisi sebelum mengirim pasien ke kasir.');
+    if (isCompleteHandover && diagnoses.length === 0) {
+      setErrorMessage('Minimal satu diagnosa ICD-10 wajib dipilih sebelum mengirim pasien ke kasir.');
       setActiveTab('diagnosa');
       return;
     }
@@ -247,8 +255,8 @@ export function ExaminationForm({
         .from('visits')
         .update({
           keluhan_anamnesa: keluhan.trim() || null,
-          kode_icd10: kodeIcd10.trim().toUpperCase() || null,
-          diagnosa_deskripsi: diagnosaDeskripsi.trim() || null,
+          kode_icd10: serializedCodes || null,
+          diagnosa_deskripsi: serializedDescriptions || null,
           terapi_obat: terapiObat.trim() || null,
           tindakan: tindakan.trim() || null,
           keterangan_tindakan: keteranganTindakan.trim() || null,
@@ -260,25 +268,19 @@ export function ExaminationForm({
           status_pembayaran: targetStatus,
         })
         .eq('id', visit.id)
-        .select(`
-          *,
-          pasien:patients(*),
-          dokter:doctors(*)
-        `)
+        .select(`*, pasien:patients(*), dokter:doctors(*)`)
         .single();
 
       if (error) throw error;
 
-      if (isCompleteHandover) {
-        toast.success('Pemeriksaan selesai!', {
-          description: `${patient?.nama || 'Pasien'} berhasil dialihkan ke loket kasir & farmasi.`,
-        });
-      } else {
-        toast.success('Draft rekam medis berhasil disimpan.');
-      }
+      toast.success(
+        isCompleteHandover
+          ? 'Pemeriksaan selesai. Pasien berhasil dikirim ke antrean kasir & farmasi.'
+          : 'Draft rekam medis berhasil disimpan.'
+      );
 
       if (onSaveSuccess && data) {
-        onSaveSuccess(data as Visit);
+        onSaveSuccess(data as unknown as Visit, isCompleteHandover);
       }
     } catch (err) {
       console.error('Error saving examination record:', err);
@@ -291,7 +293,7 @@ export function ExaminationForm({
   };
 
   const patient = visit.pasien;
-  const isFinished = visit.status_pembayaran !== 'Menunggu Dokter' || Boolean(visit.kode_icd10 && visit.diagnosa_deskripsi);
+  const isFinished = visit.status_pembayaran !== 'Menunggu Dokter';
 
   const tabsConfig = [
     {
@@ -304,7 +306,7 @@ export function ExaminationForm({
       id: 'diagnosa' as ClinicalTab,
       label: '2. Diagnosa & Tindakan',
       icon: Stethoscope,
-      isComplete: Boolean(kodeIcd10.trim() && diagnosaDeskripsi.trim()),
+      isComplete: diagnoses.length > 0,
       required: true,
     },
     {
@@ -324,19 +326,34 @@ export function ExaminationForm({
   return (
     <>
       <div className={cn('bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden flex flex-col', className)}>
+        {/* Banner Status Kunjungan Lampau / Sudah Selesai */}
+        {isFinished && (
+          <div className="bg-emerald-50 border-b border-emerald-200 px-4 py-2.5 flex items-center justify-between text-xs text-emerald-900">
+            <div className="flex items-center gap-2">
+              <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" weight="fill" />
+              <span>
+                Pasien ini sudah selesai diperiksa dan diteruskan ke loket kasir / apotek. Status: <strong>{visit.status_pembayaran}</strong>
+              </span>
+            </div>
+            <span className="font-mono text-[11px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full font-bold">
+              {visit.status_pembayaran}
+            </span>
+          </div>
+        )}
+
         {/* Header Pasien & Ringkasan Klinis */}
         <div className="p-4 sm:p-5 border-b border-slate-200 bg-slate-50/70 shrink-0">
           <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-xs font-mono font-bold px-2.5 py-1 rounded-lg bg-slate-200 text-slate-800">
+                <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono bg-blue-100 text-blue-800 border border-blue-200">
                   Antrean #{visit.nomor_antrian || '-'}
                 </span>
                 <Badge variant={visit.jenis_pasien === 'BPJS' ? 'bpjs' : 'umum'}>
                   {visit.jenis_pasien}
                 </Badge>
                 {isFinished ? (
-                  <Badge variant="lunas">
+                  <Badge variant="success" className="flex items-center gap-1">
                     <CheckCircle className="w-3.5 h-3.5 text-emerald-600" weight="duotone" />
                     Selesai Diperiksa
                   </Badge>
@@ -479,21 +496,22 @@ export function ExaminationForm({
                   <span className="text-[10px] text-amber-800 font-bold uppercase block mb-0.5">
                     Keluhan Awal dari Loket Pendaftaran:
                   </span>
-                  <p className="text-amber-950 font-medium">{visit.keluhan_anamnesa}</p>
+                  <p className="font-medium text-slate-800">{visit.keluhan_anamnesa}</p>
                 </div>
               )}
 
+              {/* Anamnesa Dokter */}
               <div className="space-y-1.5">
                 <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
-                  <span>Anamnesa Lanjutan & Riwayat Penyakit Sekarang (RPS)</span>
-                  <span className="text-[11px] font-normal text-slate-500">Keluhan utama, durasi, dan faktor pemicu</span>
+                  <span>Catatan Anamnesa & Pemeriksaan Fisik</span>
+                  <span className="text-[11px] font-normal text-slate-500">Keluhan utama, riwayat penyakit sekarang</span>
                 </label>
                 <textarea
-                  rows={3}
+                  rows={4}
                   value={keluhan}
                   onChange={(e) => setKeluhan(e.target.value)}
-                  placeholder="Catatan anamnesa lanjutan dokter..."
-                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 resize-y"
+                  placeholder="Ketik catatan anamnesa lanjutan atau hasil periksa fisik dokter di sini..."
+                  className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 resize-y leading-relaxed"
                 />
               </div>
 
@@ -599,7 +617,7 @@ export function ExaminationForm({
                     className="text-xs h-9 bg-white"
                   />
                   <Input
-                    placeholder="Hasil: Misal GDS 125 mg/dL / Asam Urat 6.2"
+                    placeholder="Hasil Lab (contoh: 110 mg/dL, 6.2 mg/dL)"
                     value={labHasil}
                     onChange={(e) => setLabHasil(e.target.value)}
                     className="text-xs h-9 bg-white"
@@ -612,46 +630,11 @@ export function ExaminationForm({
           {/* TAB 2: DIAGNOSA & TINDAKAN */}
           {activeTab === 'diagnosa' && (
             <div className="space-y-4">
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5">
-                    <Stethoscope className="w-4 h-4 text-blue-600" weight="duotone" />
-                    Diagnosa Klinis (Standar ICD-10) <span className="text-rose-500">*</span>
-                  </label>
-                  <span className="text-[11px] text-slate-500">Pilih cepat chip atau ketik kode diagnosa</span>
-                </div>
-
-                <Icd10QuickPicker
-                  selectedCode={kodeIcd10}
-                  selectedDescription={diagnosaDeskripsi}
-                  onSelectIcd10={handleIcd10Change}
-                />
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
-                  <div>
-                    <Input
-                      label="Kode ICD-10"
-                      requiredIndicator
-                      value={kodeIcd10}
-                      onChange={(e) => setKodeIcd10(e.target.value.toUpperCase())}
-                      placeholder="Contoh: J00"
-                      className="font-mono font-bold uppercase text-xs"
-                      required
-                    />
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Input
-                      label="Deskripsi Diagnosa Medis"
-                      requiredIndicator
-                      value={diagnosaDeskripsi}
-                      onChange={(e) => setDiagnosaDeskripsi(e.target.value)}
-                      placeholder="Contoh: ISPA / Nasopharyngitis Akut"
-                      className="text-xs font-semibold"
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
+              {/* Komponen Multi-Diagnosa ICD-10 (Tanpa Duplikasi Input) */}
+              <Icd10QuickPicker
+                diagnoses={diagnoses}
+                onChangeDiagnoses={setDiagnoses}
+              />
 
               {/* Jembatan Cerdas Program Khusus */}
               {isTbDiagnosis && (
@@ -667,7 +650,7 @@ export function ExaminationForm({
                     onClick={() => setIsTbcModalOpen(true)}
                     className="text-[11px] text-rose-700 border-rose-300 hover:bg-rose-100 min-h-[32px]"
                   >
-                    + Buka Register Kohort TBC
+                    + Buka Register TBC
                   </Button>
                 </div>
               )}
@@ -676,7 +659,7 @@ export function ExaminationForm({
                 <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-xl flex items-center justify-between text-xs text-indigo-900">
                   <div className="flex items-center gap-2">
                     <Scissors className="w-4 h-4 text-indigo-600" weight="duotone" />
-                    <span>Terdeteksi prosedur sirkumsisi / sunat.</span>
+                    <span>Terdeteksi tindakan Sirkumsisi / Sunat pada kunjungan ini.</span>
                   </div>
                   <Button
                     type="button"
@@ -725,36 +708,28 @@ export function ExaminationForm({
                 </div>
               )}
 
-              {/* Template Resep Cepat */}
-              <div>
-                <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
-                  Pintasan Resep Populer Klinik (Klik untuk Menambahkan):
-                </span>
-                <div className="flex flex-wrap gap-1.5">
-                  {POPULAR_PRESCRIPTIONS.slice(0, 10).map((preset) => (
-                    <button
-                      key={preset.name}
-                      type="button"
-                      onClick={() => handleAddPrescriptionPreset(preset)}
-                      className="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 hover:text-blue-800 transition min-h-[32px]"
-                    >
-                      + {preset.name}
-                    </button>
-                  ))}
-                </div>
-              </div>
+              {/* Pencarian Obat Cerdas & Pintasan Signa Sekali-Klik */}
+              <MedicineQuickSearch
+                onAppendPrescription={(itemText) => {
+                  setTerapiObat((prev) => {
+                    if (!prev || !prev.trim()) return itemText;
+                    return `${prev.trim()}\n${itemText}`;
+                  });
+                  toast.success('Ditambahkan ke resep.');
+                }}
+              />
 
               {/* Textarea Resep */}
-              <div className="space-y-1.5">
+              <div className="space-y-1.5 pt-1">
                 <label className="text-xs font-bold text-slate-800 flex items-center justify-between">
                   <span>Terapi Obat & Aturan Pakai (Resep Apotek)</span>
-                  <span className="text-[11px] font-normal text-slate-500">Nama obat, dosis, frekuensi (signa)</span>
+                  <span className="text-[11px] font-normal text-slate-500">Dapat diedit bebas untuk dosis khusus</span>
                 </label>
                 <textarea
                   rows={4}
                   value={terapiObat}
                   onChange={(e) => setTerapiObat(e.target.value)}
-                  placeholder="Contoh:&#10;1. Paracetamol 500mg tab (3x1 sesudah makan bila demam)&#10;2. Amoxicillin 500mg tab (3x1 sesudah makan - habiskan)"
+                  placeholder="Contoh:&#10;Amoxicillin 500 mg - 3x1 tab (pc wajib dihabiskan)&#10;Paracetamol 500 mg - 3x1 tab (pc prn bila demam/nyeri)"
                   className="w-full px-3 py-2 text-xs font-mono bg-white border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-600 resize-y leading-relaxed"
                 />
               </div>
@@ -778,81 +753,53 @@ export function ExaminationForm({
                   <div className="text-right">
                     <span className="text-[10px] text-slate-500 uppercase block">Estimasi Total Tagihan</span>
                     <span className="text-sm font-extrabold text-slate-900 font-mono">
-                      {formatRupiah((visit.jenis_pasien === 'BPJS' ? 0 : Number(biayaPeriksa || 0)) + Number(pendapatanLain || 0))}
+                      {formatRupiah(Number(biayaPeriksa || 0) + Number(pendapatanLain || 0))}
                     </span>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1000"
-                    label="Biaya Pemeriksaan Pokok"
-                    leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
-                    value={biayaPeriksa}
-                    onChange={(e) => setBiayaPeriksa(Number(e.target.value))}
-                    disabled={visit.jenis_pasien === 'BPJS'}
-                    helperText={visit.jenis_pasien === 'BPJS' ? 'Pasien BPJS ditanggung kapitasi (Rp 0)' : 'Tarif standar periksa'}
-                    className="font-mono font-bold"
-                  />
-
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1000"
-                    label="Biaya Tindakan Tambahan / Obat Khusus"
-                    leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
-                    value={pendapatanLain}
-                    onChange={(e) => setPendapatanLain(Number(e.target.value))}
-                    placeholder="0"
-                    className="font-mono font-bold"
-                  />
-                </div>
-
-                {pendapatanLain > 0 && (
                   <div>
-                    <Input
-                      label="Keterangan Tindakan / Biaya Tambahan"
-                      value={keteranganPendapatan}
-                      onChange={(e) => setKeteranganPendapatan(e.target.value)}
-                      placeholder="Contoh: Nebulizer / Jahit Luka / Cek GDS"
-                      required
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Biaya Periksa Pokok Dokter (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      value={biayaPeriksa}
+                      onChange={(e) => setBiayaPeriksa(Number(e.target.value))}
+                      disabled={visit.jenis_pasien === 'BPJS'}
+                      className="w-full px-3 py-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none disabled:bg-slate-100 disabled:text-slate-500"
+                    />
+                    {visit.jenis_pasien === 'BPJS' && (
+                      <span className="text-[10px] text-emerald-700 font-semibold block mt-0.5">
+                        Gratis ditanggung Kapitasi BPJS
+                      </span>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="block text-[11px] font-semibold text-slate-700 mb-1">
+                      Biaya Tindakan / Pendapatan Lain (Rp)
+                    </label>
+                    <input
+                      type="number"
+                      value={pendapatanLain}
+                      onChange={(e) => setPendapatanLain(Number(e.target.value))}
+                      placeholder="0"
+                      className="w-full px-3 py-2 text-xs font-mono font-bold bg-white border border-slate-300 rounded-xl focus:ring-2 focus:ring-blue-600 outline-none"
                     />
                   </div>
-                )}
+                </div>
 
-                {/* Pintasan Biaya Tindakan */}
+                {/* Keterangan Biaya Tindakan */}
                 <div className="pt-1">
-                  <span className="text-[10px] font-semibold text-slate-500 uppercase tracking-wider block mb-1.5">
-                    Pintasan Tarif Tindakan Populer:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {[
-                      { nama: 'Nebulizer', tarif: 50000 },
-                      { nama: 'Jahit Luka (Hecting)', tarif: 75000 },
-                      { nama: 'Cek GDS / Gula Darah', tarif: 20000 },
-                      { nama: 'Cek Asam Urat', tarif: 25000 },
-                      { nama: 'Cek Kolesterol', tarif: 30000 },
-                      { nama: 'Ganti Verban Luka', tarif: 35000 },
-                    ].map((preset) => (
-                      <button
-                        key={preset.nama}
-                        type="button"
-                        onClick={() => {
-                          setPendapatanLain(preset.tarif);
-                          setKeteranganPendapatan(preset.nama);
-                          if (!tindakan.includes(preset.nama)) {
-                            setTindakan((prev) => (prev ? `${prev}, ${preset.nama}` : preset.nama));
-                          }
-                        }}
-                        className="px-2.5 py-1 text-[11px] font-medium rounded-lg border border-slate-200 bg-white hover:bg-emerald-50 hover:border-emerald-300 hover:text-emerald-800 transition flex items-center gap-1.5 min-h-[32px]"
-                      >
-                        <span>{preset.nama}</span>
-                        <span className="text-[10px] text-slate-500 font-mono">({formatRupiah(preset.tarif)})</span>
-                      </button>
-                    ))}
-                  </div>
+                  <Input
+                    label="Keterangan Tindakan / Tagihan Tambahan"
+                    placeholder="Contoh: Jahit Luka 3 simpul, Nebulizer 1x, Perban luka"
+                    value={keteranganPendapatan}
+                    onChange={(e) => setKeteranganPendapatan(e.target.value)}
+                    className="text-xs bg-white"
+                  />
                 </div>
               </div>
             </div>
@@ -879,7 +826,7 @@ export function ExaminationForm({
           )}
         </div>
 
-        {/* Sticky Bottom Action Bar */}
+        {/* Step-Scoped Bottom Action Bar */}
         <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 p-4 sm:px-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 z-10">
           <div className="flex items-center gap-2">
             {activeTab !== 'anamnesa' && (
@@ -899,19 +846,42 @@ export function ExaminationForm({
               </Button>
             )}
 
-            {activeTab !== 'resep' && activeTab !== 'riwayat' && (
+            {activeTab === 'anamnesa' && (
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => {
-                  if (activeTab === 'anamnesa') setActiveTab('diagnosa');
-                  else if (activeTab === 'diagnosa') setActiveTab('resep');
-                }}
+                onClick={() => setActiveTab('diagnosa')}
                 rightIcon={<CaretRight className="w-4 h-4" weight="bold" />}
                 className="min-h-[44px] text-xs font-semibold text-blue-700 border-blue-200 hover:bg-blue-50"
               >
-                Lanjut
+                Lanjut ke Diagnosa & Tindakan
+              </Button>
+            )}
+
+            {activeTab === 'diagnosa' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('resep')}
+                rightIcon={<CaretRight className="w-4 h-4" weight="bold" />}
+                className="min-h-[44px] text-xs font-semibold text-blue-700 border-blue-200 hover:bg-blue-50"
+              >
+                Lanjut ke Resep Obat & Kasir
+              </Button>
+            )}
+
+            {activeTab === 'riwayat' && (
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setActiveTab('resep')}
+                leftIcon={<CaretLeft className="w-4 h-4" weight="bold" />}
+                className="min-h-[44px] text-xs font-semibold text-blue-700 border-blue-200 hover:bg-blue-50"
+              >
+                Kembali ke Form Periksa
               </Button>
             )}
           </div>
@@ -930,24 +900,27 @@ export function ExaminationForm({
               Simpan Draft
             </Button>
 
-            <Button
-              type="button"
-              variant="primary"
-              size="md"
-              onClick={() => handleSave(true)}
-              disabled={isSaving}
-              leftIcon={
-                isSaving ? (
-                  <CircleNotch className="w-4 h-4 animate-spin text-white" weight="bold" />
-                ) : (
-                  <PaperPlaneTilt className="w-4 h-4 text-white" weight="bold" />
-                )
-              }
-              className="w-full sm:w-auto min-h-[44px] text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs px-5"
-              title="Kirim ke loket kasir & farmasi"
-            >
-              {isSaving ? 'Menyimpan...' : 'Selesai Periksa & Kirim ke Kasir'}
-            </Button>
+            {/* Tombol Utama Kirim ke Kasir HANYA Aktif di Tab 3 (Resep & Kasir) */}
+            {activeTab === 'resep' && (
+              <Button
+                type="button"
+                variant="primary"
+                size="md"
+                onClick={() => handleSave(true)}
+                disabled={isSaving}
+                leftIcon={
+                  isSaving ? (
+                    <CircleNotch className="w-4 h-4 animate-spin text-white" weight="bold" />
+                  ) : (
+                    <PaperPlaneTilt className="w-4 h-4 text-white" weight="bold" />
+                  )
+                }
+                className="w-full sm:w-auto min-h-[44px] text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs px-5"
+                title="Kirim ke loket kasir & farmasi"
+              >
+                {isSaving ? 'Menyimpan...' : 'Selesai Periksa & Kirim ke Kasir'}
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -963,7 +936,7 @@ export function ExaminationForm({
         />
       )}
 
-      {/* Modal Cetak Surat Rujukan Pasien Eksternal */}
+      {/* Modal Cetak Surat Rujukan Eksternal */}
       {patient && (
         <SuratRujukanModal
           isOpen={isSuratRujukanOpen}
@@ -971,37 +944,31 @@ export function ExaminationForm({
           visit={visit}
           patient={patient}
           doctors={doctorsList}
-          vitalSigns={{
-            td: sistol && diastol ? `${sistol}/${diastol}` : undefined,
-            nadi: nadi || undefined,
-            suhu: suhu || undefined,
-            beratBadan: beratBadan || undefined,
-          }}
         />
       )}
 
-      {/* Jembatan 1-Klik Modal Program Khusus: TBC */}
+      {/* Modal Pendaftaran Khusus TBC */}
       {patient && (
         <NewTbcModal
           isOpen={isTbcModalOpen}
           onClose={() => setIsTbcModalOpen(false)}
           initialPatient={patient}
           onSuccess={() => {
-            toast.success(`Pasien ${patient.nama} berhasil didaftarkan ke Kartu Kendali TBC 6 Bulan.`);
             setIsTbcModalOpen(false);
+            toast.success('Pasien berhasil didaftarkan ke Program Khusus TBC.');
           }}
         />
       )}
 
-      {/* Jembatan 1-Klik Modal Program Khusus: Sirkumsisi */}
+      {/* Modal Pendaftaran Khusus Sirkumsisi / Sunat */}
       {patient && (
         <NewCircumcisionModal
           isOpen={isCircumcisionModalOpen}
           onClose={() => setIsCircumcisionModalOpen(false)}
           initialPatient={patient}
           onSuccess={() => {
-            toast.success(`Pasien ${patient.nama} berhasil dicatat ke Register Sirkumsisi.`);
             setIsCircumcisionModalOpen(false);
+            toast.success('Tindakan Sirkumsisi berhasil dicatat.');
           }}
         />
       )}

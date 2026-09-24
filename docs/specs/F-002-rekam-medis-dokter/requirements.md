@@ -71,30 +71,65 @@ Sistem HARUS memberlakukan mesin status kunjungan yang linier dan saling lepas:
 - **AC-001.5**: WHEN kasir menyelesaikan pelunasan, THEN sistem HARUS mengupdate `status_pembayaran = 'Lunas'` (atau `'Ditanggung BPJS'`) dan pasien HANYA muncul pada tab *"Selesai / Lunas"*.
 
 ### FR-002: Tabbed Clinical Workspace
-Sistem HARUS menyajikan formulir pemeriksaan dokter dalam struktur Tab terbagi tanpa scroll vertikal tanpa akhir.
+Sistem HARUS menyajikan formulir pemeriksaan dokter dalam struktur Tab terbagi tanpa scroll vertikal tanpa akhir dan DILARANG menampilkan duplikasi field input/label.
 
-- **AC-002.1**: Antarmuka ruang periksa HARUS memiliki 3 tab navigasi utama:
-  - **Tab 1: Anamnesa & TTV (Subjektif & Objektif)**: Keluhan awal loket, anamnesa lanjutan, tanda vital (Sistol, Diastol, Nadi, Suhu, BB, TB), dan peringatan alergi obat.
-  - **Tab 2: Diagnosa & Tindakan (Assesmen)**: 8 Quick-pick chip ICD-10, pencarian autocomplete ICD-10, diagnosa deskripsi, tindakan medis, dan lab sederhana (GDS, Asam Urat, Kolesterol).
-  - **Tab 3: Resep Obat & Kasir (Plan & Billing)**: Template resep obat cepat, aturan pakai obat, biaya periksa pokok, dan biaya tindakan tambahan untuk kasir.
-- **AC-002.2**: Sistem DAPAT menyediakan **Tab 4: Riwayat Medis Lampau** (*Patient History*) atau tombol laci riwayat yang menampilkan rekam medis kunjungan sebelumnya dengan badge tanggal, diagnosa, dan terapi lampau.
-- **AC-002.3**: Setiap tab HARUS memiliki penanda visual indikator status (misal: badge centang hijau kecil saat diagnosa ICD-10 pada Tab 2 telah terisi).
+- **AC-002.1**: Antarmuka ruang periksa HARUS memiliki 4 tab navigasi:
+  - **Tab 1: Anamnesa & TTV (Subjektif & Objektif)**: Keluhan awal loket, anamnesa lanjutan, tanda vital (Sistol, Diastol, Nadi, Suhu, BB, TB), kalkulasi BMI otomatis, dan peringatan riwayat alergi obat.
+  - **Tab 2: Diagnosa & Tindakan (Assesmen)**: Multi-diagnosa ICD-10 (chip cepat, search autocomplete, manual), tindakan medis, dan deteksi otomatis program khusus (TBC & Sunat). Input kode dan deskripsi ICD-10 TIDAK BOLEH diduplikasi di bawah komponen quick picker.
+  - **Tab 3: Resep Obat & Kasir (Plan & Billing)**: Pencarian obat pintar (50+ obat katalog), preset obat populer, pintasan aturan pakai (signa) sekali-klik, rincian biaya tindakan kasir.
+  - **Tab 4: Riwayat Pasien (History)**: Menampilkan linimasa rekam medis kunjungan lampau pasien secara terintegrasi.
+- **AC-002.2**: Setiap tab HARUS memiliki penanda visual indikator status (centang hijau kecil saat data wajib terpenuhi).
 
-### FR-003: Sticky Bottom Action Bar & Claim Button
-Sistem HARUS menyediakan bilah tombol aksi yang selalu menempel di bagian bawah layar (*docked / sticky footer*).
+### FR-003: Step-Scoped Bottom Action Bar (Pencegahan Salah Pencet Dokter)
+Sistem HARUS menyediakan bilah navigasi bawah (*sticky bottom bar*) dengan visibilitas tombol aksi yang terkontrol sesuai tahapan pemeriksaan klinis:
 
-- **AC-003.1**: Bilah aksi HARUS menyediakan:
-  - Tombol navigasi *"Sebelumnya"* dan *"Lanjut"* antar-tab.
-  - Tombol *"Simpan Draft"* (menyimpan catatan tanpa memindahkan antrean pasien ke kasir).
-  - Tombol primer utama: **"Selesai Periksa & Kirim ke Kasir"** (berwarna emerald/hijau, dengan ikon kirim/centang).
-- **AC-003.2**: IF dokter menekan *"Selesai Periksa & Kirim ke Kasir"* saat `kode_icd10` atau `diagnosa_deskripsi` masih kosong, THEN sistem HARUS menolak penyimpanan, menampilkan pesan validasi *"Diagnosa ICD-10 wajib diisi sebelum mengirim pasien ke kasir"*, dan otomatis mengarahkan fokus ke Tab 2 (Diagnosa).
-- **AC-003.3**: WHEN pemeriksaan berhasil diselesaikan, THEN kartu antrean pasien di kolom kiri HARUS berubah menjadi *"Selesai Diperiksa"* (centang hijau) dan sistem otomatis menawarkan atau memanggil pasien antrean berikutnya.
+- **AC-003.1**: Pada **Tab 1 (Anamnesa & TTV)** dan **Tab 2 (Diagnosa & Tindakan)**:
+  - Bilah navigasi HANYA menampilkan tombol *"Sebelumnya"* (jika bukan tab pertama), tombol navigasi *"Lanjut >"*, dan *"Simpan Draft"*.
+  - Sistem DILARANG menampilkan tombol *"Selesai Periksa & Kirim ke Kasir"* pada Tab 1 dan Tab 2 untuk mencegah dokter tidak sengaja menyelesaikan periksa sebelum tahapan resep.
+- **AC-003.2**: Pada **Tab 3 (Resep Obat & Kasir)**:
+  - Bilah navigasi menampilkan tombol *"Sebelumnya"*, *"Simpan Draft"*, dan tombol aksi primer utama: **"Selesai Periksa & Kirim ke Kasir"** (berwarna emerald/hijau dengan ikon kirim).
+- **AC-003.3**: IF dokter menekan *"Selesai Periksa & Kirim ke Kasir"* saat daftar diagnosa ICD-10 masih kosong, THEN sistem HARUS menolak aksi, menampilkan pesan validasi *"Minimal satu diagnosa ICD-10 wajib diisi sebelum mengirim pasien ke kasir"*, dan otomatis mengalihkan tab ke Tab 2 (Diagnosa).
 
 ### FR-004: Akses Cepat Riwayat Medis Lampau
 Sistem HARUS mempermudah dokter melihat riwayat penyakit pasien tanpa navigasi halaman terpisah.
 
 - **AC-004.1**: Sistem HARUS memuat seluruh kunjungan lampau pasien (`pasien_id = activeVisit.pasien_id` AND `id != activeVisit.id`) diurutkan dari yang terbaru.
 - **AC-004.2**: Pada setiap kunjungan lampau, sistem menampilkan: Tanggal Kunjungan, Dokter Pemeriksa, Kode & Deskripsi ICD-10, serta Terapi Obat yang pernah diberikan.
+
+### FR-005: Multi-Diagnosa ICD-10 (Primer & Sekunder)
+Sistem HARUS mendukung pemilihan lebih dari satu diagnosa ICD-10 untuk pasien dengan komorbiditas/keluhan majemuk:
+
+- **AC-005.1**: Dokter DAPAT menambahkan beberapa diagnosa ICD-10 sekaligus melalui chip diagnosa populer atau pencarian kode/nama ICD-10.
+- **AC-005.2**: Diagnosa pertama yang dipilih otomatis berstatus sebagai **Diagnosa Primer (Utama)**. Diagnosa tambahan berikutnya berstatus sebagai **Diagnosa Sekunder (Komorbid)**.
+- **AC-005.3**: Setiap item diagnosa pada daftar memiliki tombol hapus `(x)` dan penanda badge visual yang jelas (`[Utama]` dan `[Sekunder]`).
+- **AC-005.4**: Data multi-diagnosa disimpan ke database PostgreSQL:
+  - `kode_icd10`: string kode dipisahkan koma (contoh: `"J00, K30, R50"`).
+  - `diagnosa_deskripsi`: string deskripsi dipisahkan titik koma (contoh: `"ISPA / Nasopharyngitis Akut; Dispepsia / Sakit Lambung; Demam / Observasi Febris"`).
+- **AC-005.5**: Modul kasir (`PaymentModal`) dan cetak kuitansi (`ReceiptModal`) HARUS menampilkan seluruh daftar diagnosa yang dicatat dokter.
+
+### FR-006: Pencarian Obat Pintar & Pintasan Aturan Pakai (Signa Cepat)
+Sistem HARUS memfasilitasi penulisan resep obat cepat tanpa mewajibkan pengetikan keyboard secara intensif:
+
+- **AC-006.1**: Sistem menyediakan kotak pencarian autocomplete obat instan yang mencakup minimal 50 jenis obat umum klinik (analgesik, antibiotik, lambung, pernapasan, antihipertensi, vitamin, cairan oralit).
+- **AC-006.2**: Memilih obat dari hasil pencarian otomatis menyisipkan item resep baru ke kolom terapi obat lengkap dengan dosis dan aturan pakai standar.
+- **AC-006.3**: Sistem menyediakan baris chip aturan pakai (signa) sekali-klik:
+  - `3x1 tab sesudah makan (pc)`
+  - `2x1 tab sesudah makan (pc)`
+  - `1x1 tab malam hari`
+  - `3x1 tab sebelum makan (ac)`
+  - `Bila demam / nyeri (prn)`
+  - `Habiskan (antibiotik)`
+  Mengklik chip signa langsung menyisipkan atau melengkapi aturan pakai pada resep.
+- **AC-006.4**: Kolom terapi obat tetap berupa textarea yang dapat diedit secara bebas oleh dokter untuk kasus dosis khusus.
+
+### FR-007: Otomasi Status Antrean & Penutupan Workstation
+Sistem HARUS mengelola siklus hidup form ruang periksa dokter secara bersih saat pasien diserahkan ke kasir:
+
+- **AC-007.1**: WHEN dokter menekan tombol *"Selesai Periksa & Kirim ke Kasir"*, status kunjungan diupdate menjadi `'Menunggu Kasir'`, kartu antrean di kolom kiri diperbarui, dan sistem mencari pasien berikutnya dalam antrean yang masih berstatus `'Menunggu Dokter'`.
+- **AC-007.2**: IF masih ada pasien berikutnya yang menunggu dokter, THEN sistem otomatis memuat data pasien berikutnya ke workstation.
+- **AC-007.3**: IF seluruh pasien dalam antrean dokter hari tersebut telah selesai diperiksa (antrean kosong), THEN sistem HARUS menutup formulir pemeriksaan aktif (`selectedVisit = null`) dan menampilkan tampilan layar siaga (*Standby Empty State*):
+  *"Semua Pasien Hari Ini Selesai Diperiksa. Tidak ada antrean pasien yang menunggu ruang dokter saat ini."*
+  Sistem DILARANG membiarkan form aktif macet (*stuck*) menampilkan data pasien lama yang sudah selesai diperiksa.
 
 ---
 
