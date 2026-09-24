@@ -1,9 +1,9 @@
 ---
 id: SPECS-INDEX
 title: Feature Specifications
-status: template
-owner: "{{OWNER}}"
-last_updated: "{{YYYY-MM-DD}}"
+status: active
+owner: "Developer"
+last_updated: "2026-09-23"
 ---
 
 # Feature Specifications

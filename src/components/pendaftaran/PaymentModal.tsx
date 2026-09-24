@@ -1,0 +1,422 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import {
+  CreditCard,
+  CheckCircle,
+  WarningCircle,
+  Stethoscope,
+  Pill,
+  Receipt,
+  User,
+  MapPin,
+  ShieldCheck,
+  Money,
+} from '@phosphor-icons/react';
+import { toast } from 'sonner';
+import { createClient } from '@/lib/supabase/client';
+import type { Visit } from '@/types/database';
+import { Modal, Button, Input, Select, Badge } from '@/components/ui';
+import { formatRupiah, cn } from '@/lib/utils';
+import { METODE_PEMBAYARAN_OPTIONS } from '@/constants/clinic';
+
+export interface PaymentModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  visit: Visit | null;
+  onPaymentSuccess: (updatedVisit: Visit) => void;
+}
+
+export function PaymentModal({
+  isOpen,
+  onClose,
+  visit,
+  onPaymentSuccess,
+}: PaymentModalProps) {
+  const [biayaPeriksa, setBiayaPeriksa] = useState<number>(0);
+  const [pendapatanLain, setPendapatanLain] = useState<number>(0);
+  const [keteranganPendapatan, setKeteranganPendapatan] = useState<string>('');
+  const [jenisPembayaran, setJenisPembayaran] = useState<'Tunai' | 'TF'>('Tunai');
+  const [uangDiterima, setUangDiterima] = useState<string>('');
+  const [isSubmitting, setIsSubmitting] = useState<boolean>(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!isOpen || !visit) {
+      setErrorMessage(null);
+      return;
+    }
+
+    const periksa = visit.jenis_pasien === 'BPJS' ? 0 : Number(visit.biaya_periksa || 0);
+    const lain = Number(visit.pendapatan_lain || 0);
+
+    setBiayaPeriksa(periksa);
+    setPendapatanLain(lain);
+    setKeteranganPendapatan(visit.keterangan_pendapatan || '');
+    setJenisPembayaran(visit.jenis_pembayaran || 'Tunai');
+    setErrorMessage(null);
+
+    const total = periksa + lain;
+    setUangDiterima(total > 0 ? String(total) : '0');
+  }, [isOpen, visit]);
+
+  if (!isOpen || !visit) return null;
+
+  const patient = visit.pasien;
+  const patientFullName = patient
+    ? [patient.gelar, patient.nama].filter(Boolean).join(' ')
+    : 'Pasien';
+
+  const totalTagihan = (visit.jenis_pasien === 'BPJS' ? 0 : Number(biayaPeriksa || 0)) + Number(pendapatanLain || 0);
+  const nominalDiterima = Number(uangDiterima) || 0;
+  const uangKembalian = Math.max(0, nominalDiterima - totalTagihan);
+  const isKurangBayar = jenisPembayaran === 'Tunai' && totalTagihan > 0 && nominalDiterima < totalTagihan;
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage(null);
+
+    if (pendapatanLain > 0 && !keteranganPendapatan.trim()) {
+      setErrorMessage('Keterangan tindakan / biaya tambahan wajib diisi.');
+      return;
+    }
+
+    if (isKurangBayar) {
+      setErrorMessage('Uang yang diterima kurang dari total tagihan.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const supabase = createClient();
+      const finalBiayaPeriksa = visit.jenis_pasien === 'BPJS' ? 0 : Number(biayaPeriksa || 0);
+      const finalPendapatanLain = Number(pendapatanLain || 0);
+
+      const { data, error } = await supabase
+        .from('visits')
+        .update({
+          biaya_periksa: finalBiayaPeriksa,
+          pendapatan_lain: finalPendapatanLain,
+          keterangan_pendapatan: keteranganPendapatan.trim() || null,
+          jenis_pembayaran: jenisPembayaran,
+          status_pembayaran: visit.jenis_pasien === 'BPJS' && totalTagihan === 0 ? 'Ditanggung BPJS' : 'Lunas',
+        })
+        .eq('id', visit.id)
+        .select(`
+          *,
+          pasien:patients(*),
+          dokter:doctors(*)
+        `)
+        .single();
+
+      if (error) throw error;
+
+      toast.success('Pelunasan kasir berhasil diselesaikan!', {
+        description: `${patientFullName} • Total: ${formatRupiah(totalTagihan)} (${jenisPembayaran})`,
+      });
+
+      if (data) {
+        onPaymentSuccess(data as unknown as Visit);
+      }
+      onClose();
+    } catch (err) {
+      console.error('Error settling payment:', err);
+      const msg = err instanceof Error ? err.message : 'Gagal memproses pelunasan kasir.';
+      setErrorMessage(msg);
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Pelunasan Kasir & Farmasi"
+      description={
+        <span>
+          Nomor Antrian: <span className="font-bold text-emerald-700 font-mono">#{visit.nomor_antrian}</span> • Status:{' '}
+          <span className="font-semibold text-slate-800">{visit.status_pembayaran}</span>
+        </span>
+      }
+      icon={
+        <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+          <CreditCard className="w-5 h-5 text-emerald-700" weight="duotone" />
+        </div>
+      }
+      maxWidth="lg"
+    >
+      <div className="shrink-0 px-4 sm:px-6 py-3 bg-slate-50 border-b border-slate-200 flex items-center justify-between flex-wrap gap-2">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-emerald-600 text-white flex items-center justify-center text-xs font-bold shrink-0">
+            <User className="w-4 h-4 text-white" weight="duotone" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="font-bold text-xs text-slate-900">{patientFullName}</span>
+              <Badge variant="umum" className="font-mono">
+                {patient?.no_rm || '-'}
+              </Badge>
+            </div>
+            <div className="flex items-center gap-2 text-[11px] text-slate-600 mt-0.5">
+              <span className="flex items-center gap-1">
+                <MapPin className="w-3.5 h-3.5 text-slate-400" weight="duotone" />
+                Desa {patient?.desa || '-'}
+              </span>
+              {patient?.usia !== undefined && patient?.usia !== null && (
+                <>
+                  <span>•</span>
+                  <span>{patient.usia} thn</span>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        <div>
+          {visit.jenis_pasien === 'BPJS' ? (
+            <Badge variant="bpjs" size="md">
+              <ShieldCheck className="w-3.5 h-3.5" weight="duotone" />
+              BPJS {patient?.no_bpjs ? `(${patient.no_bpjs})` : ''}
+            </Badge>
+          ) : (
+            <Badge variant="umum" size="md">
+              Pasien Umum
+            </Badge>
+          )}
+        </div>
+      </div>
+
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+        <div className="p-4 sm:p-6 space-y-4 overflow-y-auto">
+          {errorMessage && (
+            <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs">
+              <WarningCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" weight="duotone" />
+              <span>{errorMessage}</span>
+            </div>
+          )}
+
+          {/* Ringkasan Pemeriksaan Dokter */}
+          <div className="p-3.5 bg-blue-50/60 rounded-xl border border-blue-100 space-y-2">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-blue-950 flex items-center gap-1.5">
+                <Stethoscope className="w-4 h-4 text-blue-600" weight="duotone" />
+                Pemeriksaan Dokter: {visit.dokter?.nama || 'Dokter Jaga'}
+              </span>
+              <span className="text-[11px] text-blue-700 font-mono">
+                {visit.jam_periksa || '-'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs pt-1">
+              <div>
+                <span className="text-[10px] text-slate-500 uppercase font-bold block">Diagnosa ICD-10</span>
+                <span className="font-medium text-slate-800">
+                  {visit.kode_icd10 ? `${visit.kode_icd10} - ${visit.diagnosa_deskripsi}` : 'Belum diisi dokter'}
+                </span>
+              </div>
+              <div>
+                <span className="text-[10px] text-slate-500 uppercase font-bold block">Tindakan Medis</span>
+                <span className="font-medium text-slate-800">
+                  {visit.tindakan || 'Pemeriksaan standar'}
+                </span>
+              </div>
+            </div>
+
+            {visit.terapi_obat && (
+              <div className="pt-1.5 border-t border-blue-100/80">
+                <span className="text-[10px] text-slate-500 uppercase font-bold flex items-center gap-1 mb-1">
+                  <Pill className="w-3.5 h-3.5 text-teal-600" weight="duotone" />
+                  Resep Obat yang Diberikan:
+                </span>
+                <div className="bg-white p-2 rounded-lg border border-blue-100 text-slate-700 font-mono text-[11px] whitespace-pre-wrap leading-relaxed">
+                  {visit.terapi_obat}
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Rincian Tagihan */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <div className="flex items-center justify-between">
+              <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                <Receipt className="w-4 h-4 text-emerald-600" weight="duotone" />
+                Rincian Tagihan Kasir
+              </h3>
+              {visit.jenis_pasien === 'BPJS' && (
+                <Badge variant="bpjs">Klaim Kapitasi BPJS</Badge>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <Input
+                type="number"
+                min="0"
+                step="1000"
+                label="Biaya Pemeriksaan Pokok"
+                leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
+                value={biayaPeriksa}
+                onChange={(e) => setBiayaPeriksa(Number(e.target.value))}
+                disabled={visit.jenis_pasien === 'BPJS'}
+                helperText={visit.jenis_pasien === 'BPJS' ? 'Pasien BPJS ditanggung kapitasi (Rp 0)' : 'Tarif konsultasi & periksa'}
+                className="font-mono font-bold"
+              />
+
+              <Input
+                type="number"
+                min="0"
+                step="1000"
+                label="Biaya Tindakan / Obat Tambahan"
+                leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
+                value={pendapatanLain}
+                onChange={(e) => setPendapatanLain(Number(e.target.value))}
+                placeholder="0"
+                className="font-mono font-bold"
+              />
+            </div>
+
+            {pendapatanLain > 0 && (
+              <div>
+                <Input
+                  label="Keterangan Tindakan / Biaya Tambahan"
+                  requiredIndicator
+                  value={keteranganPendapatan}
+                  onChange={(e) => setKeteranganPendapatan(e.target.value)}
+                  placeholder="Contoh: Nebulizer / Jahit Luka / Cek GDS"
+                  required
+                />
+              </div>
+            )}
+
+            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-700 uppercase">
+                Total Tagihan Pasien
+              </span>
+              <span className="text-lg font-extrabold text-slate-900 font-mono">
+                {formatRupiah(totalTagihan)}
+              </span>
+            </div>
+          </div>
+
+          {/* Metode Pembayaran & Kalkulator Kasir */}
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <Money className="w-4 h-4 text-blue-600" weight="duotone" />
+              Metode Pembayaran
+            </h3>
+
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setJenisPembayaran('Tunai')}
+                className={cn(
+                  'py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition',
+                  jenisPembayaran === 'Tunai'
+                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
+                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                )}
+              >
+                <Money className="w-4 h-4" weight="duotone" />
+                Tunai (Cash)
+              </button>
+              <button
+                type="button"
+                onClick={() => setJenisPembayaran('TF')}
+                className={cn(
+                  'py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition',
+                  jenisPembayaran === 'TF'
+                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
+                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                )}
+              >
+                <CreditCard className="w-4 h-4" weight="duotone" />
+                Transfer Bank (TF)
+              </button>
+            </div>
+
+            {jenisPembayaran === 'Tunai' && (
+              <div className="pt-2 border-t border-slate-200 space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1000"
+                    label="Uang yang Diterima (Rp)"
+                    leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
+                    value={uangDiterima}
+                    onChange={(e) => setUangDiterima(e.target.value)}
+                    className="font-mono font-bold"
+                  />
+
+                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase font-bold text-emerald-800 block">
+                        Uang Kembalian
+                      </span>
+                      <span className="text-base font-extrabold text-emerald-900 font-mono">
+                        {formatRupiah(uangKembalian)}
+                      </span>
+                    </div>
+                    {nominalDiterima >= totalTagihan && totalTagihan > 0 && (
+                      <Badge variant="lunas">Pas / Lunas</Badge>
+                    )}
+                  </div>
+                </div>
+
+                {/* Quick Cash Buttons */}
+                <div className="flex flex-wrap gap-1.5 pt-1">
+                  <span className="text-[10px] text-slate-500 self-center mr-1 font-semibold uppercase">Nominal Cepat:</span>
+                  {[totalTagihan, 50000, 100000, 150000, 200000]
+                    .filter((v, i, a) => v > 0 && a.indexOf(v) === i)
+                    .map((nom) => (
+                      <button
+                        key={nom}
+                        type="button"
+                        onClick={() => setUangDiterima(String(nom))}
+                        className="px-2.5 py-1 text-[11px] font-mono font-medium rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition"
+                      >
+                        {nom === totalTagihan ? 'Uang Pas' : formatRupiah(nom)}
+                      </button>
+                    ))}
+                </div>
+
+                {isKurangBayar && (
+                  <p className="text-[11px] text-rose-600 font-medium">
+                    Uang yang diterima kurang {formatRupiah(totalTagihan - nominalDiterima)} dari total tagihan.
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Sticky Footer */}
+        <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 p-4 sm:px-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 z-10">
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="w-full sm:w-auto min-h-[44px]"
+          >
+            Batal
+          </Button>
+          <Button
+            type="submit"
+            variant="primary"
+            isLoading={isSubmitting}
+            disabled={isKurangBayar}
+            leftIcon={<CheckCircle className="w-4 h-4 text-white" weight="bold" />}
+            className="w-full sm:w-auto min-h-[44px]"
+          >
+            Selesaikan Pembayaran & Cetak Kuitansi
+          </Button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export default PaymentModal;

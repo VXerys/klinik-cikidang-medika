@@ -12,6 +12,8 @@ import {
   FileXls,
   Buildings,
   CaretRight,
+  CaretLeft,
+  SidebarSimple,
   X,
 } from '@phosphor-icons/react';
 
@@ -27,9 +29,16 @@ const menus = [
 export interface SidebarProps {
   isMobileOpen?: boolean;
   onCloseMobile?: () => void;
+  isDesktopCollapsed?: boolean;
+  onToggleDesktop?: () => void;
 }
 
-export default function Sidebar({ isMobileOpen = false, onCloseMobile }: SidebarProps) {
+export default function Sidebar({
+  isMobileOpen = false,
+  onCloseMobile,
+  isDesktopCollapsed = false,
+  onToggleDesktop,
+}: SidebarProps) {
   const pathname = usePathname();
 
   const navigationContent = (
@@ -77,18 +86,35 @@ export default function Sidebar({ isMobileOpen = false, onCloseMobile }: Sidebar
 
   return (
     <>
-      {/* 1. Desktop Persistent Sidebar */}
-      <aside className="hidden lg:flex w-64 bg-slate-900 text-slate-100 flex-col shrink-0 min-h-screen border-r border-slate-800 select-none">
-        <div className="p-5 border-b border-slate-800 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-600/30 shrink-0">
-            <Buildings className="w-5 h-5 text-white" weight="duotone" />
+      {/* 1. Desktop Persistent Sidebar (Hideable / Collapsible) */}
+      <aside
+        className={`hidden lg:flex flex-col shrink-0 min-h-screen bg-slate-900 text-slate-100 border-r border-slate-800 select-none transition-all duration-300 ease-in-out ${
+          isDesktopCollapsed ? 'w-0 overflow-hidden border-r-0' : 'w-64'
+        }`}
+      >
+        <div className="p-4 border-b border-slate-800 flex items-center justify-between">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center font-bold text-white shadow-md shadow-blue-600/30 shrink-0">
+              <Buildings className="w-5 h-5 text-white" weight="duotone" />
+            </div>
+            <div className="min-w-0">
+              <h1 className="font-bold text-sm tracking-wide text-white leading-tight truncate">
+                CIKIDANG MEDIKA
+              </h1>
+              <p className="text-[11px] text-blue-400 font-medium truncate">Sistem Informasi Klinik</p>
+            </div>
           </div>
-          <div className="min-w-0">
-            <h1 className="font-bold text-sm tracking-wide text-white leading-tight truncate">
-              CIKIDANG MEDIKA
-            </h1>
-            <p className="text-[11px] text-blue-400 font-medium truncate">Sistem Informasi Klinik</p>
-          </div>
+          {onToggleDesktop && (
+            <button
+              type="button"
+              onClick={onToggleDesktop}
+              aria-label="Sembunyikan menu navigasi"
+              title="Sembunyikan Menu (Layar Penuh)"
+              className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition min-w-[36px] min-h-[36px] flex items-center justify-center shrink-0"
+            >
+              <SidebarSimple className="w-5 h-5" weight="bold" />
+            </button>
+          )}
         </div>
 
         {navigationContent}

@@ -22,12 +22,13 @@ export default function Navbar({ onToggleSidebar }: NavbarProps) {
   return (
     <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-2.5 sm:px-6 shrink-0 shadow-2xs min-w-0 w-full overflow-x-hidden">
       <div className="flex items-center gap-1.5 sm:gap-3 min-w-0 flex-1 mr-2">
-        {/* Mobile Hamburger Button (min 44x44px touch target) */}
+        {/* Sidebar Toggle Button (Mobile drawer & Desktop collapse, min 44x44px) */}
         <button
           type="button"
           onClick={onToggleSidebar}
-          aria-label="Buka menu navigasi"
-          className="lg:hidden p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+          aria-label="Buka atau sembunyikan menu navigasi"
+          title="Buka / Sembunyikan Menu Navigasi"
+          className="p-2 rounded-xl text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition focus:outline-none focus:ring-2 focus:ring-blue-500 min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
         >
           <List className="w-5 h-5" weight="bold" />
         </button>

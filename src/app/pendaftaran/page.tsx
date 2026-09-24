@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import {
   UserPlus,
   Receipt,
@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   WarningCircle,
   NotePencil,
+  Ticket,
+  CreditCard,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
@@ -23,23 +25,30 @@ import { NewPatientModal } from '@/components/pendaftaran/NewPatientModal';
 import { EditPatientModal } from '@/components/pendaftaran/EditPatientModal';
 import { RegisterVisitModal } from '@/components/pendaftaran/RegisterVisitModal';
 import { ReceiptModal } from '@/components/pendaftaran/ReceiptModal';
+import { QueueTicketModal } from '@/components/pendaftaran/QueueTicketModal';
+import { PaymentModal } from '@/components/pendaftaran/PaymentModal';
 import { Button, Badge, Card } from '@/components/ui';
-import { formatRupiah } from '@/lib/utils';
+import { formatRupiah, cn } from '@/lib/utils';
 
 export default function PendaftaranKasirPage() {
   const [visits, setVisits] = useState<Visit[]>([]);
   const [isLoadingVisits, setIsLoadingVisits] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [viewMode, setViewMode] = useState<'today' | 'recent'>('today');
+  const [statusFilter, setStatusFilter] = useState<'semua' | 'menunggu_dokter' | 'menunggu_bayar' | 'lunas'>('semua');
 
   const [isNewPatientOpen, setIsNewPatientOpen] = useState(false);
   const [isEditPatientOpen, setIsEditPatientOpen] = useState(false);
   const [patientToEdit, setPatientToEdit] = useState<Patient | null>(null);
   const [isRegisterVisitOpen, setIsRegisterVisitOpen] = useState(false);
   const [isReceiptOpen, setIsReceiptOpen] = useState(false);
+  const [isTicketOpen, setIsTicketOpen] = useState(false);
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
 
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
   const [activeReceiptVisit, setActiveReceiptVisit] = useState<Visit | null>(null);
+  const [activeTicketVisit, setActiveTicketVisit] = useState<Visit | null>(null);
+  const [activePaymentVisit, setActivePaymentVisit] = useState<Visit | null>(null);
 
   const fetchVisits = useCallback(async () => {
     setIsLoadingVisits(true);
@@ -52,19 +61,7 @@ export default function PendaftaranKasirPage() {
       let query = supabase
         .from('visits')
         .select(`
-          id,
-          nomor_antrian,
-          tanggal_periksa,
-          jam_periksa,
-          bulan,
-          keluhan_anamnesa,
-          jenis_pasien,
-          biaya_periksa,
-          pendapatan_lain,
-          keterangan_pendapatan,
-          jenis_pembayaran,
-          status_pembayaran,
-          created_at,
+          *,
           pasien:patients(*),
           dokter:doctors(*)
         `);
@@ -117,9 +114,43 @@ export default function PendaftaranKasirPage() {
 
   const handleVisitRegistered = (newVisit: Visit) => {
     fetchVisits();
-    setActiveReceiptVisit(newVisit);
+    setActiveTicketVisit(newVisit);
+    setIsTicketOpen(true);
+  };
+
+  const handlePaymentSuccess = (updatedVisit: Visit) => {
+    fetchVisits();
+    setActiveReceiptVisit(updatedVisit);
     setIsReceiptOpen(true);
   };
+
+  const isSettled = (v: Visit) =>
+    v.status_pembayaran === 'Lunas' || v.status_pembayaran === 'Ditanggung BPJS';
+
+  const isWaitingDoctor = (v: Visit) => {
+    if (isSettled(v)) return false;
+    if (v.status_pembayaran === 'Menunggu Kasir') return false;
+    return v.status_pembayaran === 'Menunggu Dokter' || !v.kode_icd10;
+  };
+
+  const isWaitingPayment = (v: Visit) => {
+    if (isSettled(v)) return false;
+    if (isWaitingDoctor(v)) return false;
+    return v.status_pembayaran === 'Menunggu Kasir' || v.status_pembayaran === 'Menunggu Pembayaran' || Boolean(v.kode_icd10);
+  };
+
+  const countMenungguDokter = useMemo(() => visits.filter(isWaitingDoctor).length, [visits]);
+  const countMenungguBayar = useMemo(() => visits.filter(isWaitingPayment).length, [visits]);
+  const countLunas = useMemo(() => visits.filter(isSettled).length, [visits]);
+
+  const filteredVisits = useMemo(() => {
+    return visits.filter((v) => {
+      if (statusFilter === 'menunggu_dokter') return isWaitingDoctor(v);
+      if (statusFilter === 'menunggu_bayar') return isWaitingPayment(v);
+      if (statusFilter === 'lunas') return isSettled(v);
+      return true;
+    });
+  }, [visits, statusFilter]);
 
   const todayFormatted = new Intl.DateTimeFormat('id-ID', {
     weekday: 'long',
@@ -136,7 +167,7 @@ export default function PendaftaranKasirPage() {
             Loket Pendaftaran & Kasir
           </h1>
           <p className="text-xs text-slate-500 mt-1">
-            Pencarian cepat pasien terdaftar, registrasi pasien baru, dan antrian poli rawat jalan.
+            Pencarian cepat pasien terdaftar, registrasi pasien baru, antrian poli, dan pelunasan kasir.
           </p>
         </div>
         <div className="w-full sm:w-auto">
@@ -152,7 +183,7 @@ export default function PendaftaranKasirPage() {
         </div>
       </div>
 
-      <Card className="p-5 space-y-3">
+      <Card className="p-5 space-y-3 overflow-visible relative z-30">
         <div className="flex items-center justify-between">
           <label className="text-xs font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
             <Users className="w-4 h-4 text-blue-600" weight="duotone" />
@@ -229,6 +260,61 @@ export default function PendaftaranKasirPage() {
           </div>
         </div>
 
+        {/* Status Filter Tabs */}
+        <div className="px-4 sm:px-5 py-2.5 bg-slate-50/80 border-b border-slate-200 flex items-center gap-1.5 overflow-x-auto">
+          <button
+            type="button"
+            onClick={() => setStatusFilter('semua')}
+            className={cn(
+              'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition min-h-[36px]',
+              statusFilter === 'semua'
+                ? 'bg-slate-900 text-white shadow-xs'
+                : 'bg-white text-slate-600 hover:text-slate-900 border border-slate-200'
+            )}
+          >
+            Semua ({visits.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('menunggu_dokter')}
+            className={cn(
+              'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition min-h-[36px] flex items-center gap-1.5',
+              statusFilter === 'menunggu_dokter'
+                ? 'bg-blue-600 text-white shadow-xs'
+                : 'bg-white text-blue-700 hover:bg-blue-50 border border-blue-200'
+            )}
+          >
+            <Stethoscope className="w-3.5 h-3.5" weight="duotone" />
+            Menunggu Dokter ({countMenungguDokter})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('menunggu_bayar')}
+            className={cn(
+              'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition min-h-[36px] flex items-center gap-1.5',
+              statusFilter === 'menunggu_bayar'
+                ? 'bg-amber-600 text-white shadow-xs'
+                : 'bg-white text-amber-700 hover:bg-amber-50 border border-amber-200'
+            )}
+          >
+            <CreditCard className="w-3.5 h-3.5" weight="duotone" />
+            Menunggu Pembayaran ({countMenungguBayar})
+          </button>
+          <button
+            type="button"
+            onClick={() => setStatusFilter('lunas')}
+            className={cn(
+              'px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition min-h-[36px] flex items-center gap-1.5',
+              statusFilter === 'lunas'
+                ? 'bg-emerald-600 text-white shadow-xs'
+                : 'bg-white text-emerald-700 hover:bg-emerald-50 border border-emerald-200'
+            )}
+          >
+            <CheckCircle className="w-3.5 h-3.5" weight="duotone" />
+            Selesai / Lunas ({countLunas})
+          </button>
+        </div>
+
         {errorMessage && (
           <div className="m-4 p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-center gap-2 text-xs text-rose-700">
             <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
@@ -247,7 +333,7 @@ export default function PendaftaranKasirPage() {
                 <th className="py-3 px-4">Jenis Pasien</th>
                 <th className="py-3 px-4">Keluhan Anamnesa</th>
                 <th className="py-3 px-4 text-right">Total Biaya</th>
-                <th className="py-3 px-4 text-center">Pembayaran</th>
+                <th className="py-3 px-4 text-center">Status Pembayaran</th>
                 <th className="py-3 px-4 text-right">Aksi</th>
               </tr>
             </thead>
@@ -259,14 +345,16 @@ export default function PendaftaranKasirPage() {
                     <span>Memuat data kunjungan dari database...</span>
                   </td>
                 </tr>
-              ) : visits.length === 0 ? (
+              ) : filteredVisits.length === 0 ? (
                 <tr>
                   <td colSpan={9} className="py-16 text-center text-slate-400">
                     <div className="w-12 h-12 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto mb-3">
                       <Users className="w-6 h-6" weight="duotone" />
                     </div>
                     <p className="text-sm font-semibold text-slate-700">
-                      {viewMode === 'today'
+                      {statusFilter !== 'semua'
+                        ? 'Tidak ada kunjungan pada status ini'
+                        : viewMode === 'today'
                         ? 'Belum ada kunjungan pasien terdaftar hari ini'
                         : 'Tidak ada data kunjungan ditemukan'}
                     </p>
@@ -276,7 +364,7 @@ export default function PendaftaranKasirPage() {
                   </td>
                 </tr>
               ) : (
-                visits.map((visit) => {
+                filteredVisits.map((visit) => {
                   const patientName = visit.pasien
                     ? [visit.pasien.gelar, visit.pasien.nama].filter(Boolean).join(' ')
                     : 'Pasien Tidak Diketahui';
@@ -284,9 +372,9 @@ export default function PendaftaranKasirPage() {
                   const totalBayar = Number(visit.biaya_periksa || 0) + Number(visit.pendapatan_lain || 0);
 
                   return (
-                    <tr key={visit.id} className="hover:bg-slate-50/80 transition">
-                      <td className="py-3 px-4 text-center">
-                        <span className="font-mono font-bold text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md">
+                    <tr key={visit.id} className="hover:bg-slate-50/80 transition group">
+                      <td className="py-3 px-4 text-center whitespace-nowrap">
+                        <span className="font-mono font-bold text-slate-800 bg-slate-100 px-2 py-1 rounded-md text-xs">
                           #{visit.nomor_antrian || '-'}
                         </span>
                       </td>
@@ -362,14 +450,52 @@ export default function PendaftaranKasirPage() {
                       </td>
 
                       <td className="py-3 px-4 text-center whitespace-nowrap">
-                        <Badge variant="lunas">
-                          <CheckCircle className="w-3 h-3 text-emerald-600" weight="duotone" />
-                          {visit.jenis_pembayaran || 'Tunai'}
-                        </Badge>
+                        {isWaitingDoctor(visit) ? (
+                          <Badge variant="default" className="bg-blue-50 text-blue-700 border-blue-200">
+                            <Clock className="w-3 h-3 text-blue-600" weight="bold" />
+                            Menunggu Dokter
+                          </Badge>
+                        ) : isWaitingPayment(visit) ? (
+                          <Badge variant="warning">
+                            Menunggu Kasir
+                          </Badge>
+                        ) : visit.status_pembayaran === 'Ditanggung BPJS' ? (
+                          <Badge variant="bpjs">
+                            <ShieldCheck className="w-3 h-3" weight="duotone" />
+                            BPJS
+                          </Badge>
+                        ) : visit.status_pembayaran === 'Lunas' ? (
+                          <Badge variant="lunas">
+                            <CheckCircle className="w-3 h-3 text-emerald-600" weight="duotone" />
+                            Lunas ({visit.jenis_pembayaran || 'Tunai'})
+                          </Badge>
+                        ) : (
+                          <Badge variant="default">
+                            {visit.status_pembayaran || 'Menunggu'}
+                          </Badge>
+                        )}
                       </td>
 
                       <td className="py-3 px-4 text-right whitespace-nowrap">
                         <div className="flex items-center justify-end gap-1.5">
+                          {/* Tombol aksi bayar jika menunggu kasir */}
+                          {isWaitingPayment(visit) && (
+                            <Button
+                              type="button"
+                              variant="primary"
+                              size="sm"
+                              leftIcon={<CreditCard className="w-3.5 h-3.5 text-white" weight="bold" />}
+                              onClick={() => {
+                                setActivePaymentVisit(visit);
+                                setIsPaymentOpen(true);
+                              }}
+                              className="min-h-[36px] bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-xs text-xs px-2.5"
+                              title="Proses pelunasan kasir"
+                            >
+                              Bayar Kasir
+                            </Button>
+                          )}
+
                           {visit.pasien && (
                             <Button
                               type="button"
@@ -387,15 +513,32 @@ export default function PendaftaranKasirPage() {
                             type="button"
                             variant="outline"
                             size="sm"
-                            leftIcon={<Receipt className="w-3.5 h-3.5 text-blue-600" weight="duotone" />}
+                            leftIcon={<Ticket className="w-3.5 h-3.5 text-blue-600" weight="duotone" />}
                             onClick={() => {
-                              setActiveReceiptVisit(visit);
-                              setIsReceiptOpen(true);
+                              setActiveTicketVisit(visit);
+                              setIsTicketOpen(true);
                             }}
                             className="min-h-[36px]"
+                            title="Cetak nomor antrean poli"
                           >
-                            Kuitansi
+                            Karcis
                           </Button>
+                          {(visit.status_pembayaran === 'Lunas' || visit.status_pembayaran === 'Ditanggung BPJS') && (
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              leftIcon={<Receipt className="w-3.5 h-3.5 text-emerald-600" weight="duotone" />}
+                              onClick={() => {
+                                setActiveReceiptVisit(visit);
+                                setIsReceiptOpen(true);
+                              }}
+                              className="min-h-[36px]"
+                              title="Cetak kuitansi resmi"
+                            >
+                              Kuitansi
+                            </Button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -431,6 +574,25 @@ export default function PendaftaranKasirPage() {
         }}
         patient={selectedPatient}
         onVisitRegistered={handleVisitRegistered}
+      />
+
+      <QueueTicketModal
+        isOpen={isTicketOpen}
+        onClose={() => {
+          setIsTicketOpen(false);
+          setActiveTicketVisit(null);
+        }}
+        visit={activeTicketVisit}
+      />
+
+      <PaymentModal
+        isOpen={isPaymentOpen}
+        onClose={() => {
+          setIsPaymentOpen(false);
+          setActivePaymentVisit(null);
+        }}
+        visit={activePaymentVisit}
+        onPaymentSuccess={handlePaymentSuccess}
       />
 
       <ReceiptModal

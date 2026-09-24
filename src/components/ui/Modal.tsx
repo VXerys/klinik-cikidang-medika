@@ -53,12 +53,12 @@ export function Modal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150 print:p-0 print:bg-white print:static"
+      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150 print:p-0 print:bg-white print:static"
       onClick={onClose}
     >
       <div
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh] print:max-h-none print:shadow-none print:border-none print:w-full print:rounded-none',
+          'relative w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[90vh] min-h-0 print:max-h-none print:shadow-none print:border-none print:w-full print:rounded-none',
           maxWidthMap[maxWidth],
           className
         )}
@@ -66,7 +66,7 @@ export function Modal({
       >
         {/* Header */}
         {(title || icon) && (
-          <div className="px-4 sm:px-6 py-3.5 sm:py-4 bg-slate-50 border-b border-slate-200 flex items-center justify-between print:hidden">
+          <div className="shrink-0 px-4 sm:px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between print:hidden">
             <div className="flex items-center gap-3 min-w-0 mr-2">
               {icon && <div className="shrink-0">{icon}</div>}
               <div className="min-w-0">
@@ -85,9 +85,12 @@ export function Modal({
           </div>
         )}
 
-        {/* Content */}
-        {children}
+        {/* Content Wrapper */}
+        <div className="flex-1 min-h-0 overflow-y-auto flex flex-col">
+          {children}
+        </div>
       </div>
     </div>
+
   );
 }

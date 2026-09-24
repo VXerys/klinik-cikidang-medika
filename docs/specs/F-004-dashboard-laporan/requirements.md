@@ -2,7 +2,7 @@
 id: F-004-REQ
 feature: F-004
 title: "Requirements: Dashboard Eksekutif & Ekspor Excel"
-status: draft
+status: implemented
 owner: "Developer / dr. Ovan"
 last_updated: "2026-09-19"
 last_verified_commit: unverified

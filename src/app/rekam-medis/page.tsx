@@ -13,7 +13,6 @@ import { createClient } from '@/lib/supabase/client';
 import type { Visit } from '@/types/database';
 import { QueueList } from '@/components/rekam-medis/QueueList';
 import { ExaminationForm } from '@/components/rekam-medis/ExaminationForm';
-import { PatientHistoryTimeline } from '@/components/rekam-medis/PatientHistoryTimeline';
 import { Button } from '@/components/ui';
 
 export default function RekamMedisPage() {
@@ -171,18 +170,11 @@ export default function RekamMedisPage() {
 
         <div id="exam-workstation" className="lg:col-span-7 xl:col-span-8 space-y-6 scroll-mt-6">
           {selectedVisit ? (
-            <>
-              <ExaminationForm
-                key={selectedVisit.id}
-                visit={selectedVisit}
-                onSaveSuccess={handleSaveSuccess}
-              />
-
-              <PatientHistoryTimeline
-                patientId={selectedVisit.pasien_id}
-                currentVisitId={selectedVisit.id}
-              />
-            </>
+            <ExaminationForm
+              key={selectedVisit.id}
+              visit={selectedVisit}
+              onSaveSuccess={handleSaveSuccess}
+            />
           ) : (
             <div className="bg-white rounded-2xl border border-slate-200 p-12 text-center shadow-xs space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-blue-50 text-blue-600 flex items-center justify-center mx-auto border border-blue-100">

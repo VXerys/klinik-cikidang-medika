@@ -209,7 +209,8 @@ export function EditPatientModal({
       description={`Perbarui informasi identitas master pasien [${patient.no_rm}].`}
       maxWidth="2xl"
     >
-      <form onSubmit={handleSubmit} className="space-y-4">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+        <div className="p-4 sm:p-6 space-y-4">
         {errorMessage && (
           <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
             <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
@@ -359,7 +360,10 @@ export function EditPatientModal({
           />
         </div>
 
-        <div className="pt-4 border-t border-slate-200 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
+        </div>
+
+        {/* Sticky Footer Actions */}
+        <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 p-4 sm:px-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 z-10">
           <Button
             type="button"
             variant="ghost"

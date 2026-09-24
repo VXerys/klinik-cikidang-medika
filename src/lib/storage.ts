@@ -116,9 +116,17 @@ export async function uploadMedicalPhoto(
         path: data.path,
       };
     } catch (err: unknown) {
-      console.warn('Upload Supabase gagal, fallback ke Cloudinary...', err);
-      // Fallback ke Cloudinary jika Supabase Storage gagal atau kuota penuh
-      return uploadToCloudinary(compressedBlob, filename);
+      console.warn('Upload Supabase gagal, memeriksa konfigurasi fallback Cloudinary...', err);
+      const cloudinaryPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      if (cloudinaryPreset) {
+        try {
+          return await uploadToCloudinary(compressedBlob, filename);
+        } catch (cloudinaryErr) {
+          console.error('Fallback Cloudinary juga gagal:', cloudinaryErr);
+        }
+      }
+      const errMessage = err instanceof Error ? err.message : 'Terjadi kendala saat menyimpan foto medis';
+      throw new Error(`Gagal mengunggah foto ke Supabase Storage: ${errMessage}`);
     }
   }
 
@@ -130,10 +138,16 @@ export async function uploadMedicalPhoto(
  * Helper upload ke Cloudinary via unsigned/signed upload
  */
 async function uploadToCloudinary(blob: Blob, filename: string): Promise<UploadPhotoResult> {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'pzlvn2bl';
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !uploadPreset) {
+    throw new Error('Konfigurasi Cloudinary belum lengkap (NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET belum diset)');
+  }
+
   const formData = new FormData();
   formData.append('file', blob, filename);
-  formData.append('upload_preset', 'klinik_medika'); // preset di Cloudinary
+  formData.append('upload_preset', uploadPreset);
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: 'POST',

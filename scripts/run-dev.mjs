@@ -47,6 +47,7 @@ console.log('');
 const cmd = process.platform === 'win32' ? 'npx.cmd' : 'npx';
 const child = spawn(cmd, ['next', 'dev'], {
   stdio: 'inherit',
+  shell: true,
 });
 
 child.on('exit', (code) => {

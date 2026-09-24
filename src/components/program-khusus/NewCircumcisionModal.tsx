@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Scissors,
   Camera,
@@ -23,6 +23,7 @@ interface NewCircumcisionModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSuccess: () => void;
+  initialPatient?: Patient | null;
 }
 
 interface PhotoSlotState {
@@ -43,8 +44,15 @@ const initialSlotState: PhotoSlotState = {
   isCompressing: false,
 };
 
-export function NewCircumcisionModal({ isOpen, onClose, onSuccess }: NewCircumcisionModalProps) {
-  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatient }: NewCircumcisionModalProps) {
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(initialPatient || null);
+
+  useEffect(() => {
+    if (initialPatient) {
+      setSelectedPatient(initialPatient);
+    }
+  }, [initialPatient, isOpen]);
+
   const [tanggalTindakan, setTanggalTindakan] = useState(new Date().toISOString().split('T')[0]);
   const [dokterNama, setDokterNama] = useState('dr. Ovan');
   const [metode, setMetode] = useState('Laser / Kauter');
@@ -299,7 +307,8 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess }: NewCircumci
       }
       maxWidth="xl"
     >
-      <form onSubmit={handleSubmit} className="p-5 space-y-4 overflow-y-auto max-h-[75vh] text-xs">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+        <div className="p-4 sm:p-6 space-y-4 text-xs">
         {errorMsg && (
           <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center gap-2">
             <WarningCircle weight="duotone" className="w-4 h-4 shrink-0" />
@@ -445,8 +454,10 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess }: NewCircumci
           />
         </div>
 
-        {/* Footer Actions */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pt-3 border-t border-slate-100">
+        </div>
+
+        {/* Sticky Footer Actions */}
+        <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 z-10">
           <div className="text-[11px] text-slate-500">
             {uploadProgress && (
               <span className="flex items-center gap-1.5 text-blue-600 font-semibold">
@@ -456,19 +467,19 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess }: NewCircumci
             )}
           </div>
 
-          <div className="flex items-center justify-end gap-2">
+          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
             <button
               type="button"
               onClick={onClose}
               disabled={isSubmitting}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition min-h-[44px]"
+              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition min-h-[44px] w-full sm:w-auto"
             >
               Batal
             </button>
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition min-h-[44px] flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none shadow-xs"
+              className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition min-h-[44px] flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none shadow-xs w-full sm:w-auto"
             >
               {isSubmitting ? (
                 <>

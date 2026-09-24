@@ -158,7 +158,7 @@ export function PatientSearchAutocomplete({
   const hasSearchQuery = query.trim().length >= 2;
 
   return (
-    <div ref={containerRef} className={cn('relative w-full', className)}>
+    <div ref={containerRef} className={cn('relative w-full', isOpen && hasSearchQuery ? 'z-40' : '', className)}>
       <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-xs transition-all focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 min-h-[44px]">
         <div className="pl-3.5 pr-2 flex items-center justify-center text-slate-400 pointer-events-none">
           <MagnifyingGlass className="w-4 h-4" weight="duotone" />
@@ -201,7 +201,7 @@ export function PatientSearchAutocomplete({
       </div>
 
       {isOpen && hasSearchQuery && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100">
+        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-100">
           {results.length > 0 ? (
             <div>
               <div className="px-3 py-2 bg-slate-50 text-[11px] font-semibold text-slate-500 flex justify-between items-center">

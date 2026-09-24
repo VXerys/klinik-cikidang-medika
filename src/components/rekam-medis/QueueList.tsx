@@ -30,7 +30,7 @@ export function QueueList({
   const [filterStatus, setFilterStatus] = useState<'all' | 'waiting' | 'done'>('waiting');
   const [searchQuery, setSearchQuery] = useState('');
 
-  const isVisitDone = (v: Visit) => Boolean(v.kode_icd10 || v.diagnosa_deskripsi || v.terapi_obat);
+  const isVisitDone = (v: Visit) => v.status_pembayaran !== 'Menunggu Dokter' || Boolean(v.kode_icd10);
 
   const filteredVisits = visits.filter((v) => {
     const done = isVisitDone(v);

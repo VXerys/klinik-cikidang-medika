@@ -338,6 +338,8 @@ Project-specific prohibitions:
 
 - Do not build features for Emerys Glow skincare data. That scope is explicitly excluded per client instruction.
 - Do not integrate with BPJS P-Care API. The system records BPJS data internally only, per client confirmation.
+- Strict MVP Scope Control: Dilarang menambahkan, mengimplementasikan, atau merekomendasikan fitur baru yang di luar lingkup resmi MVP (F-001 s/d F-006). Jika agen memiliki saran atau rekomendasi di luar MVP, agen hanya boleh menyampaikannya sebagai opsi Post-MVP dan DILARANG KERAS mengimplementasikannya kecuali setelah pengguna secara eksplisit menyatakan SETUJU.
+
 
 ## 15. Definition of Done
 

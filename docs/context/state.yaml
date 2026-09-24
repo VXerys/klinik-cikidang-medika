@@ -57,14 +57,14 @@ features:
     active_phase: completed
 
 active:
-  feature_id: "F-007"
-  task_id: "TASK-007-DELIVERY-GATE"
+  feature_id: "F-001"
+  task_id: "PHASE-2-UI-RESPONSIVE-FIXES"
   branch: "staging"
 
 blockers: []
 risks: []
 
-last_updated: "2026-09-23"
+last_updated: "2026-09-24"
 last_verified_commit: "9a59997"
 
 

@@ -8,11 +8,13 @@ import {
   User,
   Heartbeat,
   FileText,
+  Printer,
 } from '@phosphor-icons/react';
 import { Lungs } from 'healthicons-react';
 import { toast } from 'sonner';
 import type { TbcProgram } from '@/types/database';
 import { Modal } from '@/components/ui/Modal';
+import { TbTreatmentCardPrint } from '@/components/program-khusus/TbTreatmentCardPrint';
 import { createClient } from '@/lib/supabase/client';
 
 interface TbcControlCardProps {
@@ -23,6 +25,8 @@ interface TbcControlCardProps {
 export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
   const [isUpdating, setIsUpdating] = useState(false);
   const [showUpdateModal, setShowUpdateModal] = useState(false);
+  const [showPrintCard, setShowPrintCard] = useState(false);
+
   const [currentMonth, setCurrentMonth] = useState(program.bulan_ke || 1);
   const [statusTbc, setStatusTbc] = useState(program.status_tbc);
   const [dahakResult, setDahakResult] = useState(program.hasil_dahak_akhir || 'Belum Periksa');
@@ -174,15 +178,27 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
             &ldquo;{program.catatan}&rdquo;
           </div>
         )}
-        <button
-          type="button"
-          onClick={() => setShowUpdateModal(true)}
-          className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs transition self-end sm:self-auto focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
-        >
-          <span>Update Status</span>
-          <CaretRight className="w-3.5 h-3.5" />
-        </button>
+        <div className="flex items-center gap-2 self-end sm:self-auto">
+          <button
+            type="button"
+            onClick={() => setShowPrintCard(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-white hover:bg-rose-50 border border-rose-200 rounded-lg text-xs font-semibold text-rose-700 shadow-2xs transition focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:outline-none"
+            title="Cetak Formulir TB 01 Saku Pasien"
+          >
+            <Printer className="w-3.5 h-3.5 text-rose-600" weight="bold" />
+            <span>Cetak Kartu TB</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setShowUpdateModal(true)}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 min-h-[36px] bg-white hover:bg-slate-100 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 shadow-2xs transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
+          >
+            <span>Update Status</span>
+            <CaretRight className="w-3.5 h-3.5" />
+          </button>
+        </div>
       </div>
+
 
       {/* Modal Update Status */}
       <Modal
@@ -278,6 +294,14 @@ export function TbcControlCard({ program, onRefresh }: TbcControlCardProps) {
           </div>
         </div>
       </Modal>
+
+      {/* Modal Cetak Kartu Berobat TBC Saku */}
+      <TbTreatmentCardPrint
+        isOpen={showPrintCard}
+        onClose={() => setShowPrintCard(false)}
+        program={program}
+      />
     </div>
   );
 }
+

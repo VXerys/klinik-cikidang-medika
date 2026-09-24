@@ -45,7 +45,7 @@ export type Visit = {
   pendapatan_lain: number;
   keterangan_pendapatan?: string;
   jenis_pembayaran?: 'Tunai' | 'TF';
-  status_pembayaran: 'Lunas' | 'Pending';
+  status_pembayaran: 'Menunggu Dokter' | 'Menunggu Kasir' | 'Menunggu Pembayaran' | 'Lunas' | 'Ditanggung BPJS' | 'Pending';
   pasien?: Patient;
   dokter?: Doctor;
   created_at: string;

@@ -44,7 +44,21 @@ Berdasarkan dokumen resmi **Proposal Penawaran SIM Klinik Pratama Cikidang Medik
 | **Hemat Biaya Berkelanjutan (Rp 0/Bln)** | Memanfaatkan arsitektur *Zero-Cost Serverless Cloud* (Vercel Free Tier + Supabase PostgreSQL + Cloudinary Fallback), bebas biaya langganan bulanan. |
 | **Data Minimal Sesuai Alur Nyata** | Fitur ramping dan fokus pada kebutuhan klinik nyata (tanpa kerumitan bridging BPJS P-Care dan tanpa stok butir apotek yang sudah ditangani RME dokter). |
 
+### 1.3 Matriks Batasan Ruang Lingkup (Scope Boundaries Matrix)
+Berdasarkan kesepakatan penawaran resmi dan transkrip persetujuan dr. Ovan (Total Deal Rp 2.500.000 bersih), batasan ruang lingkup didefinisikan secara tegas guna mencegah penyimpangan fitur (*scope creep*):
+
+| Modul / Komponen | In-Scope Core MVP (Deal Rp 2.500.000) | Out-of-Scope / Post-MVP Extension |
+|---|---|---|
+| **Pendaftaran & Loket** | Autocomplete pasien, input pasien baru, billing kasir (BPJS vs Umum), cetak nota kuitansi, cetak karcis antrean loket | Panggilan suara mesin antrean (hardware queue speaker) |
+| **Rekam Medis Dokter** | Antrean harian, SOAP ringkas, Quick ICD-10 chips + search, resep teks, riwayat lampau, jembatan 1-klik ke Program Khusus | Surat Keterangan Sakit (SKS), Surat Rujukan Luar (Fase 2 Post-MVP) |
+| **Buku Kas Operasional** | Kas masuk (Kapitasi BPJS, setor kasir), kas keluar (obat, operasional, prive), rekonsiliasi kas laci vs BRI | Integrasi Open Banking API / BI-Fast otomatis |
+| **Dashboard & Laporan** | 4 KPI utama, 10 besar ICD-10, sebaran wilayah desa, panel likuiditas, grafik visual, ekspor 3-sheet Excel `.xlsx` | Pembuatan laporan PDF server-side headless Chromium |
+| **Migrasi Data Historis** | Migrasi 4.238 pasien, 7.493 visits, 1.486 arus kas dari Google Sheets ke PostgreSQL | Pemulihan data NIK/BPJS yang kosong pada arsip lama |
+| **Program Khusus Medis** | Kartu TBC 6 bulan (deteksi mangkir >7 hr, cetak kartu TB 01), Layanan Sunat (+2 foto WebP <300KB via kamera/galeri, lightbox HD), Agenda Pos-Rawat | Bot pengingat WhatsApp otomatis (WA Gateway), API SITB Kemenkes |
+| **Lain-lain / Pihak Ketiga** | Internal clinic database only | Integrasi BPJS P-Care, retail skincare Emerys Glow |
+
 ---
+
 
 ## 2. Hak Akses & Peran Pengguna (Role-Based Access Control)
 
