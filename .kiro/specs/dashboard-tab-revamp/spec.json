@@ -1,0 +1,23 @@
+{
+  "slug": "dashboard-tab-revamp",
+  "title": "Dashboard Tab Architectural & UI Overhaul",
+  "module": "Dashboard",
+  "route": "/",
+  "targetFiles": [
+    "src/app/page.tsx",
+    "src/components/dashboard/DashboardKpiCards.tsx",
+    "src/components/dashboard/DashboardPeriodSelector.tsx",
+    "src/components/dashboard/ClinicalAlertWidget.tsx",
+    "src/components/dashboard/TopDiseasesChart.tsx",
+    "src/components/dashboard/PaymentDistributionChart.tsx",
+    "src/components/dashboard/VisitTrendChart.tsx",
+    "src/components/dashboard/FinancialTrendChart.tsx",
+    "src/components/dashboard/VillageDistributionCard.tsx",
+    "src/components/dashboard/CashLiquidityCard.tsx"
+  ],
+  "status": "in_progress",
+  "priority": "P1",
+  "author": "Antigravity Pair Engineer",
+  "createdAt": "2026-09-25",
+  "updatedAt": "2026-09-25"
+}

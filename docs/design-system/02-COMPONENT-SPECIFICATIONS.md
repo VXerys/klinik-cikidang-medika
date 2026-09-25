@@ -105,3 +105,52 @@ Mengacu pada estetika *Chronyx*:
   - Navbar atas menampilkan tombol hamburger berukuran minimal 44x44px (`min-w-[44px] min-h-[44px]`).
   - Menekan tombol hamburger membuka *slide-over drawer* bersafir dengan animasi pegas halus dan lapisan *backdrop-blur* gelap (`bg-slate-900/40 backdrop-blur-xs`).
   - Seluruh menu dan item formulir ramah sentuhan jari dokter dan perawat di ruang periksa.
+
+---
+
+## 8. Paket Template Resep Obat 1-Klik untuk Dokter (Medication Presets)
+
+- Untuk dokter faskes yang menangani puluhan pasien per hari:
+- **Tombol Pintasan Paket Obat Terapi**:
+  - `💊 Paket ISPA Dewasa`: Amoxicillin 500mg (3x1 sesudah makan), Paracetamol 500mg (3x1 prn), Glyceryl Guaiacolate 100mg (3x1).
+  - `💊 Paket Maag / Gastritis`: Antasida Doen Tab Kunyah (3x1 sebelum makan), Omeprazole 20mg (2x1 sebelum makan).
+  - `💊 Paket Alergi / Kulit`: Cetirizine 10mg (1x1 malam), Deksametason 0.5mg (3x1 sesudah makan).
+- **Interaksi**:
+  - Sekali klik langsung memasukkan seluruh daftar obat ke dalam tabel resep pasien.
+  - Dokter tetap dapat menambah, menghapus, atau mengubah dosis secara fleksibel.
+  - Otomatis menghitung perkiraan biaya obat farmasi untuk pasien umum.
+
+---
+
+## 9. Tabel Master Data Pasien High-Density
+
+- Standar tabel untuk modul `/pendaftaran` dan `/rekam-medis`:
+- **Filter Tab Jaminan**: `[Semua]`, `[BPJS Kesehatan]`, `[Pasien Umum]`, `[Program Khusus]`.
+- **Hierarki Kolom**:
+  - No. RM (`font-mono text-blue-700 font-bold`).
+  - Identitas Pasien (Nama tebal + Umur/Gender).
+  - Wilayah / Alamat Desa (Desa Cikidang, Pangkalan, dll.).
+  - Jaminan Berobat (Badge resmi BPJS hijau zamrud atau Umum biru safir).
+  - Status Terakhir (Sedang Menunggu / Dalam Pemeriksaan / Selesai).
+  - Tombol Aksi Taktil (`Periksa`, `Kuitansi`, `Detail`).
+- **Responsive Wrapper**: Tabel dibungkus dalam kontainer `overflow-x-auto` dengan radius proporsional dan bayangan *double-bezel*.
+
+---
+
+## 10. Area Gradient Chart & Visualisasi KPI Eksekutif
+
+- Menggantikan garis kurva statis menjadi visualisasi data interaktif:
+- **Area Fill Gradasi Transparan**: Kurva SVG menggunakan gradasi linier dari `#2563EB` dengan opasitas 25% memudar ke 0% di bagian dasar.
+- **Titik Data Aktif (*Beacon*)**: Titik data terkini menggunakan lingkaran safir dengan ring putih dan bayangan halus.
+- **Delta Pertumbuhan Realistis**: Kapsul delta hijau (`+14.2% vs Ags 2026`) dengan nominal pembanding yang kredibel.
+
+---
+
+## 11. Validasi Form Taktil (Micro-Shake) & Empty State
+
+- **Animasi Micro-Shake Input**:
+  - Saat kasir memasukkan uang kurang atau staf mengosongkan input wajib, kotak input bergetar secara halus (`@keyframes shake 0.3s ease-in-out`).
+  - Border berubah menjadi merah lembut (`border-rose-400 ring-4 ring-rose-500/10`) dengan teks bantuan yang ramah tanpa pesan error teknis membingungkan.
+- **Empty State Berbobot**:
+  - Saat antrean poli atau daftar diagnosa kosong, sistem menampilkan ikon ilustratif minimalis netral dengan pesan panduan yang jelas (*"Belum ada antrean poli aktif. Pasien baru yang didaftarkan kasir akan otomatis muncul di sini."*).
+
