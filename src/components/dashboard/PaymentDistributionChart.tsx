@@ -33,8 +33,8 @@ interface PaymentDistributionChartProps {
   isLoading?: boolean;
 }
 
-const COLORS_ASSURANCE = ['#2563eb', '#0d9488']; // Blue for BPJS, Teal for UMUM
-const COLORS_PAYMENT = ['#059669', '#7c3aed']; // Emerald for Tunai, Violet for Transfer
+const COLORS_ASSURANCE = ['#059669', '#2563eb']; // Emerald for BPJS, Sapphire for UMUM
+const COLORS_PAYMENT = ['#0d9488', '#6366f1']; // Teal for Tunai, Indigo for Transfer
 
 export function PaymentDistributionChart({
   data,
@@ -103,7 +103,7 @@ export function PaymentDistributionChart({
 
   if (isLoading) {
     return (
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 animate-pulse">
+      <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4 animate-pulse">
         <div className="flex justify-between items-center">
           <div className="h-5 w-44 bg-slate-200 rounded"></div>
           <div className="h-9 w-36 bg-slate-200 rounded-xl"></div>
@@ -114,13 +114,13 @@ export function PaymentDistributionChart({
   }
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4 flex flex-col justify-between">
       {/* Header */}
       <div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-100">
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
           <div className="flex items-center gap-2.5">
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-              <CreditCard weight="duotone" className="w-5 h-5" />
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 border border-blue-200/60 flex items-center justify-center shrink-0">
+              <CreditCard weight="duotone" className="w-4 h-4" />
             </div>
             <div>
               <h3 className="text-sm font-bold text-slate-900 tracking-tight">
@@ -133,29 +133,29 @@ export function PaymentDistributionChart({
           </div>
 
           {/* Toggle Tab */}
-          <div className="flex items-center p-1 bg-slate-100 rounded-xl self-start sm:self-auto border border-slate-200/80">
+          <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-well self-start sm:self-auto">
             <button
               type="button"
               onClick={() => setActiveTab('assurance')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs transition-all tactile-btn flex items-center gap-1.5 ${
                 activeTab === 'assurance'
-                  ? 'bg-white text-blue-700 shadow-xs font-bold'
+                  ? 'bg-white text-blue-700 shadow-btn-secondary font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <ShieldCheck weight="duotone" className="w-4 h-4" />
+              <ShieldCheck weight="duotone" className="w-3.5 h-3.5" />
               <span>Penjamin</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('method')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg text-xs transition-all tactile-btn flex items-center gap-1.5 ${
                 activeTab === 'method'
-                  ? 'bg-white text-blue-700 shadow-xs font-bold'
+                  ? 'bg-white text-blue-700 shadow-btn-secondary font-bold'
                   : 'text-slate-600 hover:text-slate-900'
               }`}
             >
-              <Money weight="duotone" className="w-4 h-4" />
+              <Money weight="duotone" className="w-3.5 h-3.5" />
               <span>Metode Bayar</span>
             </button>
           </div>
@@ -172,10 +172,12 @@ export function PaymentDistributionChart({
                     data={currentChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={55}
-                    outerRadius={78}
-                    paddingAngle={4}
+                    innerRadius={56}
+                    outerRadius={80}
+                    paddingAngle={3}
                     dataKey="value"
+                    stroke="#ffffff"
+                    strokeWidth={2}
                   >
                     {currentChartData.map((_, index) => (
                       <Cell
@@ -187,13 +189,13 @@ export function PaymentDistributionChart({
                 </PieChart>
               </ResponsiveContainer>
 
-              {/* Center Metrik */}
+              {/* Center Metric */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                <span className="text-[10px] text-slate-400 font-medium">Total</span>
-                <span className="text-lg font-bold font-mono text-slate-900">
+                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</span>
+                <span className="text-xl font-extrabold font-mono text-slate-900">
                   {currentTotal.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[10px] text-slate-500">
+                <span className="text-[11px] text-slate-500 font-medium">
                   {activeTab === 'assurance' ? 'Pasien' : 'Transaksi'}
                 </span>
               </div>
@@ -211,33 +213,25 @@ export function PaymentDistributionChart({
         {currentChartData.map((item, idx) => (
           <div
             key={item.name}
-            className="p-2.5 rounded-xl border border-slate-100 bg-slate-50/70 flex flex-col justify-between"
+            className="p-3 rounded-xl border border-slate-200/80 bg-slate-50/70 shadow-well flex flex-col justify-between"
           >
-            <div className="flex items-center gap-1.5 mb-1">
+            <div className="flex items-center gap-1.5 mb-1.5">
               <span
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: currentColors[idx % currentColors.length] }}
               />
-              <span className="font-semibold text-slate-700 truncate text-[11px]">
-                {item.name}
-              </span>
+              <span className="font-semibold text-slate-700 truncate">{item.name}</span>
             </div>
-            <div className="flex items-baseline justify-between mt-1">
-              <span className="font-mono font-bold text-slate-900 text-sm">
+            <div className="flex items-baseline justify-between gap-1">
+              <span className="text-base font-extrabold font-mono text-slate-900">
                 {item.value.toLocaleString('id-ID')}
               </span>
-              <span
-                className="font-bold text-[11px] px-1.5 py-0.5 rounded"
-                style={{
-                  color: currentColors[idx % currentColors.length],
-                  backgroundColor: `${currentColors[idx % currentColors.length]}15`,
-                }}
-              >
+              <span className="text-xs font-mono font-bold text-slate-500">
                 {item.percentage}%
               </span>
             </div>
-            {item.revenue > 0 && (
-              <div className="text-[10px] font-mono text-slate-500 mt-1 truncate">
+            {item.revenue !== undefined && item.revenue > 0 && (
+              <div className="text-[11px] font-mono text-slate-500 mt-1 pt-1 border-t border-slate-200/60 truncate">
                 {formatRupiah(item.revenue)}
               </div>
             )}

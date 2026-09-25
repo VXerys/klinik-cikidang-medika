@@ -42,7 +42,7 @@ export function VillageDistributionCard({
   const umumPct = totalAssurance > 0 ? (umumCount / totalAssurance) * 100 : 0;
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double flex flex-col justify-between">
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
           <div className="flex items-center gap-2">

@@ -84,9 +84,9 @@ export function FinancialTrendChart({
   }
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-2 border-b border-slate-100">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
         <div className="flex items-center gap-2.5">
           <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
             <ChartLineUp weight="duotone" className="w-5 h-5" />

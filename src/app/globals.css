@@ -14,3 +14,27 @@ body {
   -moz-osx-font-smoothing: grayscale;
   -webkit-tap-highlight-color: transparent;
 }
+
+/* Tactile Physics (Emil Kowalski & Better-UI standard) */
+.tactile-btn {
+  transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.12s ease, background-color 0.12s ease, border-color 0.12s ease, color 0.12s ease;
+}
+.tactile-btn:active {
+  transform: scale(0.96);
+}
+
+.tactile-card {
+  transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+}
+.tactile-card:hover {
+  transform: translateY(-2px);
+}
+
+@keyframes microShake {
+  0%, 100% { transform: translateX(0); }
+  20%, 60% { transform: translateX(-4px); }
+  40%, 80% { transform: translateX(4px); }
+}
+.animate-shake {
+  animation: microShake 0.35s ease-in-out;
+}

@@ -15,7 +15,7 @@
     "src/components/dashboard/VillageDistributionCard.tsx",
     "src/components/dashboard/CashLiquidityCard.tsx"
   ],
-  "status": "in_progress",
+  "status": "completed",
   "priority": "P1",
   "author": "Antigravity Pair Engineer",
   "createdAt": "2026-09-25",

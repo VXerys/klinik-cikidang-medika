@@ -43,23 +43,24 @@ export function TopDiseasesChart({
   const maxCount = data.length > 0 ? Math.max(...data.map((d) => d.count)) : 1;
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double flex flex-col justify-between">
       <div>
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-teal-50 text-teal-700 rounded-xl shrink-0">
-              <Heartbeat className="w-5 h-5 text-teal-700" weight="duotone" />
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-slate-100 mb-3.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 border border-blue-200/60 flex items-center justify-center shrink-0">
+              <Heartbeat className="w-4 h-4 text-blue-700" weight="duotone" />
             </div>
             <div>
               <h2 className="text-sm font-bold text-slate-900 tracking-tight">
-                10 Penyakit Terbanyak (ICD-10)
+                10 Morbiditas Terbanyak (ICD-10)
               </h2>
               <p className="text-[11px] text-slate-500">
-                Morbiditas penyakit berdasar rekam medis pasien
+                Penyakit paling sering didiagnosa pada rekam medis
               </p>
             </div>
           </div>
-          <span className="text-xs font-semibold text-slate-600 bg-slate-100 px-2.5 py-1 rounded-lg self-start sm:self-auto font-mono">
+          <span className="text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200/80 px-2.5 py-1 rounded-lg self-start sm:self-auto font-mono">
             {totalDiagnoses.toLocaleString('id-ID')} kasus
           </span>
         </div>
@@ -70,37 +71,41 @@ export function TopDiseasesChart({
             <p className="text-xs">Tidak ada data diagnosa pada periode terpilih</p>
           </div>
         ) : (
-          <div className="space-y-3.5 pt-1">
+          <div className="space-y-2.5">
             {data.slice(0, 10).map((item, index) => {
               const barWidth = Math.min(Math.round((item.count / maxCount) * 100), 100);
 
               return (
-                <div key={item.code || index} className="space-y-1.5">
+                <div key={item.code || index} className="group p-2 rounded-xl hover:bg-slate-50/80 transition-colors space-y-1.5 border border-transparent hover:border-slate-200/60">
                   <div className="flex items-center justify-between text-xs gap-2">
                     <div className="flex items-center gap-2 min-w-0">
-                      <span className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-100 text-slate-600 font-bold text-[10px] shrink-0 font-mono">
+                      <span className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-100 text-slate-500 font-bold text-[10px] shrink-0 font-mono">
                         {index + 1}
                       </span>
+                      <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-1.5 py-0.2 rounded-md shrink-0">
+                        {item.code}
+                      </span>
                       <span
-                        className="font-medium text-slate-800 truncate"
-                        title={`[${item.code}] ${item.name}`}
+                        className="font-semibold text-slate-800 truncate"
+                        title={item.name}
                       >
-                        <span className="font-mono font-bold text-teal-700">[{item.code}]</span>{' '}
                         {item.name}
                       </span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 font-mono">
-                      <span className="font-bold text-slate-900">
+                      <span className="font-bold text-slate-900 text-xs">
                         {item.count.toLocaleString('id-ID')}
                       </span>
-                      <span className="text-[11px] text-slate-400 w-11 text-right">
+                      <span className="text-[11px] text-slate-500 w-11 text-right font-medium">
                         {item.percentage.toFixed(1)}%
                       </span>
                     </div>
                   </div>
-                  <div className="w-full bg-slate-100 rounded-full h-2 overflow-hidden">
+
+                  {/* Micro Proportion Bar */}
+                  <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-teal-600 h-2 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${barWidth}%` }}
                     />
                   </div>

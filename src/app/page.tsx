@@ -518,58 +518,35 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6 min-w-0 w-full">
-      {/* Top Header & Quick Action Buttons */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      {/* Top Header & Integrated Toolbar */}
+      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 pb-1">
         <div>
           <div className="flex items-center gap-2">
             <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
               Dashboard Eksekutif Klinik
             </h1>
             {lastRefreshed && (
-              <span className="hidden sm:inline-flex items-center gap-1 text-[11px] text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md font-mono">
-                <Clock className="w-3.5 h-3.5" weight="duotone" />
-                {lastRefreshed}
+              <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-lg font-mono">
+                <Clock className="w-3.5 h-3.5 text-slate-400" weight="duotone" />
+                <span>{lastRefreshed}</span>
               </span>
             )}
           </div>
           <p className="text-xs text-slate-500 mt-1">
-            Ringkasan operasional harian, morbiditas ICD-10, arus kas, dan surveilans pasien klinis
+            Ringkasan operasional harian, morbiditas ICD-10, arus kas, dan surveilans klinis
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2 w-full lg:w-auto">
-          <Link
-            href="/pendaftaran"
-            className="inline-flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
-          >
-            <UserPlus className="w-4 h-4 shrink-0" weight="duotone" />
-            <span>+ Pasien Baru / Kasir</span>
-          </Link>
+        {/* Integrated Toolbar: Period Filter + Quick CTA + Secondary Shortcuts */}
+        <div className="flex flex-wrap items-center gap-2.5">
+          {/* Integrated Period Selector */}
+          <DashboardPeriodSelector
+            selectedPeriod={selectedPeriod}
+            onChangePeriod={setSelectedPeriod}
+            isLoading={isLoading}
+          />
 
-          <Link
-            href="/program-khusus"
-            className="inline-flex items-center justify-center gap-2 bg-rose-600 hover:bg-rose-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:outline-none"
-          >
-            <Heartbeat className="w-4 h-4 shrink-0" weight="duotone" />
-            <span>Program Khusus</span>
-          </Link>
-
-          <Link
-            href="/buku-kas"
-            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
-          >
-            <Wallet className="w-4 h-4 shrink-0 text-slate-500" weight="duotone" />
-            <span>Buku Kas</span>
-          </Link>
-
-          <Link
-            href="/laporan"
-            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
-          >
-            <FileXls className="w-4 h-4 shrink-0" weight="duotone" />
-            <span>Laporan &amp; Excel</span>
-          </Link>
-
+          {/* Refresh Action */}
           <button
             type="button"
             onClick={() => {
@@ -578,16 +555,55 @@ export default function DashboardPage() {
             }}
             disabled={isLoading}
             title="Muat Ulang Data"
-            className="inline-flex items-center justify-center p-2.5 min-h-[44px] min-w-[44px] bg-white hover:bg-slate-50 border border-slate-200 rounded-xl text-slate-600 transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
+            className="inline-flex items-center justify-center p-2 min-h-[36px] min-w-[36px] bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-slate-600 shadow-btn-secondary tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
           >
             <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} weight="bold" />
           </button>
+
+          {/* Secondary Action Shortcuts (Harmonized Tactile Pills) */}
+          <div className="hidden sm:flex items-center gap-1.5">
+            <Link
+              href="/program-khusus"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold shadow-btn-secondary tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none min-h-[36px]"
+              title="Surveilans Program Khusus (TBC, Sirkumsisi, Pos-Rawat)"
+            >
+              <Heartbeat className="w-3.5 h-3.5 text-rose-500 shrink-0" weight="duotone" />
+              <span>Program Khusus</span>
+            </Link>
+
+            <Link
+              href="/buku-kas"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold shadow-btn-secondary tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none min-h-[36px]"
+              title="Buku Kas Operasional"
+            >
+              <Wallet className="w-3.5 h-3.5 text-slate-500 shrink-0" weight="duotone" />
+              <span>Buku Kas</span>
+            </Link>
+
+            <Link
+              href="/laporan"
+              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold shadow-btn-secondary tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none min-h-[36px]"
+              title="Laporan & Ekspor Excel"
+            >
+              <FileXls className="w-3.5 h-3.5 text-emerald-600 shrink-0" weight="duotone" />
+              <span>Laporan</span>
+            </Link>
+          </div>
+
+          {/* Primary Action Button (Medical Sapphire Tactile CTA) */}
+          <Link
+            href="/pendaftaran"
+            className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 min-h-[36px] rounded-xl text-xs font-bold shadow-btn-primary border border-blue-700/80 tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
+          >
+            <UserPlus className="w-4 h-4 shrink-0" weight="bold" />
+            <span>+ Pasien Baru</span>
+          </Link>
         </div>
       </div>
 
       {/* Error Alert if any */}
       {errorMessage && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3 shadow-2xs">
           <div className="flex items-center gap-2">
             <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
             <span>{errorMessage}</span>
@@ -602,64 +618,51 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Clinical Surveillance Alert Widget */}
+      {/* Clinical Surveillance Alert Strip */}
       <ClinicalAlertWidget alerts={clinicalAlerts} isLoading={isLoading} />
-
-      {/* Period Filter Bar */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 bg-white p-3.5 rounded-2xl border border-slate-200 shadow-xs">
-        <DashboardPeriodSelector
-          selectedPeriod={selectedPeriod}
-          onChangePeriod={setSelectedPeriod}
-          isLoading={isLoading}
-        />
-        <div className="text-[11px] text-slate-400 self-end sm:self-auto">
-          Menampilkan agregasi data berdasarkan periode aktif
-        </div>
-      </div>
 
       {/* 5 Executive KPI Cards */}
       <DashboardKpiCards data={kpiData} isLoading={isLoading} />
 
-      {/* 2-Column Primary Trend Visualizations: Kunjungan & Arus Kas */}
-      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-        <VisitTrendChart
-          dailyData={dailyTrends}
-          monthlyData={monthlyTrends}
-          isLoading={isLoading}
-        />
-        <FinancialTrendChart
-          dailyData={dailyFinances}
-          monthlyData={monthlyFinances}
-          isLoading={isLoading}
-        />
-      </div>
+      {/* 2-Column Logical Grid: Clinical / Operational (Left) vs Financial / Cashier (Right) */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+        {/* Left Column: Klinis & Operasional */}
+        <div className="space-y-6">
+          <VisitTrendChart
+            dailyData={dailyTrends}
+            monthlyData={monthlyTrends}
+            isLoading={isLoading}
+          />
+          <TopDiseasesChart
+            data={topDiseases}
+            totalDiagnoses={totalDiagnoses}
+            isLoading={isLoading}
+          />
+          <VillageDistributionCard
+            villages={villageStats}
+            totalPatients={kpiData.totalVisits}
+            bpjsCount={bpjsCount}
+            umumCount={umumCount}
+            isLoading={isLoading}
+          />
+        </div>
 
-      {/* 2-Column Analytics Visualizations: Morbiditas & Distribusi Pembayaran */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <TopDiseasesChart
-          data={topDiseases}
-          totalDiagnoses={totalDiagnoses}
-          isLoading={isLoading}
-        />
-        <PaymentDistributionChart
-          data={paymentDistribution}
-          isLoading={isLoading}
-        />
-      </div>
-
-      {/* 2-Column Demographics & Cash Liquidity */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <VillageDistributionCard
-          villages={villageStats}
-          totalPatients={kpiData.totalVisits}
-          bpjsCount={bpjsCount}
-          umumCount={umumCount}
-          isLoading={isLoading}
-        />
-        <CashLiquidityCard
-          data={cashLiquidity}
-          isLoading={isLoading}
-        />
+        {/* Right Column: Finansial & Kasir */}
+        <div className="space-y-6">
+          <FinancialTrendChart
+            dailyData={dailyFinances}
+            monthlyData={monthlyFinances}
+            isLoading={isLoading}
+          />
+          <PaymentDistributionChart
+            data={paymentDistribution}
+            isLoading={isLoading}
+          />
+          <CashLiquidityCard
+            data={cashLiquidity}
+            isLoading={isLoading}
+          />
+        </div>
       </div>
     </div>
   );

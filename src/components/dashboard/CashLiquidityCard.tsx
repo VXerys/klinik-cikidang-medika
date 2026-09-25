@@ -43,7 +43,7 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
   }
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-xs space-y-4 flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4 flex flex-col justify-between">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
