@@ -1,0 +1,916 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Koleksi Komponen Baru - SIM Klinik Pratama Cikidang Medika</title>
+  
+  <!-- Font Plus Jakarta Sans & JetBrains Mono untuk Tabular Numbers -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              100: '#d1fae5',
+              200: '#a7f3d0',
+              500: '#10b981',
+              600: '#059669',
+              700: '#047857',
+              pill: '#4ade80', /* Vibrant Mint Khas Elera Health */
+            },
+            bpjs: {
+              bg: '#f0fdfa',
+              text: '#0f766e',
+              border: '#99f6e4',
+            },
+            umum: {
+              bg: '#eff6ff',
+              text: '#1d4ed8',
+              border: '#bfdbfe',
+            },
+          },
+          boxShadow: {
+            'card': '0 1px 3px 0 rgb(0 0 0 / 0.04), 0 1px 2px -1px rgb(0 0 0 / 0.04)',
+            'card-hover': '0 4px 6px -1px rgb(0 0 0 / 0.06), 0 2px 4px -2px rgb(0 0 0 / 0.04)',
+            'dialog': '0 20px 25px -5px rgb(0 0 0 / 0.08), 0 8px 10px -6px rgb(0 0 0 / 0.04)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar & Micro-transitions */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f1f5f9; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    .interactive-press {
+      transition: transform 0.15s cubic-bezier(0.2, 0, 0, 1), background-color 0.15s ease;
+    }
+    .interactive-press:active {
+      transform: scale(0.97);
+    }
+  </style>
+</head>
+<body class="bg-slate-50 text-slate-900 font-sans antialiased min-h-screen">
+
+  <!-- Top Sticky Header -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200 px-4 sm:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center gap-3">
+      <div class="w-10 h-10 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold shadow-sm shadow-emerald-200">
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+        </svg>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold text-slate-900">Koleksi Komponen SIM Klinik</h1>
+          <span class="px-2 py-0.5 text-xs font-semibold bg-emerald-100 text-emerald-800 rounded-full">v2.0 Revamp</span>
+        </div>
+        <p class="text-xs text-slate-500">Klinik Pratama Cikidang Medika &bull; Terinspirasi dari Chronyx & Elera Health</p>
+      </div>
+    </div>
+
+    <!-- Quick Role Preview Toggle & Viewport Simulator -->
+    <div class="flex items-center gap-3">
+      <!-- Role Switcher -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-200">
+        <button id="btnRoleDokter" onclick="setRole('dokter')" class="px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-sm transition-all">
+          🩺 Dokter
+        </button>
+        <button id="btnRoleKasir" onclick="setRole('kasir')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all">
+          💳 Kasir
+        </button>
+        <button id="btnRoleOwner" onclick="setRole('owner')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all">
+          👑 Pimpinan
+        </button>
+      </div>
+
+      <a href="#quick-modal" onclick="openDemoModal()" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm interactive-press">
+        <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+        </svg>
+        Buka Demo Modal Pasien
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Showcase Container -->
+  <div class="max-w-7xl mx-auto px-4 sm:px-8 py-8">
+
+    <!-- Top Notice Banner (Elera Style) -->
+    <div class="mb-10 bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-4 sm:p-5 flex items-start gap-3.5 shadow-sm">
+      <div class="w-8 h-8 rounded-xl bg-emerald-100 border border-emerald-200 flex items-center justify-center text-emerald-700 shrink-0 mt-0.5">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+        </svg>
+      </div>
+      <div class="text-sm">
+        <h4 class="font-bold text-slate-900 mb-0.5">Katalog Sistem Desain & Pratinjau Komponen</h4>
+        <p class="text-slate-600 leading-relaxed">
+          File HTML ini bukan dashboard kerja, melainkan <strong>kumpulan komponen antarmuka yang telah ditingkatkan</strong> (styleguide hidup).
+          Semua komponen di bawah menggunakan warna klinis modern (Clinical Emerald, Slate, BPJS Teal, Umum Blue), efek taktil klik, concentric border radius, dan copywriting ramah tanpa istilah teknis.
+        </p>
+      </div>
+    </div>
+
+    <!-- Quick Navigation Jump Links -->
+    <div class="mb-10 flex flex-wrap items-center gap-2 border-b border-slate-200 pb-4 text-xs font-semibold text-slate-600">
+      <span class="text-slate-400 uppercase tracking-wider text-[11px] mr-1">Lompat Ke:</span>
+      <a href="#section-colors" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">1. Token Warna</a>
+      <a href="#section-buttons" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">2. Tombol Aksi</a>
+      <a href="#section-badges" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">3. Badge Status</a>
+      <a href="#section-search" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">4. Pencarian & Input</a>
+      <a href="#section-metrics" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">5. Kartu Metrik KPI</a>
+      <a href="#section-queue" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">6. Kartu Antrean</a>
+      <a href="#section-doctor" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">7. Widget Dokter</a>
+      <a href="#section-table" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">8. Baris Tabel Pasien</a>
+      <a href="#section-sidebar" class="px-2.5 py-1 bg-white border border-slate-200 rounded-lg hover:border-emerald-500 hover:text-emerald-700 transition-colors">9. Navigasi Samping</a>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- SECTION 1: TOKEN WARNA & SWATCHES -->
+    <!-- ========================================== -->
+    <section id="section-colors" class="mb-14 scroll-mt-20">
+      <div class="flex items-center justify-between mb-4">
+        <div>
+          <h2 class="text-lg font-bold text-slate-900">1. Palet Warna & Token Semantik</h2>
+          <p class="text-xs text-slate-500">Palet ramah medis, segar, dan kontras tinggi memenuhi standar aksesibilitas WCAG AA.</p>
+        </div>
+        <span class="text-xs font-mono text-slate-400">Klik swatch untuk salin kode warna</span>
+      </div>
+
+      <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-3">
+        <!-- Emerald 600 (Primary) -->
+        <div onclick="copyText('#059669')" class="bg-white border border-slate-200 p-3 rounded-2xl shadow-card hover:border-emerald-400 cursor-pointer transition-all">
+          <div class="h-14 rounded-xl bg-emerald-600 mb-2 flex items-center justify-center text-white text-xs font-bold font-mono">#059669</div>
+          <div class="font-bold text-xs text-slate-900">Clinical Primary</div>
+          <div class="text-[11px] text-slate-500">Tombol Aksi Utama</div>
+        </div>
+
+        <!-- Elera Mint Pill -->
+        <div onclick="copyText('#4ADE80')" class="bg-white border border-slate-200 p-3 rounded-2xl shadow-card hover:border-emerald-400 cursor-pointer transition-all">
+          <div class="h-14 rounded-xl bg-[#4ade80] mb-2 flex items-center justify-center text-slate-900 text-xs font-bold font-mono">#4ADE80</div>
+          <div class="font-bold text-xs text-slate-900">Mint Active Pill</div>
+          <div class="text-[11px] text-slate-500">Menu Navigasi Aktif</div>
+        </div>
+
+        <!-- BPJS Teal -->
+        <div onclick="copyText('#0F766E')" class="bg-white border border-slate-200 p-3 rounded-2xl shadow-card hover:border-teal-400 cursor-pointer transition-all">
+          <div class="h-14 rounded-xl bg-teal-50 border border-teal-200 mb-2 flex items-center justify-center text-teal-800 text-xs font-bold font-mono">Teal-700</div>
+          <div class="font-bold text-xs text-slate-900">Pasien BPJS</div>
+          <div class="text-[11px] text-slate-500">Badge & Kategori BPJS</div>
+        </div>
+
+        <!-- Pasien Umum Blue -->
+        <div onclick="copyText('#1D4ED8')" class="bg-white border border-slate-200 p-3 rounded-2xl shadow-card hover:border-blue-400 cursor-pointer transition-all">
+          <div class="h-14 rounded-xl bg-blue-50 border border-blue-200 mb-2 flex items-center justify-center text-blue-800 text-xs font-bold font-mono">Blue-700</div>
+          <div class="font-bold text-xs text-slate-900">Pasien Umum</div>
+          <div class="text-[11px] text-slate-500">Badge Bayar Mandiri</div>
+        </div>
+
+        <!-- Status Pending Amber -->
+        <div onclick="copyText('#D97706')" class="bg-white border border-slate-200 p-3 rounded-2xl shadow-card hover:border-amber-400 cursor-pointer transition-all">
+          <div class="h-14 rounded-xl bg-amber-50 border border-amber-200 mb-2 flex items-center justify-center text-amber-800 text-xs font-bold font-mono">Amber-700</div>
+          <div class="font-bold text-xs text-slate-900">Menunggu Panggilan</div>
+          <div class="text-[11px] text-slate-500">Antrean Dokter & Kasir</div>
+        </div>
+
+        <!-- Surface Slate -->
+        <div onclick="copyText('#F8FAFC')" class="bg-white border border-slate-200 p-3 rounded-2xl shadow-card hover:border-slate-400 cursor-pointer transition-all">
+          <div class="h-14 rounded-xl bg-slate-50 border border-slate-200 mb-2 flex items-center justify-center text-slate-600 text-xs font-bold font-mono">#F8FAFC</div>
+          <div class="font-bold text-xs text-slate-900">Surface Slate</div>
+          <div class="text-[11px] text-slate-500">Background Layar Sejuk</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 2: TOMBOL & AKSI TAKTIL -->
+    <!-- ========================================== -->
+    <section id="section-buttons" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">2. Tombol Aksi & Kontrol Interaktif</h2>
+        <p class="text-xs text-slate-500">Dilengkapi efek taktil tekan (scale 0.97), minimum touch target 44px, dan copywriting jelas.</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-6">
+        <!-- Varian Tombol Primer & Sekunder -->
+        <div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Varian Tombol Inti</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Primary Solid -->
+            <button onclick="showToast('Aksi Simpan Rekam Medis')" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-sm font-semibold shadow-sm flex items-center gap-2 interactive-press">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+              Selesai Periksa & Kirim ke Kasir
+            </button>
+
+            <!-- Secondary Outline -->
+            <button onclick="showToast('Membuka Filter Laporan')" class="px-4 py-2.5 bg-white border border-slate-200 hover:border-slate-300 text-slate-700 hover:bg-slate-50 rounded-xl text-sm font-semibold shadow-sm flex items-center gap-2 interactive-press">
+              <svg class="w-4 h-4 text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" /></svg>
+              Filter Tanggal
+            </button>
+
+            <!-- Soft Action Button with Badge Counter -->
+            <button onclick="showToast('Menampilkan antrean farmasi')" class="px-4 py-2.5 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl text-sm font-semibold flex items-center gap-2.5 interactive-press">
+              <span>Menunggu Resep Obat</span>
+              <span class="px-2 py-0.5 text-xs bg-emerald-600 text-white font-bold rounded-full font-mono">4</span>
+            </button>
+
+            <!-- Destructive / Batal -->
+            <button onclick="showToast('Membatalkan pemeriksaan')" class="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-sm font-semibold flex items-center gap-2 interactive-press">
+              <svg class="w-4 h-4 text-rose-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" /></svg>
+              Batalkan
+            </button>
+
+            <!-- Icon Only Ghost -->
+            <button onclick="showToast('Memperbarui data...')" title="Perbarui Data" class="w-10 h-10 flex items-center justify-center rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 hover:text-slate-900 interactive-press">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" /></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Segmented Control Pills (Elera Style) -->
+        <div class="pt-4 border-t border-slate-100">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Segmented Control / Tab Antrean</span>
+          <div class="inline-flex p-1 bg-slate-100 border border-slate-200 rounded-xl gap-1">
+            <button class="px-4 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-sm flex items-center gap-2">
+              <span>Semua Antrean</span>
+              <span class="px-1.5 py-0.2 bg-slate-100 text-slate-700 rounded-md font-mono">18</span>
+            </button>
+            <button class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2">
+              <span>Menunggu Dokter</span>
+              <span class="px-1.5 py-0.2 bg-amber-100 text-amber-800 rounded-md font-mono">6</span>
+            </button>
+            <button class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2">
+              <span>Menunggu Obat & Kasir</span>
+              <span class="px-1.5 py-0.2 bg-purple-100 text-purple-800 rounded-md font-mono">3</span>
+            </button>
+            <button class="px-4 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 flex items-center gap-2">
+              <span>Selesai Hari Ini</span>
+              <span class="px-1.5 py-0.2 bg-emerald-100 text-emerald-800 rounded-md font-mono">9</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 3: BADGES & STATUS PILLS -->
+    <!-- ========================================== -->
+    <section id="section-badges" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">3. Badge Status & Label Pasien</h2>
+        <p class="text-xs text-slate-500">Membantu dokter dan kasir membedakan jaminan pasien dan alur pemeriksaan dalam sekejap mata.</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-6">
+        <div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Tipe Jaminan Pasien</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-teal-50 text-teal-800 border border-teal-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-teal-500"></span>
+              BPJS Kesehatan
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-blue-800 border border-blue-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500"></span>
+              Pasien Umum
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-purple-50 text-purple-800 border border-purple-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-purple-500"></span>
+              Program TBC (DOTS)
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Sirkumsisi / Sunat
+            </span>
+          </div>
+        </div>
+
+        <div class="pt-4 border-t border-slate-100">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Status Alur Pasien di Klinik</span>
+          <div class="flex flex-wrap items-center gap-3">
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-50 text-amber-800 border border-amber-200">
+              <span class="w-2 h-2 rounded-full bg-amber-500 animate-pulse"></span>
+              Menunggu Panggilan Dokter
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-800 border border-blue-200">
+              <span class="w-2 h-2 rounded-full bg-blue-600"></span>
+              Sedang Diperiksa di Poli
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+              <span class="w-2 h-2 rounded-full bg-purple-500"></span>
+              Menunggu Resep & Bayar
+            </span>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+              <svg class="w-3.5 h-3.5 text-emerald-600" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>
+              Selesai & Lunas
+            </span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 4: PENCARIAN & FORM INPUT -->
+    <!-- ========================================== -->
+    <section id="section-search" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">4. Pencarian Cepat & Form Input</h2>
+        <p class="text-xs text-slate-500">Pencarian instan dengan shortcut Ctrl+K dan dropdown autocomplete pasien.</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Input & Search Bar -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-4">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Pencarian Universal Pasien</label>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-400">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              </div>
+              <input type="text" placeholder="Ketik nama pasien, No. RM, atau desa..." class="w-full pl-10 pr-20 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition-all font-medium">
+              <div class="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                <span class="text-[11px] font-mono text-slate-400 bg-white border border-slate-200 rounded px-1.5 py-0.5 shadow-2xs">Ctrl + K</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Kategori Jaminan</label>
+              <select class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 font-medium">
+                <option>BPJS Kesehatan</option>
+                <option>Pasien Umum (Bayar Mandiri)</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs font-semibold text-slate-700 mb-1.5">Biaya Periksa (Rp)</label>
+              <div class="relative">
+                <span class="absolute inset-y-0 left-0 pl-3 flex items-center text-xs font-bold text-slate-400">Rp</span>
+                <input type="text" value="35.000" class="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm font-mono font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Simulated Autocomplete Dropdown -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-card">
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-2 px-2">Hasil Dropdown Autocomplete (Live Preview)</span>
+          <div class="border border-slate-200/80 rounded-xl divide-y divide-slate-100 overflow-hidden">
+            <!-- Row 1 -->
+            <div class="p-3 hover:bg-emerald-50/60 cursor-pointer transition-colors flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center font-mono">AS</div>
+                <div>
+                  <div class="font-bold text-sm text-slate-900">Ahmad Subagja</div>
+                  <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                    <span class="font-mono text-emerald-700 font-semibold">RM-04281</span> &bull; <span>Cikidang (RT 02/04)</span>
+                  </div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-teal-50 text-teal-800 border border-teal-200">BPJS</span>
+            </div>
+
+            <!-- Row 2 -->
+            <div class="p-3 hover:bg-emerald-50/60 cursor-pointer transition-colors flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-800 font-bold text-xs flex items-center justify-center font-mono">SN</div>
+                <div>
+                  <div class="font-bold text-sm text-slate-900">Siti Nurhaliza</div>
+                  <div class="text-xs text-slate-500 flex items-center gap-1.5">
+                    <span class="font-mono text-blue-700 font-semibold">RM-01924</span> &bull; <span>Pangkalan</span>
+                  </div>
+                </div>
+              </div>
+              <span class="px-2 py-0.5 text-xs font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200">Umum</span>
+            </div>
+
+            <!-- Footer: Add New Patient CTA -->
+            <div class="p-2.5 bg-slate-50 flex items-center justify-between">
+              <span class="text-xs text-slate-500">Pasien tidak ada di daftar?</span>
+              <button onclick="openDemoModal()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1">
+                + Daftarkan Sebagai Pasien Baru
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 5: KARTU METRIK KPI (CHRONYX & ELERA) -->
+    <!-- ========================================== -->
+    <section id="section-metrics" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">5. Kartu Metrik KPI Eksekutif</h2>
+        <p class="text-xs text-slate-500">Mengacu pada estetika Chronyx & Elera: angka besar, perbandingan tren hari ini, dan visual bersih.</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        <!-- Card 1: Total Pasien Hari Ini -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Kunjungan Hari Ini</span>
+            <div class="w-8 h-8 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-700">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" /></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-bold font-mono text-slate-900 tracking-tight mb-2">38 <span class="text-sm font-normal text-slate-500 font-sans">pasien</span></div>
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 font-bold font-mono">+12%</span>
+            <span class="text-slate-500">vs kemarin (34)</span>
+          </div>
+        </div>
+
+        <!-- Card 2: Pasien Menunggu Dokter -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Antrean Poli Dokter</span>
+            <div class="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200 flex items-center justify-center text-amber-700">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+          </div>
+          <div class="text-3xl font-bold font-mono text-slate-900 tracking-tight mb-2">6 <span class="text-sm font-normal text-slate-500 font-sans">antre</span></div>
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="px-2 py-0.5 rounded-full bg-amber-50 text-amber-700 font-bold">dr. Ovan (Poli 1)</span>
+          </div>
+        </div>
+
+        <!-- Card 3: Pendapatan Kasir Hari Ini -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Kas Masuk Hari Ini</span>
+            <div class="w-8 h-8 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-700">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-bold font-mono text-slate-900 tracking-tight mb-2">Rp 1.450.000</div>
+          <div class="flex items-center gap-1.5 text-xs">
+            <span class="text-slate-500">14 Transaksi Tunai</span>
+          </div>
+        </div>
+
+        <!-- Card 4: Estimasi Kapitasi BPJS Bulan Ini -->
+        <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card hover:shadow-card-hover transition-all">
+          <div class="flex items-center justify-between mb-3">
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Estimasi Kapitasi BPJS</span>
+            <div class="w-8 h-8 rounded-lg bg-teal-50 border border-teal-200 flex items-center justify-center text-teal-700">
+              <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+            </div>
+          </div>
+          <div class="text-2xl font-bold font-mono text-slate-900 tracking-tight mb-2">Rp 28.320.000</div>
+          <div class="flex items-center gap-1.5 text-xs text-slate-500">
+            <span>September 2026</span> &bull; <span class="text-emerald-700 font-semibold">Tepat Sasaran</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 6: KARTU ALUR ANTREAN PASIEN -->
+    <!-- ========================================== -->
+    <section id="section-queue" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">6. Kartu Antrean Pasien Interaktif</h2>
+        <p class="text-xs text-slate-500">Merapikan alur tunggu dengan hierarki yang jelas: nama pasien, waktu kedatangan, dan tombol aksi.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Queue Item 1: Menunggu Dokter -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-card hover:border-emerald-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-amber-50 border border-amber-200 flex flex-col items-center justify-center text-amber-800 font-mono shrink-0">
+              <span class="text-[10px] uppercase font-bold leading-none">Antre</span>
+              <span class="text-base font-bold leading-none mt-1">#05</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-slate-900 text-sm">Hj. Maimunah</h4>
+                <span class="px-2 py-0.2 text-[11px] font-bold rounded-full bg-teal-50 text-teal-800 border border-teal-200">BPJS</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                <span class="font-mono">RM-02381</span> &bull; Masuk: 09:15 WIB &bull; Keluhan: <span class="text-slate-700">Batuk & Demam 3 Hari</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="showToast('Memanggil Hj. Maimunah')" class="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 interactive-press">
+              <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z"/></svg>
+              Panggil Periksa
+            </button>
+          </div>
+        </div>
+
+        <!-- Queue Item 2: Menunggu Pembayaran & Obat -->
+        <div class="bg-white border border-slate-200 rounded-2xl p-4 shadow-card hover:border-emerald-300 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div class="flex items-center gap-3.5">
+            <div class="w-12 h-12 rounded-2xl bg-purple-50 border border-purple-200 flex flex-col items-center justify-center text-purple-800 font-mono shrink-0">
+              <span class="text-[10px] uppercase font-bold leading-none">Kasir</span>
+              <span class="text-base font-bold leading-none mt-1">#02</span>
+            </div>
+            <div>
+              <div class="flex items-center gap-2">
+                <h4 class="font-bold text-slate-900 text-sm">Budi Santoso</h4>
+                <span class="px-2 py-0.2 text-[11px] font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200">Umum</span>
+              </div>
+              <p class="text-xs text-slate-500 mt-0.5">
+                <span class="font-mono">RM-04190</span> &bull; Resep: <span class="font-medium text-slate-700">Amoxicillin + Paracetamol</span>
+              </p>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <button onclick="showToast('Membuka Pembayaran Budi Santoso')" class="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-semibold shadow-sm flex items-center gap-1.5 interactive-press">
+              <span>Proses Pembayaran</span>
+              <span class="font-mono text-emerald-400">Rp 65.000</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 7: WIDGET PEMERIKSAAN DOKTER -->
+    <!-- ========================================== -->
+    <section id="section-doctor" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">7. Widget Pemeriksaan Medis (Poli Dokter)</h2>
+        <p class="text-xs text-slate-500">Terinspirasi dari Chronyx: tanda vital 4-box ringkas, multi-diagnosa chip sekali klik, dan input obat cepat.</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl p-6 shadow-card space-y-6">
+        <!-- Vital Signs 4-Box Grid -->
+        <div>
+          <span class="text-xs font-bold text-slate-400 uppercase tracking-wider block mb-3">Tanda-Tanda Vital Pasien</span>
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <!-- Box 1: Tekanan Darah -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <span>Tekanan Darah</span>
+                <span class="font-mono">mmHg</span>
+              </div>
+              <input type="text" value="120/80" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+            </div>
+
+            <!-- Box 2: Denyut Nadi -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <span>Denyut Nadi</span>
+                <span class="font-mono">bpm</span>
+              </div>
+              <input type="text" value="78" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+            </div>
+
+            <!-- Box 3: Suhu Tubuh -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <span>Suhu Tubuh</span>
+                <span class="font-mono">&deg;C</span>
+              </div>
+              <input type="text" value="36.8" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+            </div>
+
+            <!-- Box 4: Laju Pernapasan -->
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3">
+              <div class="flex items-center justify-between text-xs text-slate-500 mb-1">
+                <span>Laju Nafas</span>
+                <span class="font-mono">x/mnt</span>
+              </div>
+              <input type="text" value="20" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Diagnosis Multi-Select Chips -->
+        <div class="pt-4 border-t border-slate-100">
+          <div class="flex items-center justify-between mb-2">
+            <span class="text-xs font-bold text-slate-400 uppercase tracking-wider">Diagnosa Penyakit (Bisa Pilih > 1)</span>
+            <span class="text-xs text-emerald-700 font-medium">Klik chip untuk memilih langsung</span>
+          </div>
+          <div class="flex flex-wrap gap-2">
+            <button onclick="toggleChip(this)" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white border border-emerald-600 shadow-xs flex items-center gap-1.5">
+              <span>ISPA (J06.9)</span>
+              <span class="text-emerald-200 text-sm font-bold">&times;</span>
+            </button>
+            <button onclick="toggleChip(this)" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white border border-emerald-600 shadow-xs flex items-center gap-1.5">
+              <span>Dispepsia / Maag (K30)</span>
+              <span class="text-emerald-200 text-sm font-bold">&times;</span>
+            </button>
+            <button onclick="toggleChip(this)" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300">
+              + Hipertensi Primer (I10)
+            </button>
+            <button onclick="toggleChip(this)" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300">
+              + Gastroenteritis Akut (A09)
+            </button>
+            <button onclick="toggleChip(this)" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300">
+              + Faringitis Akut (J02.9)
+            </button>
+            <button onclick="toggleChip(this)" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300">
+              + Myalgia / Nyeri Otot (M79.1)
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 8: TABEL DATA PASIEN & AKSI BARIS -->
+    <!-- ========================================== -->
+    <section id="section-table" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">8. Desain Baris Tabel Pasien (High-Density)</h2>
+        <p class="text-xs text-slate-500">Avatar inisial melingkar ala Elera, kontras jaminan BPJS/Umum, dan aksi baris yang jelas.</p>
+      </div>
+
+      <div class="bg-white border border-slate-200 rounded-2xl shadow-card overflow-hidden">
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-sm">
+            <thead class="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <tr>
+                <th class="px-5 py-3.5">Pasien</th>
+                <th class="px-4 py-3.5">Jaminan & Alamat</th>
+                <th class="px-4 py-3.5">Dokter Pemeriksa</th>
+                <th class="px-4 py-3.5">Status Alur</th>
+                <th class="px-5 py-3.5 text-right">Aksi Tindakan</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              <!-- Row 1 -->
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-emerald-100 text-emerald-800 font-bold text-xs flex items-center justify-center font-mono">
+                      DD
+                    </div>
+                    <div>
+                      <div class="font-bold text-slate-900">Dedi Darmawan</div>
+                      <div class="text-xs text-slate-500 font-mono">RM-03910 &bull; L / 42 Thn</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span class="inline-block px-2 py-0.5 text-xs font-bold rounded-full bg-teal-50 text-teal-800 border border-teal-200 mb-1">BPJS</span>
+                  <div class="text-xs text-slate-500">Desa Cikidang</div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <div class="font-medium text-slate-900 text-xs">dr. Ovan</div>
+                  <div class="text-[11px] text-slate-500">ISPA Ringan</div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-purple-50 text-purple-800 border border-purple-200">
+                    Menunggu Obat
+                  </span>
+                </td>
+                <td class="px-5 py-3.5 text-right">
+                  <button class="px-3 py-1.5 text-xs font-semibold rounded-lg border border-slate-200 hover:bg-slate-100 text-slate-700 interactive-press">
+                    Buka Rekam Medis
+                  </button>
+                </td>
+              </tr>
+
+              <!-- Row 2 -->
+              <tr class="hover:bg-slate-50/80 transition-colors">
+                <td class="px-5 py-3.5">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full bg-blue-100 text-blue-800 font-bold text-xs flex items-center justify-center font-mono">
+                      SR
+                    </div>
+                    <div>
+                      <div class="font-bold text-slate-900">Siti Rahmawati</div>
+                      <div class="text-xs text-slate-500 font-mono">RM-04102 &bull; P / 28 Thn</div>
+                    </div>
+                  </div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span class="inline-block px-2 py-0.5 text-xs font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200 mb-1">Umum</span>
+                  <div class="text-xs text-slate-500">Desa Nangerang</div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <div class="font-medium text-slate-900 text-xs">dr. Neneng</div>
+                  <div class="text-[11px] text-slate-500">Dispepsia / Maag</div>
+                </td>
+                <td class="px-4 py-3.5">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                    Selesai & Lunas
+                  </span>
+                </td>
+                <td class="px-5 py-3.5 text-right">
+                  <button class="px-3 py-1.5 text-xs font-semibold rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-200 interactive-press">
+                    Cetak Kuitansi
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================== -->
+    <!-- SECTION 9: BILAH NAVIGASI SAMPING (ELERA STYLE) -->
+    <!-- ========================================== -->
+    <section id="section-sidebar" class="mb-14 scroll-mt-20">
+      <div class="mb-4">
+        <h2 class="text-lg font-bold text-slate-900">9. Bilah Navigasi Samping (Elera Mint Pill Showcase)</h2>
+        <p class="text-xs text-slate-500">Item menu aktif menggunakan kapsul hijau mint cerah (#4ADE80) ber-font tebal, sangat mudah dipindai mata.</p>
+      </div>
+
+      <div class="max-w-xs bg-white border border-slate-200 rounded-3xl p-4 shadow-card">
+        <!-- Logo -->
+        <div class="flex items-center gap-3 px-3 py-2 mb-4">
+          <div class="w-9 h-9 rounded-xl bg-emerald-600 flex items-center justify-center text-white font-bold">
+            +
+          </div>
+          <div>
+            <div class="font-bold text-sm text-slate-900">Cikidang Medika</div>
+            <div class="text-[11px] text-slate-400">SIM Operasional Klinik</div>
+          </div>
+        </div>
+
+        <!-- Section 1 -->
+        <div class="mb-4">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1.5 block">Operasional</span>
+          <div class="space-y-1">
+            <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-[#4ade80] text-slate-900 font-bold text-xs shadow-xs">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-900" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <span>Dashboard Utama</span>
+              </div>
+            </a>
+            <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                <span>Pendaftaran Pasien</span>
+              </div>
+            </a>
+            <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Alur Antrean</span>
+              </div>
+              <span class="px-2 py-0.2 bg-amber-100 text-amber-800 rounded-full font-mono text-[10px] font-bold">6</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Section 2 -->
+        <div class="mb-4">
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-wider px-3 mb-1.5 block">Klinis & Medis</span>
+          <div class="space-y-1">
+            <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Pemeriksaan Dokter</span>
+              </div>
+            </a>
+            <a href="#" class="flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-600 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span>Program Khusus</span>
+              </div>
+            </a>
+          </div>
+        </div>
+
+        <!-- Footer Profile -->
+        <div class="pt-3 border-t border-slate-100 flex items-center justify-between px-2">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-full bg-emerald-600 text-white font-bold text-xs flex items-center justify-center font-mono">
+              OV
+            </div>
+            <div>
+              <div class="font-bold text-xs text-slate-900">dr. Ovan</div>
+              <div class="text-[10px] text-slate-400">Pimpinan & Dokter</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+  <!-- Interactive Demo Modal Component -->
+  <div id="demoModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-dialog border border-slate-200/80 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+        <div>
+          <h3 class="font-bold text-base text-slate-900">Pendaftaran Pasien Baru</h3>
+          <p class="text-xs text-slate-500">Lengkapi data identitas pasien untuk rekam medis</p>
+        </div>
+        <button onclick="closeDemoModal()" class="w-8 h-8 rounded-full text-slate-400 hover:text-slate-700 hover:bg-slate-100 flex items-center justify-center">
+          &times;
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-semibold text-slate-700 mb-1">Nama Lengkap Pasien *</label>
+          <input type="text" placeholder="Contoh: Budi Santoso" class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Jenis Kelamin</label>
+            <select class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+              <option>Laki-laki</option>
+              <option>Perempuan</option>
+            </select>
+          </div>
+          <div>
+            <label class="block text-xs font-semibold text-slate-700 mb-1">Jaminan Berobat</label>
+            <select class="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500">
+              <option>BPJS Kesehatan</option>
+              <option>Pasien Umum</option>
+            </select>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-5 mt-6 border-t border-slate-100 flex items-center justify-end gap-2.5">
+        <button onclick="closeDemoModal()" class="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100">
+          Batal & Tutup
+        </button>
+        <button onclick="showToast('Pasien Berhasil Didaftarkan!'); closeDemoModal();" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shadow-sm interactive-press">
+          Simpan & Daftarkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+
+  <!-- JavaScript Helpers for Showcase Interactivity -->
+  <script>
+    function copyText(text) {
+      navigator.clipboard.writeText(text);
+      showToast('Warna ' + text + ' berhasil disalin!');
+    }
+
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'px-4 py-3 bg-slate-900 text-white text-xs font-semibold rounded-2xl shadow-xl border border-slate-700 flex items-center gap-2 transform transition-all duration-200 ease-out translate-y-2 opacity-0';
+      toast.innerHTML = `
+        <span class="w-2 h-2 rounded-full bg-emerald-400"></span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 200);
+      }, 2500);
+    }
+
+    function toggleChip(button) {
+      if (button.classList.contains('bg-emerald-600')) {
+        button.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-50 text-slate-700 border border-slate-200 hover:border-slate-300';
+        button.innerHTML = '+ ' + button.innerText.replace('×', '').trim();
+      } else {
+        const text = button.innerText.replace('+', '').trim();
+        button.className = 'px-3 py-1.5 rounded-xl text-xs font-semibold bg-emerald-600 text-white border border-emerald-600 shadow-xs flex items-center gap-1.5';
+        button.innerHTML = `<span>${text}</span> <span class="text-emerald-200 text-sm font-bold">&times;</span>`;
+      }
+    }
+
+    function openDemoModal() {
+      document.getElementById('demoModalBackdrop').classList.remove('hidden');
+    }
+
+    function closeDemoModal() {
+      document.getElementById('demoModalBackdrop').classList.add('hidden');
+    }
+
+    function setRole(role) {
+      ['Dokter', 'Kasir', 'Owner'].forEach(r => {
+        const btn = document.getElementById('btnRole' + r);
+        if (r.toLowerCase() === role) {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold bg-white text-slate-900 shadow-sm transition-all';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all';
+        }
+      });
+      showToast('Pratinjau peran beralih ke: ' + role.toUpperCase());
+    }
+  </script>
+
+</body>
+</html>
