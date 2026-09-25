@@ -109,6 +109,16 @@
       animation: pulseGlow 0.6s ease-out;
     }
 
+    /* Micro-Shake animation for tactile form error */
+    @keyframes microShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+    .animate-shake {
+      animation: microShake 0.35s ease-in-out;
+    }
+
     /* Medical Sapphire Ambient Canvas Background */
     .ambient-canvas {
       background-color: #F8FAFC;
@@ -415,17 +425,37 @@
 
         <!-- Dokter: Antrean Pasien Menunggu Poli -->
         <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-4">
-          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
             <div>
               <h3 class="text-sm font-extrabold text-slate-900">Daftar Pasien Menunggu di Poli 1</h3>
               <p class="text-xs text-slate-600">Pasien yang telah selesai registrasi dan menunggu panggilan dokter</p>
             </div>
-            <span class="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold rounded-full font-mono">
-              6 Antrean Aktif
-            </span>
+            <div class="flex items-center gap-2">
+              <button onclick="toggleEmptyQueueDemo()" id="btnEmptyQueueToggle" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors tactile-btn">
+                Simulasi Antrean Kosong
+              </button>
+              <span id="queueActiveBadge" class="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold rounded-full font-mono">
+                6 Antrean Aktif
+              </span>
+            </div>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <!-- Empty State Container (Hidden by default) -->
+          <div id="emptyQueueContainer" class="hidden p-8 text-center bg-slate-50/60 border border-dashed border-slate-300 rounded-2xl space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 mx-auto shadow-well">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="max-w-sm mx-auto">
+              <h4 class="text-xs font-extrabold text-slate-900">Tidak Ada Antrean Pasien di Poli 1</h4>
+              <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                Seluruh pasien telah selesai diperiksa. Pasien baru yang didaftarkan oleh kasir akan otomatis muncul secara *real-time* di sini.
+              </p>
+            </div>
+          </div>
+
+          <div id="populatedQueueContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <!-- Patient Queue Card 1 -->
             <div class="bg-slate-50/70 border border-slate-200/90 rounded-2xl p-4 shadow-well hover:border-blue-400 transition-colors flex items-center justify-between gap-3 tactile-card">
               <div class="flex items-center gap-3">
@@ -527,11 +557,44 @@
             </div>
           </div>
 
+          <!-- Paket Template Resep Obat 1-Klik -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">2. Paket Resep Cepat (1-Klik)</span>
+              <span class="text-[11px] text-slate-500">Pilih preset untuk mengisi resep secara otomatis</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button onclick="fillPresetResep('ispa')" type="button" class="px-3 py-2.5 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-400 rounded-xl text-left transition-colors tactile-btn group">
+                <div class="text-xs font-bold text-slate-900 group-hover:text-blue-900">ISPA Dewasa</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 font-mono">Amoxicillin + CTM + Paracetamol</div>
+              </button>
+              <button onclick="fillPresetResep('maag')" type="button" class="px-3 py-2.5 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-400 rounded-xl text-left transition-colors tactile-btn group">
+                <div class="text-xs font-bold text-slate-900 group-hover:text-blue-900">Maag / Gastritis</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 font-mono">Antasida + Omeprazole + Ranitidin</div>
+              </button>
+              <button onclick="fillPresetResep('alergi')" type="button" class="px-3 py-2.5 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-400 rounded-xl text-left transition-colors tactile-btn group">
+                <div class="text-xs font-bold text-slate-900 group-hover:text-blue-900">Alergi / Dermatitis</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 font-mono">Cetirizine + Betametason Krim</div>
+              </button>
+            </div>
+
+            <!-- Prescription Table (populated by preset or manual) -->
+            <div id="resepTableContainer" class="bg-slate-50/80 border border-slate-200/90 rounded-2xl overflow-hidden">
+              <div class="flex items-center justify-between px-4 py-2 border-b border-slate-200/90">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Daftar Resep Obat:</span>
+                <span id="resepCountBadge" class="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">0 item</span>
+              </div>
+              <div id="resepTableBody" class="divide-y divide-slate-100 min-h-[48px]">
+                <div id="resepEmptyRow" class="px-4 py-3 text-xs text-slate-400 text-center font-medium">Belum ada resep. Pilih preset atau tambah manual.</div>
+              </div>
+            </div>
+          </div>
+
           <!-- Multi Diagnosa ICD-10 dengan Pencarian Instan -->
           <div class="space-y-3">
             <div class="flex items-center justify-between">
               <div>
-                <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">2. Diagnosa Penyakit ICD-10 (Bisa > 1)</span>
+                <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">3. Diagnosa Penyakit ICD-10 (Bisa > 1)</span>
                 <p class="text-[11px] text-slate-500">Ketik nama/kode penyakit atau klik daftar rekomendasi di bawah</p>
               </div>
               <span id="diagnosaCountBadge" class="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
@@ -757,6 +820,86 @@
           </div>
         </div>
 
+
+        <!-- Kasir: Tabel Master Pasien High-Density -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Daftar Master Pasien Terdaftar</h3>
+              <p class="text-xs text-slate-600">Cari, filter, dan kelola data pasien terdaftar di klinik</p>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+              <input type="text" placeholder="Cari pasien, No. RM..." class="pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-300 rounded-lg text-xs font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white transition-colors w-48">
+            </div>
+          </div>
+          <div class="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 w-fit">
+            <button class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-btn-secondary tactile-btn">Semua (4.238)</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors tactile-btn">BPJS</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors tactile-btn">Umum</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors tactile-btn">Program Khusus</button>
+          </div>
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-xs border-collapse min-w-[640px]">
+              <thead>
+                <tr class="bg-slate-50/90 border-b border-slate-200">
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">No. RM</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Nama / Usia</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Desa / Kec.</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Jaminan</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Status</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-04238</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Hj. Maimunah</div><div class="text-[10px] text-slate-500 font-mono">62 thn, P</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Cikidang / Cikidang</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">BPJS</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-800 border border-amber-200">Menunggu Dokter</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Hj. Maimunah')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-04112</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Asep Sopian</div><div class="text-[10px] text-slate-500 font-mono">44 thn, L</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Mandrajaya / Ciemas</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-mono">Umum</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 text-purple-800 border border-purple-200">Siap Bayar</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Asep Sopian')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-02381</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Budi Santoso</div><div class="text-[10px] text-slate-500 font-mono">35 thn, L</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Tamanjaya / Ciemas</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-mono">Umum</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Selesai</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Budi Santoso')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-00918</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Siti Nurhaliza</div><div class="text-[10px] text-slate-500 font-mono">28 thn, P</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Cibenda / Parigi</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">BPJS</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">Selesai</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Siti Nurhaliza')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between pt-1 text-[10px] text-slate-500 font-medium">
+            <span>Menampilkan 4 dari 4.238 pasien terdaftar</span>
+            <div class="flex items-center gap-1">
+              <button class="px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-100 tactile-btn">&#8249;</button>
+              <button class="px-2 py-1 bg-blue-600 border border-blue-700 rounded-lg font-bold text-white">1</button>
+              <button class="px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-100 tactile-btn">2</button>
+              <button class="px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-100 tactile-btn">&#8250;</button>
+            </div>
+          </div>
+        </div>
+
       </div>
 
       <!-- ============================================================== -->
@@ -770,40 +913,76 @@
           <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
             <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Kas Masuk Hari Ini</span>
             <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">Rp 1.450.000</div>
-            <div class="h-8 w-full mb-1">
-              <svg class="w-full h-full" viewBox="0 0 120 30" fill="none"><path d="M0 25 Q 30 15, 60 20 T 120 5" stroke="#2563eb" stroke-width="2" fill="none"/></svg>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity="0.18"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 27 Q 30 17, 60 22 T 120 7 L 120 32 L 0 32 Z" fill="url(#grad1)"/>
+                <path d="M0 27 Q 30 17, 60 22 T 120 7" stroke="#2563eb" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="7" r="3" fill="#2563eb"/>
+                <circle cx="120" cy="7" r="5" fill="#2563eb" opacity="0.2"/>
+              </svg>
             </div>
-            <div class="text-xs text-slate-600 font-medium">14 Pasien Umum Selesai</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-slate-600 font-medium">14 Pasien Umum Selesai</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+8.4%</div>
+            </div>
           </div>
 
           <!-- Card 2 -->
           <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
             <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Kapitasi BPJS Bulanan</span>
             <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">Rp 28.320.000</div>
-            <div class="h-8 w-full mb-1">
-              <svg class="w-full h-full" viewBox="0 0 120 30" fill="none"><path d="M0 20 Q 40 5, 80 15 T 120 8" stroke="#059669" stroke-width="2" fill="none"/></svg>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#059669" stop-opacity="0.18"/><stop offset="100%" stop-color="#059669" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 22 Q 40 7, 80 17 T 120 10 L 120 32 L 0 32 Z" fill="url(#grad2)"/>
+                <path d="M0 22 Q 40 7, 80 17 T 120 10" stroke="#059669" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="10" r="3" fill="#059669"/>
+                <circle cx="120" cy="10" r="5" fill="#059669" opacity="0.2"/>
+              </svg>
             </div>
-            <div class="text-xs text-emerald-700 font-bold">Cair Setiap Tanggal 15</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-emerald-700 font-bold">Cair Setiap Tanggal 15</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+14.2%</div>
+            </div>
           </div>
 
           <!-- Card 3 -->
           <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
             <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Total Kunjungan Pasien</span>
             <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">7.493 <span class="text-xs font-medium text-slate-500 font-sans">total</span></div>
-            <div class="h-8 w-full mb-1">
-              <svg class="w-full h-full" viewBox="0 0 120 30" fill="none"><path d="M0 28 Q 30 20, 60 12 T 120 6" stroke="#0284c7" stroke-width="2" fill="none"/></svg>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.18"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 30 Q 30 22, 60 14 T 120 8 L 120 32 L 0 32 Z" fill="url(#grad3)"/>
+                <path d="M0 30 Q 30 22, 60 14 T 120 8" stroke="#0284c7" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="8" r="3" fill="#0284c7"/>
+                <circle cx="120" cy="8" r="5" fill="#0284c7" opacity="0.2"/>
+              </svg>
             </div>
-            <div class="text-xs text-slate-600 font-medium">Rekor Tertinggi 2026</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-slate-600 font-medium">Rekor Tertinggi 2026</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+22.1%</div>
+            </div>
           </div>
 
           <!-- Card 4 -->
           <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
             <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Saldo Buku Kas Fisik</span>
             <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">Rp 12.840.000</div>
-            <div class="h-8 w-full mb-1">
-              <svg class="w-full h-full" viewBox="0 0 120 30" fill="none"><path d="M0 15 Q 40 25, 80 10 T 120 18" stroke="#6366f1" stroke-width="2" fill="none"/></svg>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.18"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 17 Q 40 27, 80 12 T 120 20 L 120 32 L 0 32 Z" fill="url(#grad4)"/>
+                <path d="M0 17 Q 40 27, 80 12 T 120 20" stroke="#6366f1" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="20" r="3" fill="#6366f1"/>
+                <circle cx="120" cy="20" r="5" fill="#6366f1" opacity="0.2"/>
+              </svg>
             </div>
-            <div class="text-xs text-slate-600 font-medium">Sudah Direkonsiliasi</div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-slate-600 font-medium">Sudah Direkonsiliasi</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+5.7%</div>
+            </div>
           </div>
         </div>
 
@@ -1216,6 +1395,94 @@
       document.getElementById('diagnosaCountBadge').innerText = `${count} Terpilih`;
     }
 
+    // Empty Queue Toggle Demo
+    function toggleEmptyQueueDemo() {
+      const emptyContainer = document.getElementById('emptyQueueContainer');
+      const populatedContainer = document.getElementById('populatedQueueContainer');
+      const badge = document.getElementById('queueActiveBadge');
+      const btn = document.getElementById('btnEmptyQueueToggle');
+      const isEmpty = !emptyContainer.classList.contains('hidden');
+
+      if (isEmpty) {
+        emptyContainer.classList.add('hidden');
+        populatedContainer.classList.remove('hidden');
+        badge.innerText = '6 Antrean Aktif';
+        badge.className = 'px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold rounded-full font-mono';
+        btn.innerText = 'Simulasi Antrean Kosong';
+      } else {
+        emptyContainer.classList.remove('hidden');
+        populatedContainer.classList.add('hidden');
+        badge.innerText = '0 Antrean';
+        badge.className = 'px-2.5 py-1 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold rounded-full font-mono';
+        btn.innerText = 'Tampilkan Antrean (6)';
+      }
+    }
+
+    // Medication Preset 1-Click Fill
+    const RESEP_PRESETS = {
+      ispa: [
+        { nama: 'Amoxicillin 500mg', aturan: '3 x 1 tab', qty: '10 tab' },
+        { nama: 'CTM 4mg (Klorfeniramin)', aturan: '3 x 1 tab', qty: '10 tab' },
+        { nama: 'Paracetamol 500mg', aturan: '3 x 1 tab (bila demam)', qty: '10 tab' },
+      ],
+      maag: [
+        { nama: 'Antasida Doen', aturan: '3 x 1 tab (30 mnt sbl makan)', qty: '10 tab' },
+        { nama: 'Omeprazole 20mg', aturan: '1 x 1 kapsul (pagi)', qty: '7 kapsul' },
+        { nama: 'Ranitidin 150mg', aturan: '2 x 1 tab', qty: '10 tab' },
+      ],
+      alergi: [
+        { nama: 'Cetirizine 10mg', aturan: '1 x 1 tab (malam)', qty: '7 tab' },
+        { nama: 'Betametason Krim 0.1%', aturan: 'Oleskan tipis 2x/hari', qty: '1 tube' },
+      ],
+    };
+
+    function fillPresetResep(key) {
+      const body = document.getElementById('resepTableBody');
+      const badge = document.getElementById('resepCountBadge');
+      const emptyRow = document.getElementById('resepEmptyRow');
+      const items = RESEP_PRESETS[key];
+      if (!items) return;
+
+      // Clear existing
+      body.innerHTML = '';
+
+      items.forEach((item, i) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between px-4 py-2 gap-3 text-xs';
+        row.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-5 h-5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 font-bold font-mono text-[10px] flex items-center justify-center shrink-0">${i + 1}</span>
+            <div class="min-w-0">
+              <div class="font-bold text-slate-900 truncate">${item.nama}</div>
+              <div class="text-[10px] text-slate-500 font-mono">${item.aturan}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="font-mono text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${item.qty}</span>
+            <button onclick="this.closest('div.flex').remove(); updateResepCount();" class="text-slate-400 hover:text-rose-500 transition-colors font-extrabold text-sm leading-none">&times;</button>
+          </div>
+        `;
+        body.appendChild(row);
+      });
+
+      updateResepCount();
+      showToast('Paket resep ' + key.toUpperCase() + ' terisi otomatis (' + items.length + ' item)');
+    }
+
+    function updateResepCount() {
+      const body = document.getElementById('resepTableBody');
+      const badge = document.getElementById('resepCountBadge');
+      const count = body.querySelectorAll('div.flex').length;
+      badge.innerText = count + ' item';
+      if (count === 0) {
+        const emptyRow = document.createElement('div');
+        emptyRow.id = 'resepEmptyRow';
+        emptyRow.className = 'px-4 py-3 text-xs text-slate-400 text-center font-medium';
+        emptyRow.innerText = 'Belum ada resep. Pilih preset atau tambah manual.';
+        body.appendChild(emptyRow);
+      }
+    }
+
     // Kasir Quick Cash Tender Logic with IDR formatting
     function setUangDiterima(amount) {
       const input = document.getElementById('inputUangDiterima');
@@ -1239,9 +1506,12 @@
       const tagihan = 65000;
       const change = received - tagihan;
       const display = document.getElementById('displayKembalian');
+      const inputEl = document.getElementById('inputUangDiterima');
       if (change < 0) {
         display.innerText = 'Kurang Rp ' + Math.abs(change).toLocaleString('id-ID');
         display.className = 'text-xl font-extrabold font-mono text-rose-600';
+        inputEl.classList.add('animate-shake');
+        setTimeout(() => inputEl.classList.remove('animate-shake'), 400);
       } else {
         display.innerText = 'Rp ' + change.toLocaleString('id-ID');
         display.className = 'text-xl font-extrabold font-mono text-emerald-900';
