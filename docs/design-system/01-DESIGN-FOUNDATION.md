@@ -71,3 +71,33 @@ Berdasarkan arahan terbaru dan analisis mendalam terhadap referensi dashboard kl
 Hierarki tipografi tetap mengoptimalkan **Plus Jakarta Sans**:
 - Heading & Title: Plus Jakarta Sans Semibold/Bold (`font-bold`).
 - Angka Finansial, Vital Signs, No. RM, ICD-10: JetBrains Mono / font-mono `tabular-nums` untuk akurasi pembacaan dokter.
+
+---
+
+## 4. Standar Rekayasa Desain Emil Kowalski & Better-UI
+
+Untuk memastikan sistem antarmuka tidak terasa generic ("AI slop") dan memiliki kualitas *high-end agency*:
+
+### 4.1 Formula Concentric Border Radius
+Radius bersarang harus mengikuti formula optik:
+$$R_{\text{inner}} = R_{\text{outer}} - \text{Padding}$$
+- Kartu Utama: `rounded-3xl` (24px) dengan padding 24px (`p-6`) $\rightarrow$ Elemen di dalamnya menggunakan `rounded-xl` (12px) atau `rounded-2xl` (16px jika padding 16px).
+- Kontainer Tombol / Dropdown: `rounded-xl` (12px) dengan padding 8px $\rightarrow$ Badge ikon di dalamnya `rounded-lg` (8px).
+
+### 4.2 Restriksi Motion & Eliminasi `transition: all`
+- **Larangan `transition: all`**: Dilarang menggunakan `transition-all` pada kartu dan form input karena memicu *layout thrashing* dan mengaburkan transisi warna tema.
+- **Transisi Eksplisit**: Tentukan secara spesifik properti yang berubah:
+  ```css
+  transition: transform 150ms cubic-bezier(0.2, 0, 0, 1), box-shadow 150ms ease, border-color 150ms ease;
+  ```
+- **Transform Origin Popover**: Seluruh dropdown popover harus memiliki `transform-origin: top` agar menganimasi keluar langsung dari tombol pemicunya (*anchored trigger*), bukan mengambang dari titik tengah layar.
+
+### 4.3 Standar Kontras Layar Faskes (WCAG AAA)
+- Teks penting dan instruksi form tidak boleh menggunakan warna abu-abu pudar (`slate-400`).
+- Label form dan status wajib menggunakan minimal `text-slate-600` atau `text-slate-700` dengan rasio kontras $\ge 7:1$ terhadap background putih, memastikan dokter dan perawat dapat membaca dengan jelas pada monitor klinik beresolusi standar.
+
+### 4.4 Harmonisasi Bobot Stroke Ikon SVG
+- Teks Reguler (`font-normal` / 400): Menggunakan ikon ber-stroke `1.5px`.
+- Teks Sedang/Tebal (`font-semibold` / 600 atau `font-bold` / 700): Menggunakan ikon ber-stroke `2.0px`.
+- Seluruh ikon menggunakan `currentColor` agar mewarisi warna status dan hover secara alami.
+
