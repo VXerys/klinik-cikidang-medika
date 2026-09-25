@@ -1,107 +1,75 @@
 # Spesifikasi Komponen SIM Klinik Pratama Cikidang Medika
-*Dokumentasi Detail Aturan Komponen & Panduan Interaksi*
+*Dokumentasi Detail Aturan Komponen & Panduan Interaksi Taktil (High-Depth)*
 
 ---
 
-## 1. Tombol (Buttons)
+## 1. Tombol Taktil "Berisi" (Tactile Hardware Buttons)
 
-Semua tombol mengikuti standar `better-ui` dengan efek skala tekan `active:scale-[0.98]`, transisi seimbang `transition-all duration-150`, dan radius `rounded-xl`.
+Semua tombol mengikuti standar `better-ui` dan `emil-design-eng`:
+- **Top Specular Inset Rim**: `box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.28)`.
+- **Fisika Tekan (Scale Physics)**: `active:scale-[0.965]` dengan transisi `cubic-bezier(0.2, 0, 0, 1)` durasi 120ms.
+- **Kedalaman Gradasi**: Permukaan tidak flat polos, menggunakan gradasi mikro vertikal lembut.
 
-| Varian | Visual Classes | Konteks Penggunaan |
+| Varian | Spesifikasi Visual & Tokens | Konteks Penggunaan |
 |---|---|---|
-| **Primary (Solid Emerald)** | `bg-emerald-600 hover:bg-emerald-700 text-white shadow-sm active:scale-[0.98]` | Aksi utama: "Daftarkan Pasien", "Selesai Periksa & Kirim ke Kasir", "Simpan Data" |
-| **Secondary (Outline)** | `border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 hover:border-slate-300 active:scale-[0.98]` | Aksi pendukung: "Filter", "Ekspor Excel", "Batal", "Cetak Resep" |
-| **Soft Neutral** | `bg-slate-100 hover:bg-slate-200 text-slate-700 active:scale-[0.98]` | Aksi navigasi cepat: "+ Tambah Tindakan", "+ Tambah Obat" |
-| **Danger (Solid Rose)** | `bg-rose-600 hover:bg-rose-700 text-white shadow-sm active:scale-[0.98]` | Aksi destruktif: "Hapus Pasien", "Batalkan Kunjungan" |
-| **Ghost / Icon Button** | `text-slate-500 hover:text-slate-900 hover:bg-slate-100 rounded-lg p-2` | Tombol ikon tutup modal, refresh antrean, pagination |
-| **Button with Counter** | `flex items-center gap-2 ... badge inside: bg-emerald-100 text-emerald-800 rounded-full px-2 py-0.5 text-xs` | Segmented tab button: "Menunggu Dokter (4)", "Menunggu Obat (2)" |
+| **Primary (Emerald Bevel)** | `bg-gradient-to-b from-emerald-500 to-emerald-600 hover:from-emerald-600 hover:to-emerald-700 text-white shadow-btn-primary border border-emerald-600/90 active:scale-[0.965]` | Aksi utama: "Daftarkan Pasien", "Simpan & Kirim Kasir", "Cetak Kuitansi" |
+| **Secondary (Tactile Beveled White)** | `bg-gradient-to-b from-white to-slate-50 hover:to-slate-100 text-slate-800 shadow-btn-secondary border border-slate-300 active:scale-[0.965]` | Aksi pendukung: "Filter", "Ekspor Berkas Excel", "Batal & Tutup" |
+| **Dark Master Checkout** | `bg-gradient-to-b from-slate-800 to-slate-900 text-white shadow-md border border-slate-800 active:scale-[0.965]` | Aksi pembayaran kasir & transaksi finansial penting |
+| **Counter Pill Action** | `bg-emerald-50 hover:bg-emerald-100 text-emerald-900 border border-emerald-200/90 rounded-xl active:scale-[0.965]` | Tab antrean & filter poli dengan counter numerik |
 
 ---
 
-## 2. Kartu & Widget Metrik (Cards & Metrics)
+## 2. Dropdown Kustom (Custom Floating Popover Select)
 
-Mengacu pada gaya kartu metrik di *Chronyx* dan *Elera*:
-- **Latar & Border**: `bg-white border border-slate-200/80 rounded-2xl p-5 shadow-sm`.
-- **Hierarki Kartu Metrik**:
-  - Header: Label metrik berwarna netral (`text-slate-500 font-medium text-xs tracking-wide uppercase`) bersanding dengan ikon persegi ber-border halus (`w-8 h-8 rounded-lg bg-slate-50 border border-slate-200 flex items-center justify-center`).
-  - Nilai Utama: Angka besar `text-2xl font-bold text-slate-900 tracking-tight font-mono tabular-nums`.
-  - Delta / Keterangan: Kapsul hijau/merah lembut (`bg-emerald-50 text-emerald-700 px-2 py-0.5 rounded-full text-xs font-semibold`) untuk tren hari ini vs kemarin.
+> ⚠️ **ATURAN MUTLAK**: Dilarang menggunakan tag HTML native `<select>` polos karena memunculkan jendela popup persegi panjang biru kaku bawaan OS yang merusak estetika desain (seperti pada screenshot pengujian user).
 
----
-
-## 3. Bilah Pencarian & Autocomplete (Search Bar)
-
-Pencarian adalah fitur paling vital untuk dokter dan kasir:
-- **Universal Quick Search (`⌘K` / `Ctrl+K`)**:
-  - Input field modern dengan ikon pencarian kaca pembesar di sisi kiri dan badge tombol pintasan keyboard `Ctrl+K` di sisi kanan (`bg-slate-100 text-slate-500 text-xs px-1.5 py-0.5 rounded border border-slate-200 font-mono`).
-- **Patient Search Autocomplete**:
-  - Dropdown melayang (`bg-white border border-slate-200 rounded-xl shadow-lg mt-1 overflow-hidden z-50`).
-  - Setiap hasil menampilkan:
-    - Inisial pasien dalam lingkaran warna.
-    - Nama lengkap pasien (`font-semibold text-slate-900`).
-    - Tag No. RM (`font-mono text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded`).
-    - Desa / Alamat dan Jenis Pasien (BPJS / Umum).
-  - Footer dropdown menyediakan tombol instan: `+ Daftarkan Sebagai Pasien Baru`.
+### Spesifikasi Dropdown Kustom:
+1. **Trigger Button**:
+   - Berupa tombol kustom dengan border `border-slate-300`, background putih bersih, badge inisial jaminan di sisi kiri, judul & sub-deskripsi, serta ikon chevron di kanan.
+   - Chevron berputar 180° secara halus saat dropdown terbuka (`transition-transform duration-200`).
+2. **Floating Popover**:
+   - Melayang di atas elemen lain dengan `z-50`, radius `rounded-2xl`, background `bg-white/95 backdrop-blur-md`, border `border-slate-200`, dan bayangan `shadow-popover`.
+   - Animasi masuk: skala mikro dari `0.96` ke `1` dan opacity `0` ke `1` durasi 150ms.
+3. **Item Opsi Berisi (Rich Options)**:
+   - Setiap pilihan memuat:
+     - Badge warna penjamin (Teal untuk BPJS, Biru untuk Umum, Ungu untuk TBC, Hijau untuk Sunat).
+     - Nama Penjamin (teks tebal).
+     - Sub-deskripsi penjelasan (misal: "Tercover Kapitasi & Rujukan Faskes 1").
+     - Indikator centang (*checkmark*) pada opsi yang sedang aktif.
+4. **Interaksi Menutup**:
+   - Otomatis tertutup saat pengguna memilih opsi atau mengklik di luar area dropdown (*click outside*).
 
 ---
 
-## 4. Bilah Navigasi Samping (Sidebar Navigation)
+## 3. Kartu Metrik KPI dengan Grafik Mini (*Sparklines*)
 
-Terinspirasi kuat dari *Elera Health*:
-- **Area Klinik**: Logo Cikidang Medika + teks "Klinik Pratama Cikidang Medika" + status sistem live (titik hijau berkedip).
-- **Pengelompokan Menu**:
-  1. *Operasional*: Dashboard, Pendaftaran Pasien, Alur Antrean.
-  2. *Layanan Medis*: Pemeriksaan Dokter, Rekam Medis, Program Khusus (TBC/Sunat).
-  3. *Kasir & Finansial*: Buku Kas, Tagihan & Pembayaran, Laporan Keuangan.
-- **Item Menu Aktif (Khas Elera)**:
-  - Menggunakan kapsul hijau mint cerah (`bg-[#4ade80] text-slate-900 font-semibold shadow-sm`).
-  - Badge counter numerik di sebelah kanan untuk item antrean (`bg-white/80 text-slate-900 px-2 py-0.5 rounded-full text-xs font-bold`).
-- **Footer Sidebar (Profil & Role)**:
-  - Kartu profil petugas dengan avatar foto/inisial, nama user aktif, dan tag role RBAC (`Dokter Umum`, `Kasir / Admin`, atau `Pimpinan / Owner`).
+Mengacu pada estetika *Chronyx*:
+- **Latar & Kedalaman**: `bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-layered`.
+- **Grafik Mini Sparkline**:
+  - Menggunakan kurva SVG dinamis dengan gradasi area lembut di bawah garis.
+  - Memberikan kesan dasbor yang hidup (*alive*), tidak sekadar kotak angka mati.
+- **Hierarki Konten**:
+  - Header: Label metrik huruf kapital abu-abu netral + ikon bersudut melengkung.
+  - Angka Utama: Font monospaced tebal `tabular-nums` ukuran 30px (`text-3xl`).
+  - Tren: Kapsul delta hijau (`+12%`) atau status poli dokter.
 
 ---
 
-## 5. Avatar Inisial Pasien (Patient Chips & Avatars)
+## 4. Widget Pemeriksaan Poli Dokter (Recessed Surface Depth)
 
-Mempermudah staf mengenali pasien secara cepat tanpa harus membaca teks kecil:
-- Lingkaran avatar `w-9 h-9 rounded-full flex items-center justify-center font-bold text-xs`.
-- Variasi warna otomatis berdasarkan inisial/id pasien:
-  - Hijau: `bg-emerald-100 text-emerald-800`
-  - Biru: `bg-blue-100 text-blue-800`
-  - Ungu: `bg-purple-100 text-purple-800`
-  - Oranye: `bg-amber-100 text-amber-800`
-  - Merah muda: `bg-rose-100 text-rose-800`
-
----
-
-## 6. Widget Tanda Vital Pemeriksaan Dokter (Vital Signs Grid)
-
-Terinspirasi dari *Chronyx*:
-- Grid 4 kotak ringkas (`grid grid-cols-2 sm:grid-cols-4 gap-3`):
-  1. **Tekanan Darah**: Input angka + satuan `mmHg` (misal `120/80`).
-  2. **Nadi / Heart Rate**: Input angka + satuan `bpm` (misal `78`).
-  3. **Suhu Tubuh**: Input angka + satuan `°C` (misal `36.5`).
-  4. **Laju Nafas**: Input angka + satuan `x/mnt` (misal `20`).
-- Setiap kotak memiliki ikon medis halus, background lembut `bg-slate-50`, border `border-slate-200`, dan teks satuan abu-abu pudar.
+Mengadopsi pola *recessed wells* dari *Chronyx*:
+- **Tanda-Tanda Vital**:
+  - Kotak 4 kolom (Tekanan Darah, Nadi, Suhu, Nafas) berada dalam kontainer yang sedikit menjorok ke dalam (*recessed well*): `bg-slate-50/90 border border-slate-200 shadow-well rounded-xl p-3.5`.
+  - Teks angka tanda vital berukuran besar `text-xl font-bold font-mono text-slate-900`.
+  - Saat input difokuskan, muncul cincin fokus lembut `focus-within:ring-2 focus-within:ring-emerald-500/20 focus-within:border-emerald-500`.
+- **Multi-Diagnosa Sekali Klik**:
+  - Chip diagnosa penyakit (ISPA, Dispepsia, Hipertensi, dll.) menggunakan gaya tombol taktil.
+  - Chip terpilih berwarna hijau zamrud tegas dengan tanda silang untuk membatalkan; chip belum terpilih berupa tombol putih beveled yang dapat diklik untuk menambahkan.
 
 ---
 
-## 7. Tabel Data Pasien & Riwayat Kunjungan
+## 5. Tabel Pasien & Menu Aksi
 
-- **Header Tabel**: `bg-slate-50 text-slate-600 font-semibold text-xs tracking-wider uppercase border-b border-slate-200 px-4 py-3`.
-- **Baris Tabel**: `hover:bg-slate-50/80 transition-colors border-b border-slate-100 px-4 py-3.5`.
-- **Struktur Kolom**:
-  - Kolom 1: Pasien (Avatar Inisial + Nama Lengkap + No RM).
-  - Kolom 2: Kategori & Desa (Badge BPJS/Umum + Nama Desa).
-  - Kolom 3: Dokter Pemeriksa & Keluhan.
-  - Kolom 4: Status Alur / Pembayaran (Badge Status Berwarna).
-  - Kolom 5: Aksi Cepat (Tombol "Buka Rekam Medis" atau "Proses Bayar").
-
----
-
-## 8. Banner Wawasan Klinis (Insight Callout Banner)
-
-Sesuai pola kartu informasi bawah di *Elera*:
-- Desain kapsul lembut: `bg-blue-50/70 border border-blue-200/80 rounded-2xl p-4 flex items-start gap-3`.
-- Ikon informasi biru di kiri: `w-5 h-5 text-blue-600 shrink-0 mt-0.5`.
-- Teks ringkas dan berorientasi aksi: Memberikan ringkasan penting seperti "Ada 4 pasien BPJS menunggu konfirmasi resep di kasir" atau "Setoran kas hari ini belum direkonsiliasi".
+- **Avatar Inisial Pasien**: Lingkaran inisial dua huruf bergradasi mikro (misal `DD`, `SR`) dengan border tipis dan bayangan lembut.
+- **Badge Kategori**: Kapsul melengkung penuh (`rounded-full`) dengan border warna senada.
+- **Tombol Aksi Baris**: Tombol taktil beveled putih atau hijau yang mengundang interaksi.
