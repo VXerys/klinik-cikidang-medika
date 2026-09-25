@@ -36,7 +36,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="id" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
-      <body className="font-sans antialiased text-slate-900 bg-slate-100 selection:bg-blue-100 selection:text-blue-900">
+      <body className="font-sans antialiased text-slate-900 bg-slate-100 selection:bg-teal-100 selection:text-teal-900">
         <AppLayout>{children}</AppLayout>
         <Toaster richColors position="top-right" closeButton />
       </body>

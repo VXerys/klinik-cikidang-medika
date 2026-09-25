@@ -43,26 +43,26 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
   }
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4 flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4">
       <div>
         {/* Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl">
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
               <Wallet className="w-5 h-5 text-emerald-700" weight="duotone" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                Ringkasan Arus Kas & Likuiditas Riil
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight truncate">
+                Likuiditas Kas Riil &amp; Bank
               </h3>
-              <p className="text-[11px] text-slate-500">
-                Pemisahan fisik kas laci loket vs saldo rekening bank
+              <p className="text-[11px] text-slate-600 font-medium truncate">
+                Pemisahan kas laci loket vs saldo rekening
               </p>
             </div>
           </div>
           <Link
             href="/buku-kas"
-            className="text-xs text-blue-600 hover:text-blue-700 font-semibold flex items-center gap-1"
+            className="text-xs text-teal-600 hover:text-teal-700 font-semibold flex items-center gap-1"
           >
             <span>Buku Kas</span>
             <CaretRight className="w-3.5 h-3.5" />
@@ -91,20 +91,20 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
           </div>
 
           {/* 2. Kas Rekening Bank BRI */}
-          <div className="p-3.5 rounded-xl bg-blue-50/50 border border-blue-100 space-y-1.5">
+          <div className="p-3.5 rounded-xl bg-teal-50/50 border border-teal-100 space-y-1.5">
             <div className="flex items-center justify-between">
-              <span className="text-[11px] font-semibold text-blue-900 flex items-center gap-1.5">
-                <Buildings className="w-3.5 h-3.5 text-blue-600" weight="duotone" />
+              <span className="text-[11px] font-semibold text-teal-900 flex items-center gap-1.5">
+                <Buildings className="w-3.5 h-3.5 text-teal-600" weight="duotone" />
                 Rekening Bank BRI
               </span>
-              <span className="text-[10px] bg-blue-100 text-blue-800 px-1.5 py-0.5 rounded font-bold">
+              <span className="text-[10px] bg-teal-100 text-teal-800 px-1.5 py-0.5 rounded font-bold">
                 Kapitasi & Transfer
               </span>
             </div>
-            <div className="text-lg font-bold font-mono text-blue-900">
+            <div className="text-lg font-bold font-mono text-teal-900">
               {formatRupiah(data.bankCash)}
             </div>
-            <p className="text-[10px] text-blue-600/80">
+            <p className="text-[10px] text-teal-600/80">
               Akumulasi kapitasi & setoran klinik
             </p>
           </div>
@@ -123,7 +123,7 @@ export function CashLiquidityCard({ data, isLoading }: CashLiquidityCardProps) {
               title={`Tunai: ${data.cashRatio}%`}
             ></div>
             <div
-              className="bg-blue-600 h-full transition-all"
+              className="bg-teal-600 h-full transition-all"
               style={{ width: `${data.transferRatio}%` }}
               title={`Transfer: ${data.transferRatio}%`}
             ></div>

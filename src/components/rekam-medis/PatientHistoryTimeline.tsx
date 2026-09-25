@@ -87,23 +87,23 @@ export function PatientHistoryTimeline({
   }
 
   return (
-    <div className={cn('bg-white rounded-2xl border border-slate-200 p-4 sm:p-5 space-y-4 shadow-xs', className)}>
-      <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+    <div className={cn('bg-white rounded-xl border border-slate-200/90 p-4 sm:p-5 space-y-4 shadow-2xs', className)}>
+      <div className="flex items-center justify-between border-b border-slate-100 pb-3 flex-wrap gap-2">
         <div className="flex items-center gap-2">
-          <div className="p-2 bg-indigo-100 text-indigo-700 rounded-xl">
+          <div className="w-8 h-8 rounded-xl bg-indigo-50 text-indigo-600 border border-indigo-100/80 flex items-center justify-center shrink-0">
             <ClockCounterClockwise className="w-4 h-4" weight="duotone" />
           </div>
           <div>
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Riwayat Kunjungan & Diagnosa Lampau
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight">
+              Riwayat Kunjungan &amp; Diagnosa Lampau
             </h3>
-            <p className="text-[11px] text-slate-500">
+            <p className="text-[11px] text-slate-500 font-normal">
               Catatan rekam medis pasien dari pemeriksaan terdahulu
             </p>
           </div>
         </div>
 
-        <span className="text-[11px] font-semibold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
+        <span className="text-xs font-mono font-bold text-indigo-700 bg-indigo-50 px-2.5 py-0.5 rounded-full border border-indigo-200">
           {history.length} Riwayat Ditemukan
         </span>
       </div>
@@ -158,11 +158,11 @@ export function PatientHistoryTimeline({
 
               {(pastVisit.kode_icd10 || pastVisit.diagnosa_deskripsi) && (
                 <div className="flex items-start gap-1.5 bg-white p-2.5 rounded-xl border border-slate-100">
-                  <Stethoscope className="w-3.5 h-3.5 text-blue-600 shrink-0 mt-0.5" weight="duotone" />
+                  <Stethoscope className="w-3.5 h-3.5 text-teal-600 shrink-0 mt-0.5" weight="duotone" />
                   <div>
                     <span className="font-semibold text-slate-800 text-[11px]">Diagnosa: </span>
                     {pastVisit.kode_icd10 && (
-                      <span className="font-mono font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 mr-1.5 text-[10px]">
+                      <span className="font-mono font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 mr-1.5 text-[10px]">
                         {pastVisit.kode_icd10}
                       </span>
                     )}

@@ -519,85 +519,88 @@ export default function DashboardPage() {
   return (
     <div className="space-y-6 min-w-0 w-full">
       {/* Top Header & Integrated Toolbar */}
-      <div className="flex flex-col xl:flex-row xl:items-center xl:justify-between gap-4 pb-1">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-1">
         <div>
           <div className="flex items-center gap-2">
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
               Dashboard Eksekutif Klinik
             </h1>
             {lastRefreshed && (
-              <span className="inline-flex items-center gap-1 text-[11px] text-slate-500 bg-slate-100 border border-slate-200/80 px-2 py-0.5 rounded-lg font-mono">
-                <Clock className="w-3.5 h-3.5 text-slate-400" weight="duotone" />
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 border border-slate-200/80 font-mono">
+                <Clock className="w-3.5 h-3.5 text-slate-500" weight="duotone" />
                 <span>{lastRefreshed}</span>
               </span>
             )}
           </div>
-          <p className="text-xs text-slate-500 mt-1">
+          <p className="text-xs text-slate-600 font-medium mt-0.5">
             Ringkasan operasional harian, morbiditas ICD-10, arus kas, dan surveilans klinis
           </p>
         </div>
 
-        {/* Integrated Toolbar: Period Filter + Quick CTA + Secondary Shortcuts */}
-        <div className="flex flex-wrap items-center gap-2.5">
-          {/* Integrated Period Selector */}
-          <DashboardPeriodSelector
-            selectedPeriod={selectedPeriod}
-            onChangePeriod={setSelectedPeriod}
-            isLoading={isLoading}
-          />
-
-          {/* Refresh Action */}
-          <button
-            type="button"
-            onClick={() => {
-              fetchDashboardData();
-              toast.info('Memperbarui data dashboard...');
-            }}
-            disabled={isLoading}
-            title="Muat Ulang Data"
-            className="inline-flex items-center justify-center p-2 min-h-[36px] min-w-[36px] bg-white hover:bg-slate-50 border border-slate-200/90 rounded-xl text-slate-600 shadow-btn-secondary tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
-          >
-            <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-blue-600' : ''}`} weight="bold" />
-          </button>
-
-          {/* Secondary Action Shortcuts (Harmonized Tactile Pills) */}
-          <div className="hidden sm:flex items-center gap-1.5">
-            <Link
-              href="/program-khusus"
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold shadow-btn-secondary tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none min-h-[36px]"
-              title="Surveilans Program Khusus (TBC, Sirkumsisi, Pos-Rawat)"
-            >
-              <Heartbeat className="w-3.5 h-3.5 text-rose-500 shrink-0" weight="duotone" />
-              <span>Program Khusus</span>
-            </Link>
-
-            <Link
-              href="/buku-kas"
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold shadow-btn-secondary tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none min-h-[36px]"
-              title="Buku Kas Operasional"
-            >
-              <Wallet className="w-3.5 h-3.5 text-slate-500 shrink-0" weight="duotone" />
-              <span>Buku Kas</span>
-            </Link>
-
-            <Link
-              href="/laporan"
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 border border-slate-200/90 text-slate-700 rounded-xl text-xs font-semibold shadow-btn-secondary tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none min-h-[36px]"
-              title="Laporan & Ekspor Excel"
-            >
-              <FileXls className="w-3.5 h-3.5 text-emerald-600 shrink-0" weight="duotone" />
-              <span>Laporan</span>
-            </Link>
+        {/* 2-Line Full-Width Responsive Toolbar */}
+        <div className="flex flex-col gap-2 w-full lg:w-auto lg:min-w-[400px] xl:min-w-[440px]">
+          {/* Line 1: Period Selector Full-Width (4 equal tabs spanning 100% width) */}
+          <div className="w-full">
+            <DashboardPeriodSelector
+              selectedPeriod={selectedPeriod}
+              onChangePeriod={setSelectedPeriod}
+              isLoading={isLoading}
+            />
           </div>
 
-          {/* Primary Action Button (Medical Sapphire Tactile CTA) */}
-          <Link
-            href="/pendaftaran"
-            className="inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-4 py-2 min-h-[36px] rounded-xl text-xs font-bold shadow-btn-primary border border-blue-700/80 tactile-btn transition focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
-          >
-            <UserPlus className="w-4 h-4 shrink-0" weight="bold" />
-            <span>+ Pasien Baru</span>
-          </Link>
+          {/* Line 2: Quick Action Ribbon & Primary Action Button Full-Width */}
+          <div className="flex items-center gap-2 w-full">
+            {/* Quick Action Ribbon */}
+            <div className="inline-flex items-center bg-white p-1 rounded-xl border border-slate-200/90 shadow-btn-secondary gap-1 shrink-0">
+              <button
+                type="button"
+                onClick={() => {
+                  fetchDashboardData();
+                  toast.info('Memperbarui data dashboard...');
+                }}
+                disabled={isLoading}
+                title="Muat Ulang Data"
+                className="p-1.5 rounded-lg text-slate-500 hover:text-slate-900 hover:bg-slate-100 transition-colors disabled:opacity-50 tactile-btn"
+              >
+                <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-teal-600' : ''}`} weight="bold" />
+              </button>
+
+              <div className="w-px h-4 bg-slate-200 mx-0.5" />
+
+              <Link
+                href="/program-khusus"
+                className="p-1.5 rounded-lg text-slate-600 hover:text-rose-600 hover:bg-rose-50 transition-colors tactile-btn"
+                title="Program Khusus (TBC, Sirkumsisi, Pos-Rawat)"
+              >
+                <Heartbeat className="w-4 h-4 text-rose-500" weight="duotone" />
+              </Link>
+
+              <Link
+                href="/buku-kas"
+                className="p-1.5 rounded-lg text-slate-600 hover:text-teal-600 hover:bg-teal-50 transition-colors tactile-btn"
+                title="Buku Kas Operasional"
+              >
+                <Wallet className="w-4 h-4 text-slate-500" weight="duotone" />
+              </Link>
+
+              <Link
+                href="/laporan"
+                className="p-1.5 rounded-lg text-slate-600 hover:text-emerald-600 hover:bg-emerald-50 transition-colors tactile-btn"
+                title="Laporan & Ekspor Excel"
+              >
+                <FileXls className="w-4 h-4 text-emerald-600" weight="duotone" />
+              </Link>
+            </div>
+
+            {/* Primary Action Button (stretches flex-1 to fill the remaining line width) */}
+            <Link
+              href="/pendaftaran"
+              className="flex-1 inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-3.5 py-1.5 min-h-[36px] rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700/80 tactile-btn transition focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none"
+            >
+              <UserPlus className="w-3.5 h-3.5 shrink-0" weight="bold" />
+              <span>Pasien Baru</span>
+            </Link>
+          </div>
         </div>
       </div>
 
@@ -624,7 +627,7 @@ export default function DashboardPage() {
       {/* 5 Executive KPI Cards */}
       <DashboardKpiCards data={kpiData} isLoading={isLoading} />
 
-      {/* 2-Column Logical Grid: Clinical / Operational (Left) vs Financial / Cashier (Right) */}
+      {/* 2-Column Logical Grid with Natural Card Heights (Zero Empty Space) */}
       <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
         {/* Left Column: Klinis & Operasional */}
         <div className="space-y-6">

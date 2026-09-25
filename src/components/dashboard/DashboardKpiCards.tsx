@@ -7,8 +7,6 @@ import {
   Handshake,
   ArrowUpRight,
   Wallet,
-  TrendUp,
-  WarningCircle,
 } from '@phosphor-icons/react';
 import { formatRupiah } from '@/lib/utils';
 
@@ -40,7 +38,7 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
               <div className="w-8 h-8 bg-slate-200 rounded-xl"></div>
             </div>
             <div className="h-7 w-32 bg-slate-200 rounded"></div>
-            <div className="h-8 w-full bg-slate-100 rounded"></div>
+            <div className="h-2.5 w-full bg-slate-100 rounded-full"></div>
             <div className="h-3 w-28 bg-slate-100 rounded"></div>
           </div>
         ))}
@@ -48,81 +46,91 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
     );
   }
 
+  const totalVisits = data.totalVisits || 0;
+  const uniquePatients = data.uniquePatients || 0;
+  const totalRevenue = (data.umumRevenue || 0) + (data.bpjsRevenue || 0);
+
+  const umumRevPct = totalRevenue > 0 ? Math.round((data.umumRevenue / totalRevenue) * 100) : 0;
+  const bpjsRevPct = totalRevenue > 0 ? 100 - umumRevPct : 0;
+  const expenseRatio = totalRevenue > 0 ? Math.min(100, Math.round((data.totalExpenses / totalRevenue) * 100)) : (data.totalExpenses > 0 ? 100 : 0);
+
   const cards = [
     {
       id: 'kunjungan',
       title: 'Total Kunjungan',
-      value: data.totalVisits.toLocaleString('id-ID'),
-      subtitle: `${data.uniquePatients.toLocaleString('id-ID')} Pasien Terdaftar`,
-      delta: '+12.5%',
-      deltaColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+      value: totalVisits.toLocaleString('id-ID'),
+      unit: 'Kunjungan',
+      subtitle: `${uniquePatients.toLocaleString('id-ID')} Pasien Terdaftar`,
+      barLabel: 'Volume Pelayanan',
+      barDetail: `${totalVisits} Rawat Jalan`,
+      barPct: totalVisits > 0 ? 100 : 0,
+      barColor: 'bg-teal-600',
+      badge: 'Live Data',
+      badgeColor: 'text-teal-700 bg-teal-50 border-teal-200',
       icon: Users,
-      iconBg: 'bg-blue-50 text-blue-600',
-      strokeColor: '#2563eb',
-      gradId: 'spark-grad-kunjungan',
-      pathD: 'M0 26 Q 30 14, 60 20 T 120 6 L 120 32 L 0 32 Z',
-      lineD: 'M0 26 Q 30 14, 60 20 T 120 6',
-      circleY: 6,
+      iconBg: 'bg-teal-50 text-teal-600',
     },
     {
       id: 'umum',
       title: 'Pendapatan Umum',
       value: formatRupiah(data.umumRevenue),
       subtitle: 'Kasir poli rawat jalan',
-      delta: '+8.4%',
-      deltaColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+      barLabel: 'Kontribusi Omzet',
+      barDetail: `${umumRevPct}% total kasir`,
+      barPct: umumRevPct,
+      barColor: 'bg-emerald-600',
+      badge: `${umumRevPct}% Omzet`,
+      badgeColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
       icon: CreditCard,
       iconBg: 'bg-emerald-50 text-emerald-600',
-      strokeColor: '#059669',
-      gradId: 'spark-grad-umum',
-      pathD: 'M0 24 Q 40 8, 80 18 T 120 8 L 120 32 L 0 32 Z',
-      lineD: 'M0 24 Q 40 8, 80 18 T 120 8',
-      circleY: 8,
     },
     {
       id: 'bpjs',
       title: 'Kapitasi BPJS',
       value: formatRupiah(data.bpjsRevenue),
       subtitle: 'Klaim bulanan FKTP',
-      delta: '+14.2%',
-      deltaColor: 'text-emerald-700 bg-emerald-50 border-emerald-200',
+      barLabel: 'Porsi Kapitasi',
+      barDetail: `${bpjsRevPct}% total omzet`,
+      barPct: bpjsRevPct,
+      barColor: 'bg-teal-600',
+      badge: `${bpjsRevPct}% Omzet`,
+      badgeColor: 'text-teal-700 bg-teal-50 border-teal-200',
       icon: Handshake,
       iconBg: 'bg-teal-50 text-teal-600',
-      strokeColor: '#0d9488',
-      gradId: 'spark-grad-bpjs',
-      pathD: 'M0 20 Q 35 6, 75 14 T 120 10 L 120 32 L 0 32 Z',
-      lineD: 'M0 20 Q 35 6, 75 14 T 120 10',
-      circleY: 10,
     },
     {
       id: 'pengeluaran',
       title: 'Total Pengeluaran',
       value: formatRupiah(data.totalExpenses),
-      subtitle: 'Obat & biaya operasional',
-      delta: '-3.1%',
-      deltaColor: 'text-slate-600 bg-slate-100 border-slate-200',
+      subtitle: 'Obat & operasional',
+      barLabel: 'Beban Operasional',
+      barDetail: `${expenseRatio}% pemasukan`,
+      barPct: expenseRatio,
+      barColor: expenseRatio > 80 ? 'bg-rose-600' : 'bg-amber-500',
+      badge: expenseRatio <= 70 ? 'Terkendali' : 'Perhatian',
+      badgeColor:
+        expenseRatio <= 70
+          ? 'text-slate-700 bg-slate-100 border-slate-200'
+          : 'text-rose-700 bg-rose-50 border-rose-200',
       icon: ArrowUpRight,
       iconBg: 'bg-rose-50 text-rose-600',
-      strokeColor: '#e11d48',
-      gradId: 'spark-grad-beban',
-      pathD: 'M0 16 Q 40 24, 80 12 T 120 18 L 120 32 L 0 32 Z',
-      lineD: 'M0 16 Q 40 24, 80 12 T 120 18',
-      circleY: 18,
     },
     {
       id: 'saldo',
       title: 'Saldo Kas Bersih',
       value: formatRupiah(data.netIncome),
-      subtitle: data.netIncome >= 0 ? 'Surplus arus kas bersih' : 'Defisit arus kas',
-      delta: data.netIncome >= 0 ? 'Surplus' : 'Defisit',
-      deltaColor: data.netIncome >= 0 ? 'text-emerald-700 bg-emerald-50 border-emerald-200' : 'text-rose-700 bg-rose-50 border-rose-200',
+      subtitle: data.netIncome >= 0 ? 'Surplus kas riil' : 'Defisit kas operasional',
+      barLabel: 'Kesehatan Arus Kas',
+      barDetail: data.netIncome >= 0 ? 'Surplus Positif' : 'Defisit Negatif',
+      barPct: data.netIncome >= 0 ? Math.min(100, Math.max(20, Math.round(((totalRevenue - data.totalExpenses) / (totalRevenue || 1)) * 100))) : 100,
+      barColor: data.netIncome >= 0 ? 'bg-indigo-600' : 'bg-rose-600',
+      badge: data.netIncome >= 0 ? 'Surplus' : 'Defisit',
+      badgeColor:
+        data.netIncome >= 0
+          ? 'text-emerald-700 bg-emerald-50 border-emerald-200'
+          : 'text-rose-700 bg-rose-50 border-rose-200',
       icon: Wallet,
-      iconBg: data.netIncome >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-amber-50 text-amber-600',
-      strokeColor: '#4f46e5',
-      gradId: 'spark-grad-saldo',
-      pathD: 'M0 26 Q 30 18, 65 10 T 120 6 L 120 32 L 0 32 Z',
-      lineD: 'M0 26 Q 30 18, 65 10 T 120 6',
-      circleY: 6,
+      iconBg: data.netIncome >= 0 ? 'bg-indigo-50 text-indigo-600' : 'bg-rose-50 text-rose-600',
     },
   ];
 
@@ -134,12 +142,12 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
         return (
           <div
             key={card.id}
-            className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-card-double tactile-card flex flex-col justify-between hover:border-blue-400 transition-colors"
+            className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-card-double tactile-card flex flex-col justify-between hover:border-teal-400 transition-colors"
           >
             <div>
               {/* Header: Title & Icon Pill */}
               <div className="flex items-center justify-between text-slate-500 mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500 truncate mr-1">
                   {card.title}
                 </span>
                 <div className={`p-1.5 rounded-xl shrink-0 ${card.iconBg}`}>
@@ -147,35 +155,61 @@ export function DashboardKpiCards({ data, isLoading }: DashboardKpiCardsProps) {
                 </div>
               </div>
 
-              {/* Value with Tabular Monospace */}
-              <div className="text-xl sm:text-2xl font-extrabold text-slate-900 font-mono tracking-tight">
-                {card.value}
+              {/* Value with Tabular Monospace & Responsive Fluid Scaling */}
+              <div className="flex items-baseline gap-1 font-mono tracking-tight min-w-0">
+                {card.value.startsWith('Rp') ? (
+                  <>
+                    <span className="text-[11px] sm:text-xs font-semibold text-slate-400 select-none shrink-0">
+                      Rp
+                    </span>
+                    <span
+                      className="text-lg sm:text-xl lg:text-lg xl:text-[1.18rem] 2xl:text-2xl font-extrabold text-slate-900 truncate tabular-nums"
+                      title={card.value}
+                    >
+                      {card.value.replace(/^Rp\s*/, '')}
+                    </span>
+                  </>
+                ) : (
+                  <>
+                    <span
+                      className="text-lg sm:text-xl lg:text-lg xl:text-[1.18rem] 2xl:text-2xl font-extrabold text-slate-900 truncate tabular-nums"
+                      title={card.value}
+                    >
+                      {card.value}
+                    </span>
+                    {card.unit && (
+                      <span className="text-xs font-semibold text-slate-500 ml-1">
+                        {card.unit}
+                      </span>
+                    )}
+                  </>
+                )}
               </div>
 
-              {/* Area Gradient Sparkline SVG */}
-              <div className="h-8 w-full my-2">
-                <svg className="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
-                  <defs>
-                    <linearGradient id={card.gradId} x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="0%" stopColor={card.strokeColor} stopOpacity="0.22" />
-                      <stop offset="100%" stopColor={card.strokeColor} stopOpacity="0.0" />
-                    </linearGradient>
-                  </defs>
-                  <path d={card.pathD} fill={`url(#${card.gradId})`} />
-                  <path d={card.lineD} stroke={card.strokeColor} strokeWidth="1.8" fill="none" strokeLinecap="round" />
-                  <circle cx="120" cy={card.circleY} r="3" fill={card.strokeColor} />
-                  <circle cx="120" cy={card.circleY} r="5" fill={card.strokeColor} opacity="0.25" />
-                </svg>
+              {/* Real Metric Proportional Track (replaces fake distorted sparkline) */}
+              <div className="my-3 space-y-1.5">
+                <div className="flex items-center justify-between text-[10px] font-mono text-slate-500 font-semibold">
+                  <span className="truncate">{card.barLabel}</span>
+                  <span className="shrink-0 text-slate-700">{card.barDetail}</span>
+                </div>
+                <div className="h-2 w-full bg-slate-100 rounded-full overflow-hidden shadow-inner">
+                  <div
+                    style={{ width: `${card.barPct}%` }}
+                    className={`h-full ${card.barColor} transition-all duration-500 rounded-full`}
+                  />
+                </div>
               </div>
             </div>
 
-            {/* Footer: Subtitle & Delta Badge without truncation */}
-            <div className="flex items-center justify-between gap-1 text-xs pt-1 border-t border-slate-100">
-              <span className="text-slate-600 text-[11px] font-medium leading-tight">
+            {/* Footer: Subtitle & Real Badge */}
+            <div className="flex items-center justify-between gap-1 text-xs pt-2 border-t border-slate-100">
+              <span className="text-slate-600 text-[11px] font-medium leading-tight truncate">
                 {card.subtitle}
               </span>
-              <span className={`text-[10px] font-bold font-mono px-1.5 py-0.5 rounded-md border shrink-0 ${card.deltaColor}`}>
-                {card.delta}
+              <span
+                className={`text-[10px] font-bold font-mono px-2 py-0.5 rounded-md border shrink-0 ${card.badgeColor}`}
+              >
+                {card.badge}
               </span>
             </div>
           </div>

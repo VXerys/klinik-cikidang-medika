@@ -65,7 +65,7 @@ export function MedicineQuickSearch({
             }}
             placeholder="Cari katalog obat (contoh: Amox, Parac, Antasida, Omep, Amlodipine, Cetirizine)..."
             aria-label="Cari obat dan resep apotek"
-            className="w-full pl-9 pr-3 py-2.5 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-blue-600 transition"
+            className="w-full pl-9 pr-3 py-2.5 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-600 transition"
           />
         </div>
 
@@ -77,10 +77,10 @@ export function MedicineQuickSearch({
                 <div
                   key={item.id}
                   onClick={() => handleSelectDrug(item)}
-                  className="p-2.5 flex items-center justify-between text-xs hover:bg-blue-50/70 cursor-pointer transition"
+                  className="p-2.5 flex items-center justify-between text-xs hover:bg-teal-50/70 cursor-pointer transition"
                 >
                   <div className="flex items-center gap-2">
-                    <Pill className="w-3.5 h-3.5 text-blue-600 shrink-0" weight="duotone" />
+                    <Pill className="w-3.5 h-3.5 text-teal-600 shrink-0" weight="duotone" />
                     <div>
                       <span className="font-bold text-slate-800">{item.name}</span>
                       <span className="text-slate-500 ml-2">
@@ -88,7 +88,7 @@ export function MedicineQuickSearch({
                       </span>
                     </div>
                   </div>
-                  <span className="text-[10px] text-blue-700 bg-blue-50 border border-blue-200 px-2 py-0.5 rounded-full shrink-0 font-medium">
+                  <span className="text-[10px] text-teal-700 bg-teal-50 border border-teal-200 px-2 py-0.5 rounded-full shrink-0 font-medium">
                     {item.category}
                   </span>
                 </div>
@@ -113,9 +113,9 @@ export function MedicineQuickSearch({
               key={preset.id}
               type="button"
               onClick={() => handleSelectDrug(preset)}
-              className="px-2.5 py-1.5 min-h-[34px] rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-blue-50 hover:border-blue-300 text-slate-700 transition flex items-center gap-1 select-none"
+              className="px-2.5 py-1.5 min-h-[34px] rounded-xl text-xs font-medium border border-slate-200 bg-white hover:bg-teal-50 hover:border-teal-300 text-slate-700 transition flex items-center gap-1 select-none"
             >
-              <Plus className="w-3 h-3 text-blue-600" weight="bold" />
+              <Plus className="w-3 h-3 text-teal-600" weight="bold" />
               <span>{preset.name}</span>
             </button>
           ))}

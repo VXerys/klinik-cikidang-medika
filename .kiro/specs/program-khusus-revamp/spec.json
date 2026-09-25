@@ -1,0 +1,22 @@
+{
+  "slug": "program-khusus-revamp",
+  "title": "Program Khusus Medis Tab UI/UX Structural & Visual Revamp",
+  "module": "Program Khusus",
+  "route": "/program-khusus",
+  "targetFiles": [
+    "src/app/program-khusus/page.tsx",
+    "src/components/program-khusus/ProgramKhususKpis.tsx",
+    "src/components/program-khusus/TbcControlCard.tsx",
+    "src/components/program-khusus/NewTbcModal.tsx",
+    "src/components/program-khusus/CircumcisionList.tsx",
+    "src/components/program-khusus/NewCircumcisionModal.tsx",
+    "src/components/program-khusus/PostCareAgenda.tsx",
+    "src/components/program-khusus/NewPostCareModal.tsx",
+    "src/components/program-khusus/TbTreatmentCardPrint.tsx"
+  ],
+  "status": "completed",
+  "priority": "P1",
+  "author": "Antigravity Pair Engineer",
+  "createdAt": "2026-09-25",
+  "updatedAt": "2026-09-25"
+}

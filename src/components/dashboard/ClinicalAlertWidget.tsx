@@ -102,8 +102,8 @@ export function ClinicalAlertWidget({ alerts, isLoading }: ClinicalAlertWidgetPr
         )}
 
         {alerts.recentCircumcision > 0 && (
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white text-blue-800 border border-blue-200 shadow-2xs">
-            <BandageAdhesive className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] font-semibold bg-white text-teal-800 border border-teal-200 shadow-2xs">
+            <BandageAdhesive className="w-3.5 h-3.5 text-teal-600 shrink-0" />
             <span>{alerts.recentCircumcision} Sirkumsisi Aktif</span>
           </span>
         )}

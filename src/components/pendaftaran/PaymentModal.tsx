@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   CreditCard,
   CheckCircle,
@@ -71,6 +71,20 @@ export function PaymentModal({
   const nominalDiterima = Number(uangDiterima) || 0;
   const uangKembalian = Math.max(0, nominalDiterima - totalTagihan);
   const isKurangBayar = jenisPembayaran === 'Tunai' && totalTagihan > 0 && nominalDiterima < totalTagihan;
+
+  const quickCashOptions = useMemo(() => {
+    const list: Array<{ label: string; value: number; isPas: boolean }> = [];
+    if (totalTagihan > 0) {
+      list.push({ label: 'Uang Pas', value: totalTagihan, isPas: true });
+    }
+    const defaultNominals = [50000, 100000, 150000, 200000];
+    defaultNominals.forEach((val) => {
+      if (val !== totalTagihan) {
+        list.push({ label: formatRupiah(val), value: val, isPas: false });
+      }
+    });
+    return list;
+  }, [totalTagihan]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -199,13 +213,13 @@ export function PaymentModal({
           )}
 
           {/* Ringkasan Pemeriksaan Dokter */}
-          <div className="p-3.5 bg-blue-50/60 rounded-xl border border-blue-100 space-y-2">
+          <div className="p-3.5 bg-teal-50/60 rounded-xl border border-teal-100 space-y-2">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-blue-950 flex items-center gap-1.5">
-                <Stethoscope className="w-4 h-4 text-blue-600" weight="duotone" />
+              <span className="font-bold text-teal-950 flex items-center gap-1.5">
+                <Stethoscope className="w-4 h-4 text-teal-600" weight="duotone" />
                 Pemeriksaan Dokter: {visit.dokter?.nama || 'Dokter Jaga'}
               </span>
-              <span className="text-[11px] text-blue-700 font-mono">
+              <span className="text-[11px] text-teal-700 font-mono">
                 {visit.jam_periksa || '-'}
               </span>
             </div>
@@ -221,9 +235,9 @@ export function PaymentModal({
                       return (
                         <span
                           key={trimmedCode + idx}
-                          className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-blue-200 rounded text-[11px] text-slate-800"
+                          className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-white border border-teal-200 rounded text-[11px] text-slate-800"
                         >
-                          <span className="font-mono font-bold text-blue-700">{trimmedCode}</span>
+                          <span className="font-mono font-bold text-teal-700">{trimmedCode}</span>
                           {desc && <span className="text-slate-600 truncate max-w-[150px]">{desc}</span>}
                         </span>
                       );
@@ -242,12 +256,12 @@ export function PaymentModal({
             </div>
 
             {visit.terapi_obat && (
-              <div className="pt-1.5 border-t border-blue-100/80">
+              <div className="pt-1.5 border-t border-teal-100/80">
                 <span className="text-[10px] text-slate-500 uppercase font-bold flex items-center gap-1 mb-1">
                   <Pill className="w-3.5 h-3.5 text-teal-600" weight="duotone" />
                   Resep Obat yang Diberikan:
                 </span>
-                <div className="bg-white p-2 rounded-lg border border-blue-100 text-slate-700 font-mono text-[11px] whitespace-pre-wrap leading-relaxed">
+                <div className="bg-white p-2 rounded-lg border border-teal-100 text-slate-700 font-mono text-[11px] whitespace-pre-wrap leading-relaxed">
                   {visit.terapi_obat}
                 </div>
               </div>
@@ -306,96 +320,138 @@ export function PaymentModal({
               </div>
             )}
 
-            <div className="p-3 bg-white rounded-xl border border-slate-200 flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-700 uppercase">
-                Total Tagihan Pasien
-              </span>
-              <span className="text-lg font-extrabold text-slate-900 font-mono">
+            <div className="p-3.5 bg-slate-900 text-white rounded-xl flex items-center justify-between shadow-2xs">
+              <div>
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400 block">
+                  Total Tagihan Pasien
+                </span>
+                {visit.jenis_pasien === 'BPJS' && totalTagihan === 0 && (
+                  <span className="text-[10px] text-emerald-400 font-medium">Ditanggung Penuh Kapitasi BPJS</span>
+                )}
+              </div>
+              <span className="text-xl font-extrabold font-mono tracking-tight text-white">
                 {formatRupiah(totalTagihan)}
               </span>
             </div>
           </div>
 
           {/* Metode Pembayaran & Kalkulator Kasir */}
-          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
+          <div className="p-4 bg-slate-50 rounded-xl border border-slate-200/90 space-y-3.5">
             <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
-              <Money className="w-4 h-4 text-blue-600" weight="duotone" />
+              <Money className="w-4 h-4 text-teal-600" weight="duotone" />
               Metode Pembayaran
             </h3>
 
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-2.5">
               <button
                 type="button"
                 onClick={() => setJenisPembayaran('Tunai')}
                 className={cn(
-                  'py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition',
+                  'py-3 px-4 min-h-[48px] rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all tactile-card',
                   jenisPembayaran === 'Tunai'
                     ? 'bg-emerald-600 text-white border-emerald-600 shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    : 'bg-white text-slate-700 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300'
                 )}
               >
-                <Money className="w-4 h-4" weight="duotone" />
-                Tunai (Cash)
+                <Money className="w-4 h-4 shrink-0" weight="duotone" />
+                <span>Tunai (Laci Kasir)</span>
               </button>
               <button
                 type="button"
                 onClick={() => setJenisPembayaran('TF')}
                 className={cn(
-                  'py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-semibold border flex items-center justify-center gap-1.5 transition',
+                  'py-3 px-4 min-h-[48px] rounded-xl text-xs font-bold border flex items-center justify-center gap-2 transition-all tactile-card',
                   jenisPembayaran === 'TF'
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
+                    : 'bg-white text-slate-700 border-slate-200/90 hover:bg-slate-50 hover:border-slate-300'
                 )}
               >
-                <CreditCard className="w-4 h-4" weight="duotone" />
-                Transfer Bank (TF)
+                <CreditCard className="w-4 h-4 shrink-0" weight="duotone" />
+                <span>Transfer / QRIS</span>
               </button>
             </div>
 
             {jenisPembayaran === 'Tunai' && (
-              <div className="pt-2 border-t border-slate-200 space-y-3">
+              <div className="pt-3 border-t border-slate-200 space-y-3.5">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <span className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                      Pecahan Uang Cepat (Quick Cash)
+                    </span>
+                    <span className="text-[10px] text-slate-400">
+                      Klik untuk set nominal diterima
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {quickCashOptions.map((opt) => {
+                      const isSelected = nominalDiterima === opt.value;
+                      return (
+                        <button
+                          key={opt.value}
+                          type="button"
+                          onClick={() => setUangDiterima(String(opt.value))}
+                          className={cn(
+                            'px-3 py-1.5 rounded-xl text-xs font-mono font-bold border transition-all flex items-center gap-1.5 min-h-[38px] select-none',
+                            isSelected
+                              ? 'bg-emerald-700 text-white border-emerald-700 shadow-2xs ring-2 ring-emerald-200'
+                              : 'bg-white text-slate-700 border-slate-200 hover:bg-slate-100 hover:border-slate-300'
+                          )}
+                        >
+                          {opt.isPas && (
+                            <CheckCircle className={cn('w-3.5 h-3.5', isSelected ? 'text-white' : 'text-emerald-600')} weight="bold" />
+                          )}
+                          <span>{opt.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 items-end">
                   <Input
                     type="number"
                     min="0"
                     step="1000"
-                    label="Uang yang Diterima (Rp)"
-                    leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
+                    label="Uang yang Diterima"
+                    leftElement={<span className="font-bold text-xs text-slate-500 font-mono">Rp</span>}
                     value={uangDiterima}
                     onChange={(e) => setUangDiterima(e.target.value)}
-                    className="font-mono font-bold"
+                    className="font-mono font-bold text-base"
+                    placeholder="0"
                   />
 
-                  <div className="p-3 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+                  <div
+                    className={cn(
+                      'p-3.5 rounded-xl border flex items-center justify-between transition-all min-h-[58px]',
+                      isKurangBayar
+                        ? 'bg-rose-50 border-rose-200 text-rose-900'
+                        : 'bg-emerald-50 border-emerald-200 text-emerald-950'
+                    )}
+                  >
                     <div>
-                      <span className="text-[10px] uppercase font-bold text-emerald-800 block">
-                        Uang Kembalian
+                      <span
+                        className={cn(
+                          'text-[10px] uppercase font-bold tracking-wider block',
+                          isKurangBayar ? 'text-rose-700' : 'text-emerald-700'
+                        )}
+                      >
+                        {isKurangBayar ? 'Kurang Bayar' : 'Uang Kembalian'}
                       </span>
-                      <span className="text-base font-extrabold text-emerald-900 font-mono">
-                        {formatRupiah(uangKembalian)}
+                      <span className="text-lg font-extrabold font-mono tracking-tight">
+                        {formatRupiah(isKurangBayar ? totalTagihan - nominalDiterima : uangKembalian)}
                       </span>
                     </div>
                     {nominalDiterima >= totalTagihan && totalTagihan > 0 && (
-                      <Badge variant="lunas">Pas / Lunas</Badge>
+                      <Badge variant="lunas" className="shrink-0 font-bold">
+                        {uangKembalian === 0 ? 'Uang Pas' : 'Lunas'}
+                      </Badge>
+                    )}
+                    {isKurangBayar && (
+                      <span className="text-xs font-bold text-rose-700 px-2 py-0.5 bg-rose-100/80 rounded border border-rose-200 shrink-0">
+                        Kurang
+                      </span>
                     )}
                   </div>
-                </div>
-
-                {/* Quick Cash Buttons */}
-                <div className="flex flex-wrap gap-1.5 pt-1">
-                  <span className="text-[10px] text-slate-500 self-center mr-1 font-semibold uppercase">Nominal Cepat:</span>
-                  {[totalTagihan, 50000, 100000, 150000, 200000]
-                    .filter((v, i, a) => v > 0 && a.indexOf(v) === i)
-                    .map((nom) => (
-                      <button
-                        key={nom}
-                        type="button"
-                        onClick={() => setUangDiterima(String(nom))}
-                        className="px-2.5 py-1 text-[11px] font-mono font-medium rounded-lg border border-slate-200 bg-white hover:bg-slate-100 text-slate-700 transition"
-                      >
-                        {nom === totalTagihan ? 'Uang Pas' : formatRupiah(nom)}
-                      </button>
-                    ))}
                 </div>
 
                 {isKurangBayar && (

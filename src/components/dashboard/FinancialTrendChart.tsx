@@ -87,89 +87,101 @@ export function FinancialTrendChart({
     <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
-        <div className="flex items-center gap-2.5">
-          <div className="p-2.5 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
-            <ChartLineUp weight="duotone" className="w-5 h-5" />
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="p-2 bg-emerald-50 text-emerald-700 rounded-xl shrink-0">
+            <ChartLineUp weight="duotone" className="w-4 h-4" />
           </div>
-          <div>
-            <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-              Tren Arus Kas &amp; Finansial Klinik
+          <div className="min-w-0">
+            <h3 className="text-sm font-bold text-slate-900 tracking-tight truncate">
+              Tren Finansial &amp; Arus Kas
             </h3>
-            <p className="text-[11px] text-slate-500">
-              Perbandingan pendapatan kasir &amp; kapitasi vs pengeluaran operasional
+            <p className="text-[11px] text-slate-600 font-medium truncate">
+              Kas masuk vs pengeluaran operasional
             </p>
           </div>
         </div>
 
         {/* View Mode Switcher */}
-        <div className="flex items-center p-1 bg-slate-100 rounded-xl self-start sm:self-auto border border-slate-200/80">
+        <div className="inline-flex items-center p-0.5 bg-slate-50/90 rounded-xl border border-slate-200/90 shadow-2xs self-start sm:self-auto shrink-0">
           <button
             type="button"
             onClick={() => setViewMode('daily')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+            className={`h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold transition-all tactile-btn flex items-center gap-1 whitespace-nowrap ${
               viewMode === 'daily'
-                ? 'bg-white text-emerald-700 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-emerald-700 font-bold shadow-xs border border-slate-200/70'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
             }`}
           >
-            <CalendarBlank weight="duotone" className="w-4 h-4" />
-            <span>Harian (14 Hari)</span>
+            <CalendarBlank weight="duotone" className="w-3.5 h-3.5" />
+            <span>14 Hari</span>
           </button>
           <button
             type="button"
             onClick={() => setViewMode('monthly')}
-            className={`px-3.5 py-2 rounded-lg text-xs font-semibold transition min-h-[44px] flex items-center gap-1.5 ${
+            className={`h-7 sm:h-8 px-2 sm:px-2.5 rounded-lg text-xs font-semibold transition-all tactile-btn flex items-center gap-1 whitespace-nowrap ${
               viewMode === 'monthly'
-                ? 'bg-white text-emerald-700 shadow-xs font-bold'
-                : 'text-slate-600 hover:text-slate-900'
+                ? 'bg-white text-emerald-700 font-bold shadow-xs border border-slate-200/70'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
             }`}
           >
-            <TrendUp weight="duotone" className="w-4 h-4" />
-            <span>Bulanan (12 Bulan)</span>
+            <TrendUp weight="duotone" className="w-3.5 h-3.5" />
+            <span>12 Bulan</span>
           </button>
         </div>
       </div>
 
-      {/* Summary KPI Badges */}
+      {/* Summary KPI Cards (Refined rounded-2xl & subtle dot accents, zero truncation) */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
-        <div className="p-3 bg-emerald-50/70 border border-emerald-200/80 rounded-xl flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-medium text-emerald-800 flex items-center gap-1">
-              <ArrowUpRight weight="bold" className="w-3.5 h-3.5 text-emerald-600" />
-              Kas Masuk (Omzet + Kapitasi)
-            </span>
-            <div className="text-sm font-bold font-mono text-emerald-900 mt-0.5">
-              {formatRupiah(totalIn)}
+        <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-well flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span className="text-[11px] font-semibold text-slate-600 truncate">
+                Kas Masuk
+              </span>
             </div>
+            <ArrowUpRight weight="bold" className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
           </div>
+          <span className="text-base font-extrabold text-emerald-700 font-mono tracking-tight">
+            {formatRupiah(totalIn)}
+          </span>
+          <span className="text-[10px] text-slate-400 mt-0.5">omzet &amp; kapitasi</span>
         </div>
 
-        <div className="p-3 bg-rose-50/70 border border-rose-200/80 rounded-xl flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-medium text-rose-800 flex items-center gap-1">
-              <ArrowDownRight weight="bold" className="w-3.5 h-3.5 text-rose-600" />
-              Beban &amp; Pengeluaran
-            </span>
-            <div className="text-sm font-bold font-mono text-rose-900 mt-0.5">
-              {formatRupiah(totalOut)}
+        <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-well flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              <span className="text-[11px] font-semibold text-slate-600 truncate">
+                Pengeluaran
+              </span>
             </div>
+            <ArrowDownRight weight="bold" className="w-3.5 h-3.5 text-rose-600 shrink-0" />
           </div>
+          <span className="text-base font-extrabold text-rose-700 font-mono tracking-tight">
+            {formatRupiah(totalOut)}
+          </span>
+          <span className="text-[10px] text-slate-400 mt-0.5">operasional &amp; obat</span>
         </div>
 
-        <div className="p-3 bg-blue-50/70 border border-blue-200/80 rounded-xl flex items-center justify-between">
-          <div>
-            <span className="text-[11px] font-medium text-blue-800 flex items-center gap-1">
-              <Scales weight="duotone" className="w-3.5 h-3.5 text-blue-600" />
-              Surplus Arus Kas Bersih
-            </span>
-            <div
-              className={`text-sm font-bold font-mono mt-0.5 ${
-                netTotal >= 0 ? 'text-blue-900' : 'text-rose-700'
-              }`}
-            >
-              {formatRupiah(netTotal)}
+        <div className="bg-white p-3 rounded-2xl border border-slate-200/80 shadow-well flex flex-col justify-between">
+          <div className="flex items-center justify-between mb-1">
+            <div className="flex items-center gap-1.5 truncate">
+              <span className="w-2 h-2 rounded-full bg-teal-500 shrink-0" />
+              <span className="text-[11px] font-semibold text-slate-600 truncate">
+                Surplus Kas
+              </span>
             </div>
+            <Scales weight="duotone" className="w-3.5 h-3.5 text-teal-600 shrink-0" />
           </div>
+          <span
+            className={`text-base font-extrabold font-mono tracking-tight ${
+              netTotal >= 0 ? 'text-teal-700' : 'text-rose-700'
+            }`}
+          >
+            {formatRupiah(netTotal)}
+          </span>
+          <span className="text-[10px] text-slate-400 mt-0.5">saldo kas riil</span>
         </div>
       </div>
 
@@ -177,15 +189,15 @@ export function FinancialTrendChart({
       <div className="h-64 sm:h-72 w-full pt-1">
         {isMounted && currentData.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={currentData} margin={{ top: 10, right: 10, left: -15, bottom: 0 }}>
+            <AreaChart data={currentData} margin={{ top: 10, right: 12, left: -5, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorCashIn" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="#059669" stopOpacity={0.3} />
+                  <stop offset="95%" stopColor="#059669" stopOpacity={0.02} />
                 </linearGradient>
                 <linearGradient id="colorCashOut" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#f43f5e" stopOpacity={0.02} />
+                  <stop offset="5%" stopColor="#e11d48" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#e11d48" stopOpacity={0.02} />
                 </linearGradient>
               </defs>
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
@@ -196,6 +208,7 @@ export function FinancialTrendChart({
                 tickLine={false}
               />
               <YAxis
+                width={42}
                 tick={{ fontSize: 10, fill: '#64748b' }}
                 axisLine={false}
                 tickLine={false}
@@ -250,24 +263,33 @@ function CustomFinancialTooltip({ active, payload, label }: any) {
     const net = cashIn - cashOut;
 
     return (
-      <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl border border-slate-800 text-xs space-y-2 min-w-[200px]">
-        <div className="font-bold border-b border-slate-800 pb-1.5 text-slate-200">
-          Periode: {label}
+      <div className="bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-xl border border-slate-700/80 text-xs space-y-2 min-w-[210px]">
+        <div className="font-bold border-b border-slate-700/80 pb-1.5 text-slate-200 flex items-center justify-between">
+          <span>Periode: {label}</span>
+          <span className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded ${net >= 0 ? 'bg-emerald-950 text-emerald-300 border border-emerald-800' : 'bg-rose-950 text-rose-300 border border-rose-800'}`}>
+            {net >= 0 ? 'Surplus' : 'Defisit'}
+          </span>
         </div>
-        <div className="space-y-1">
+        <div className="space-y-1.5 font-mono">
           <div className="flex justify-between items-center text-emerald-400">
-            <span>Kas Masuk:</span>
-            <span className="font-mono font-bold">{formatRupiah(cashIn)}</span>
+            <span className="font-sans flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 shrink-0" />
+              <span>Kas Masuk:</span>
+            </span>
+            <span className="font-bold">{formatRupiah(cashIn)}</span>
           </div>
           <div className="flex justify-between items-center text-rose-400">
-            <span>Kas Keluar:</span>
-            <span className="font-mono font-bold">{formatRupiah(cashOut)}</span>
+            <span className="font-sans flex items-center gap-1.5">
+              <span className="w-2 h-2 rounded-full bg-rose-500 shrink-0" />
+              <span>Kas Keluar:</span>
+            </span>
+            <span className="font-bold">{formatRupiah(cashOut)}</span>
           </div>
-          <div className="flex justify-between items-center pt-1 border-t border-slate-800 font-semibold text-slate-300">
-            <span>Selisih Bersih:</span>
+          <div className="flex justify-between items-center pt-1.5 border-t border-slate-700/80 font-bold text-white">
+            <span className="font-sans">Selisih Bersih:</span>
             <span
-              className={`font-mono font-bold ${
-                net >= 0 ? 'text-blue-400' : 'text-rose-400'
+              className={`font-bold ${
+                net >= 0 ? 'text-emerald-400' : 'text-rose-400'
               }`}
             >
               {formatRupiah(net)}

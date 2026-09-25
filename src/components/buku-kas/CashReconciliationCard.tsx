@@ -1,15 +1,11 @@
 'use client';
 
-import React from 'react';
 import {
   Bank,
   CheckCircle,
   Warning,
-  PlusCircle,
   Coins,
 } from '@phosphor-icons/react';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
 import { Badge } from '@/components/ui/Badge';
 import { formatRupiah, cn } from '@/lib/utils';
 
@@ -34,20 +30,20 @@ export function CashReconciliationCard({
   const hasRemainingCash = selisih > 0;
 
   return (
-    <Card
+    <div
       className={cn(
-        'p-4 sm:p-5 border-blue-200 bg-linear-to-r from-blue-50/50 via-white to-indigo-50/30 space-y-4',
+        'p-4 sm:p-5 rounded-2xl border border-slate-200/90 bg-white shadow-card-double space-y-4',
         className
       )}
     >
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-slate-200/80 pb-3">
         <div className="flex items-center gap-2.5">
-          <div className="p-2.5 bg-blue-600 text-white rounded-xl shadow-xs shadow-blue-600/30">
+          <div className="w-9 h-9 rounded-xl bg-gradient-to-b from-teal-600 to-teal-700 text-white flex items-center justify-center shadow-btn-primary shrink-0">
             <Bank weight="duotone" className="w-5 h-5" />
           </div>
           <div>
-            <h3 className="text-xs sm:text-sm font-bold text-slate-900 flex items-center gap-2 flex-wrap">
-              <span>Rekonsiliasi Kasir & Setoran Tunai Hari Ini</span>
+            <h3 className="text-xs sm:text-sm font-extrabold text-slate-900 flex items-center gap-2 flex-wrap">
+              <span>Rekonsiliasi Kasir &amp; Setoran Tunai Hari Ini</span>
               {isBalanced ? (
                 <Badge variant="success" size="sm">
                   Seimbang (Lunas Disetor)
@@ -62,23 +58,21 @@ export function CashReconciliationCard({
                 </Badge>
               )}
             </h3>
-            <p className="text-[11px] text-slate-500 mt-0.5">
+            <p className="text-[11px] text-slate-500 mt-0.5 font-medium">
               Mencocokkan penerimaan uang tunai loket kasir dengan catatan setoran bank harian
             </p>
           </div>
         </div>
 
         {onOpenSetorTunai && (
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={onOpenSetorTunai}
-            className="text-xs font-semibold self-start sm:self-auto border-blue-300 text-blue-700 hover:bg-blue-50 min-h-[44px]"
-            leftIcon={<PlusCircle weight="duotone" className="w-4 h-4" />}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 min-h-[36px] bg-white hover:bg-slate-50 text-teal-700 border border-teal-200 rounded-xl text-xs font-bold shadow-btn-secondary tactile-btn transition self-start sm:self-auto"
           >
-            Catat Setor Tunai
-          </Button>
+            <Bank weight="duotone" className="w-3.5 h-3.5" />
+            <span>Catat Setor Tunai</span>
+          </button>
         )}
       </div>
 
@@ -168,7 +162,7 @@ export function CashReconciliationCard({
           </p>
         </div>
       </div>
-    </Card>
+    </div>
   );
 }
 

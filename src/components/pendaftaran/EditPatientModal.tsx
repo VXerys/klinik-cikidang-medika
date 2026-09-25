@@ -2,12 +2,19 @@
 
 import React, { useState, useEffect } from 'react';
 import { z } from 'zod';
-import { NotePencil, WarningCircle, IdentificationCard, ShieldWarning } from '@phosphor-icons/react';
+import {
+  NotePencil,
+  WarningCircle,
+  IdentificationCard,
+  Lock,
+  MapPin,
+  Heartbeat,
+} from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
 import { DESA_OPTIONS, GELAR_OPTIONS, JENIS_KELAMIN_OPTIONS } from '@/constants/clinic';
-import { Modal, Button, Input, Select } from '@/components/ui';
+import { Modal } from '@/components/ui';
 
 const editPatientSchema = z.object({
   gelar: z.string().trim().default('Tn.'),
@@ -97,24 +104,19 @@ export function EditPatientModal({
     setFieldErrors({});
   }, [isOpen, patient]);
 
-  // Hitung perkiraan usia saat tanggal lahir berubah
   const handleDateChange = (val: string) => {
     setTanggalLahir(val);
-    if (!val) return;
-
-    try {
-      const birth = new Date(val);
+    if (val) {
+      const birthDate = new Date(val);
       const today = new Date();
-      if (!isNaN(birth.getTime()) && birth <= today) {
-        let calculatedAge = today.getFullYear() - birth.getFullYear();
-        const m = today.getMonth() - birth.getMonth();
-        if (m < 0 || (m === 0 && today.getDate() < birth.getDate())) {
-          calculatedAge--;
-        }
-        setUsia(calculatedAge >= 0 ? calculatedAge : '');
+      let calculatedAge = today.getFullYear() - birthDate.getFullYear();
+      const m = today.getMonth() - birthDate.getMonth();
+      if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
+        calculatedAge--;
       }
-    } catch {
-      // Ignored
+      if (calculatedAge >= 0) {
+        setUsia(calculatedAge);
+      }
     }
   };
 
@@ -125,7 +127,7 @@ export function EditPatientModal({
     setErrorMessage(null);
     setFieldErrors({});
 
-    const formData = {
+    const parseResult = editPatientSchema.safeParse({
       gelar,
       nama,
       jenisKelamin,
@@ -133,14 +135,12 @@ export function EditPatientModal({
       usia: usia === '' ? null : Number(usia),
       desa,
       alamat: alamat || null,
-      noKtp: noKtp.replace(/\s+/g, '') || null,
-      noBpjs: noBpjs.replace(/\s+/g, '') || null,
+      noKtp: noKtp || null,
+      noBpjs: noBpjs || null,
       noTelepon: noTelepon.trim() || null,
       pekerjaan: pekerjaan.trim() || null,
       riwayatAlergi: riwayatAlergi.trim() || 'Tidak Ada',
-    };
-
-    const parseResult = editPatientSchema.safeParse(formData);
+    });
 
     if (!parseResult.success) {
       const errors: Record<string, string> = {};
@@ -159,21 +159,23 @@ export function EditPatientModal({
 
     try {
       const supabase = createClient();
+      const validData = parseResult.data;
+
       const { data, error } = await supabase
         .from('patients')
         .update({
-          gelar: formData.gelar,
-          nama: formData.nama.trim(),
-          jenis_kelamin: formData.jenisKelamin,
-          tanggal_lahir: formData.tanggalLahir,
-          usia: formData.usia,
-          desa: formData.desa,
-          alamat: formData.alamat,
-          no_ktp: formData.noKtp,
-          no_bpjs: formData.noBpjs,
-          no_telepon: formData.noTelepon,
-          pekerjaan: formData.pekerjaan,
-          riwayat_alergi: formData.riwayatAlergi,
+          gelar: validData.gelar,
+          nama: validData.nama.trim(),
+          jenis_kelamin: validData.jenisKelamin,
+          tanggal_lahir: validData.tanggalLahir,
+          usia: validData.usia === '' || validData.usia === null || validData.usia === undefined ? null : validData.usia,
+          desa: validData.desa,
+          alamat: validData.alamat,
+          no_ktp: validData.noKtp,
+          no_bpjs: validData.noBpjs,
+          no_telepon: validData.noTelepon,
+          pekerjaan: validData.pekerjaan,
+          riwayat_alergi: validData.riwayatAlergi,
         })
         .eq('id', patient.id)
         .select()
@@ -182,7 +184,7 @@ export function EditPatientModal({
       if (error) throw error;
 
       toast.success('Biodata pasien berhasil diperbarui!', {
-        description: `No. RM: ${patient.no_rm} • ${formData.nama}`,
+        description: `No. RM: ${patient.no_rm} • ${validData.nama}`,
       });
 
       if (data) {
@@ -206,184 +208,291 @@ export function EditPatientModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Edit Biodata Pasien"
-      description={`Perbarui informasi identitas master pasien [${patient.no_rm}].`}
-      maxWidth="2xl"
+      description={`Perbarui informasi data master rekam medis [${patient.no_rm}]`}
+      maxWidth="xl"
     >
-      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-        <div className="p-4 sm:p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 p-5 sm:p-6 space-y-4">
         {errorMessage && (
-          <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-xl text-rose-700 text-xs flex items-center gap-2">
-            <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="duotone" />
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-700 text-xs">
+            <WarningCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" weight="bold" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        {/* Baris No RM & Gelar */}
-        <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
-          <div className="sm:col-span-5">
-            <Input
-              label="Nomor Rekam Medis (Terkunci)"
-              value={patient.no_rm}
-              disabled
-              leftElement={<IdentificationCard className="w-4 h-4 text-slate-400" weight="duotone" />}
-              helperText="Nomor RM bersifat unik dan permanen."
-            />
+        {/* Section 1: Identitas Rekam Medis (Locked No RM) */}
+        <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200/70">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <IdentificationCard className="w-4 h-4 text-teal-600" weight="bold" />
+              Identitas Rekam Medis
+            </span>
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 bg-slate-200/80 text-slate-600 text-[10px] font-bold rounded-lg">
+              <Lock className="w-3 h-3 text-slate-500" weight="bold" />
+              No. RM Terkunci
+            </span>
           </div>
 
-          <div className="sm:col-span-3">
-            <Select
-              label="Gelar / Sapaan"
-              options={GELAR_OPTIONS.map((g) => ({ label: g, value: g }))}
-              value={gelar}
-              onChange={(e) => setGelar(e.target.value)}
-            />
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="sm:col-span-4">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                No. Rekam Medis
+              </label>
+              <input
+                type="text"
+                value={patient.no_rm}
+                disabled
+                className="w-full px-3.5 py-2.5 bg-slate-200/60 border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-bold text-slate-700 cursor-not-allowed min-h-[44px]"
+              />
+            </div>
+
+            <div className="sm:col-span-3">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Sapaan / Gelar
+              </label>
+              <select
+                value={gelar}
+                onChange={(e) => setGelar(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              >
+                {GELAR_OPTIONS.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sm:col-span-5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Jenis Kelamin <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={jenisKelamin}
+                onChange={(e) => setJenisKelamin(e.target.value as 'Laki-laki' | 'Perempuan')}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              >
+                {JENIS_KELAMIN_OPTIONS.map((jk) => (
+                  <option key={jk} value={jk}>{jk}</option>
+                ))}
+              </select>
+            </div>
           </div>
 
-          <div className="sm:col-span-4">
-            <Select
-              label="Jenis Kelamin *"
-              options={JENIS_KELAMIN_OPTIONS.map((jk) => ({ label: jk, value: jk }))}
-              value={jenisKelamin}
-              onChange={(e) => setJenisKelamin(e.target.value as 'Laki-laki' | 'Perempuan')}
-              error={fieldErrors.jenisKelamin}
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Nama Lengkap Pasien <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={nama}
+              onChange={(e) => {
+                setNama(e.target.value);
+                if (fieldErrors.nama) setFieldErrors((prev) => ({ ...prev, nama: '' }));
+              }}
+              placeholder="Contoh: Siti Aisyah"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              required
+            />
+            {fieldErrors.nama && (
+              <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.nama}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Tanggal Lahir
+              </label>
+              <input
+                type="date"
+                value={tanggalLahir}
+                onChange={(e) => handleDateChange(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Usia (Tahun)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="130"
+                value={usia}
+                onChange={(e) => {
+                  setUsia(e.target.value === '' ? '' : parseInt(e.target.value, 10));
+                  if (fieldErrors.usia) setFieldErrors((prev) => ({ ...prev, usia: '' }));
+                }}
+                placeholder="Contoh: 35"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+              {fieldErrors.usia && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.usia}</p>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Section 2: Domisili & Asuransi */}
+        <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+          <div className="pb-2 border-b border-slate-200/70">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-emerald-600" weight="bold" />
+              Domisili & Asuransi
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Desa Domisili <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={desa}
+                onChange={(e) => {
+                  setDesa(e.target.value);
+                  if (fieldErrors.desa) setFieldErrors((prev) => ({ ...prev, desa: '' }));
+                }}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              >
+                {DESA_OPTIONS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              {fieldErrors.desa && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.desa}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Nomor Kartu BPJS (Opsional)
+              </label>
+              <input
+                type="text"
+                value={noBpjs}
+                onChange={(e) => {
+                  setNoBpjs(e.target.value);
+                  if (fieldErrors.noBpjs) setFieldErrors((prev) => ({ ...prev, noBpjs: '' }));
+                }}
+                placeholder="13 digit angka kartu BPJS"
+                maxLength={13}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+              {fieldErrors.noBpjs && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.noBpjs}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                NIK KTP (Opsional)
+              </label>
+              <input
+                type="text"
+                value={noKtp}
+                onChange={(e) => {
+                  setNoKtp(e.target.value);
+                  if (fieldErrors.noKtp) setFieldErrors((prev) => ({ ...prev, noKtp: '' }));
+                }}
+                placeholder="16 digit NIK KTP"
+                maxLength={16}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+              {fieldErrors.noKtp && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.noKtp}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Alamat / Kampung / RT / RW
+              </label>
+              <input
+                type="text"
+                value={alamat}
+                onChange={(e) => setAlamat(e.target.value)}
+                placeholder="Contoh: Kp. Pasir Kupa RT 02/04"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Section 3: Kontak & Keselamatan Obat */}
+        <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+          <div className="pb-2 border-b border-slate-200/70">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <Heartbeat className="w-4 h-4 text-rose-600" weight="bold" />
+              Kontak & Keselamatan Obat
+            </span>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Nomor Telepon / WhatsApp
+              </label>
+              <input
+                type="tel"
+                value={noTelepon}
+                onChange={(e) => setNoTelepon(e.target.value)}
+                placeholder="Contoh: 0812-3456-7890"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Pekerjaan Pasien
+              </label>
+              <input
+                type="text"
+                value={pekerjaan}
+                onChange={(e) => setPekerjaan(e.target.value)}
+                placeholder="Contoh: Karyawan Pabrik / Petani / IRT"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Riwayat Alergi Obat
+            </label>
+            <input
+              type="text"
+              value={riwayatAlergi}
+              onChange={(e) => setRiwayatAlergi(e.target.value)}
+              placeholder="Contoh: Amoxicillin, Paracetamol, Penicillin (Default: Tidak Ada)"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
             />
           </div>
         </div>
 
-        {/* Nama Pasien */}
-        <div>
-          <Input
-            label="Nama Lengkap Pasien *"
-            placeholder="Contoh: Siti Aisyah"
-            value={nama}
-            onChange={(e) => setNama(e.target.value)}
-            error={fieldErrors.nama}
-            required
-          />
-        </div>
-
-        {/* Tanggal Lahir & Usia */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            label="Tanggal Lahir"
-            type="date"
-            value={tanggalLahir}
-            onChange={(e) => handleDateChange(e.target.value)}
-            error={fieldErrors.tanggalLahir}
-            helperText="Pilih tanggal lahir untuk menghitung usia otomatis."
-          />
-          <Input
-            label="Usia (Tahun)"
-            type="number"
-            min={0}
-            max={130}
-            placeholder="Contoh: 35"
-            value={usia}
-            onChange={(e) => setUsia(e.target.value === '' ? '' : parseInt(e.target.value, 10))}
-            error={fieldErrors.usia}
-          />
-        </div>
-
-        {/* Kontak Telepon & Pekerjaan */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <Input
-            label="Nomor Telepon / WhatsApp"
-            type="tel"
-            placeholder="Contoh: 0812-3456-7890"
-            value={noTelepon}
-            onChange={(e) => setNoTelepon(e.target.value)}
-            error={fieldErrors.noTelepon}
-          />
-          <Input
-            label="Pekerjaan Pasien"
-            placeholder="Contoh: Karyawan Pabrik / Petani / IRT"
-            value={pekerjaan}
-            onChange={(e) => setPekerjaan(e.target.value)}
-            error={fieldErrors.pekerjaan}
-          />
-        </div>
-
-        {/* Wilayah Desa & Alamat Spesifik */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <div className="sm:col-span-1">
-            <Select
-              label="Desa Wilayah Cikidang *"
-              options={DESA_OPTIONS.map((d) => ({ label: `Desa ${d}`, value: d }))}
-              value={desa}
-              onChange={(e) => setDesa(e.target.value)}
-              error={fieldErrors.desa}
-            />
-          </div>
-          <div className="sm:col-span-2">
-            <Input
-              label="Alamat Detail (Kampung / RT / RW)"
-              placeholder="Contoh: Kp. Pasir Kupa RT 02/04"
-              value={alamat}
-              onChange={(e) => setAlamat(e.target.value)}
-              error={fieldErrors.alamat}
-            />
-          </div>
-        </div>
-
-        {/* NIK KTP & BPJS */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 border-t border-slate-100">
-          <Input
-            label="Nomor Induk Kependudukan (NIK KTP)"
-            placeholder="16 digit angka (opsional)"
-            maxLength={16}
-            value={noKtp}
-            onChange={(e) => setNoKtp(e.target.value)}
-            error={fieldErrors.noKtp}
-            helperText="Isi jika pasien membawa KTP asli."
-          />
-          <Input
-            label="Nomor Kartu BPJS Kesehatan"
-            placeholder="13 digit angka (opsional)"
-            maxLength={13}
-            value={noBpjs}
-            onChange={(e) => setNoBpjs(e.target.value)}
-            error={fieldErrors.noBpjs}
-            helperText="Wajib diisi jika pasien berobat memakai jaminan BPJS."
-          />
-        </div>
-
-        {/* Riwayat Alergi Obat */}
-        <div className="pt-2 border-t border-slate-100">
-          <Input
-            label="Riwayat Alergi Obat (Patient Drug Safety)"
-            placeholder="Contoh: Amoxicillin, Paracetamol, Golongan Sulfa, Penicillin (Default: Tidak Ada)"
-            value={riwayatAlergi}
-            onChange={(e) => setRiwayatAlergi(e.target.value)}
-            leftElement={<ShieldWarning className="w-4 h-4 text-amber-600" weight="duotone" />}
-            error={fieldErrors.riwayatAlergi}
-            helperText="Sistem akan memberi alarm merah otomatis di ruang dokter jika obat yang diresepkan memicu alergi ini."
-          />
-        </div>
-
-        </div>
-
-        {/* Sticky Footer Actions */}
-        <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 p-4 sm:px-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 z-10">
-          <Button
+        {/* Modal Footer */}
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button
             type="button"
-            variant="ghost"
             onClick={onClose}
             disabled={isLoading}
-            className="w-full sm:w-auto min-h-[44px]"
+            className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 tactile-btn min-h-[44px]"
           >
-            Batal
-          </Button>
-          <Button
+            Batal & Tutup
+          </button>
+          <button
             type="submit"
-            variant="primary"
-            isLoading={isLoading}
-            leftIcon={<NotePencil className="w-4 h-4" weight="bold" />}
-            className="w-full sm:w-auto min-h-[44px]"
+            disabled={isLoading}
+            className="px-5 py-2.5 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700 tactile-btn flex items-center gap-2 min-h-[44px] disabled:opacity-50"
           >
-            Simpan Perubahan
-          </Button>
+            <NotePencil className="w-4 h-4" weight="bold" />
+            <span>{isLoading ? 'Menyimpan...' : 'Simpan Perubahan'}</span>
+          </button>
         </div>
       </form>
     </Modal>
   );
 }
+
+export default EditPatientModal;

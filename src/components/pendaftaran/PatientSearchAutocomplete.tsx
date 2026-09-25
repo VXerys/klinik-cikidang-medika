@@ -107,6 +107,23 @@ export function PatientSearchAutocomplete({
     };
   }, []);
 
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === '/' &&
+        !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)
+      ) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
+    };
+  }, []);
+
   const handleSelectPatient = (patient: Patient) => {
     onSelectPatient(patient);
     setQuery('');
@@ -159,7 +176,7 @@ export function PatientSearchAutocomplete({
 
   return (
     <div ref={containerRef} className={cn('relative w-full', isOpen && hasSearchQuery ? 'z-40' : '', className)}>
-      <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-xs transition-all focus-within:border-blue-600 focus-within:ring-2 focus-within:ring-blue-100 min-h-[44px]">
+      <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-xs transition-all focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100 min-h-[44px]">
         <div className="pl-3.5 pr-2 flex items-center justify-center text-slate-400 pointer-events-none">
           <MagnifyingGlass className="w-4 h-4" weight="duotone" />
         </div>
@@ -181,16 +198,22 @@ export function PatientSearchAutocomplete({
           className="w-full py-2.5 pr-8 text-sm sm:text-xs text-slate-900 placeholder-slate-400 bg-transparent outline-none min-h-[44px]"
         />
 
-        <div className="pr-2 flex items-center gap-1.5">
-          {isLoading && (
-            <CircleNotch className="w-4 h-4 text-blue-600 animate-spin" weight="bold" />
-          )}
-
-          {query.length > 0 && !isLoading && (
+        <div className="pr-3 flex items-center gap-1.5 shrink-0">
+          {isLoading ? (
+            <CircleNotch className="w-4 h-4 text-teal-600 animate-spin" weight="bold" />
+          ) : query.length === 0 ? (
+            <kbd
+              className="hidden sm:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded select-none cursor-pointer hover:bg-slate-200 hover:text-slate-600 transition"
+              onClick={() => inputRef.current?.focus()}
+              title="Tekan tombol '/' di keyboard untuk mencari pasien"
+            >
+              /
+            </kbd>
+          ) : (
             <button
               type="button"
               onClick={handleClear}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition min-w-[36px] min-h-[36px] flex items-center justify-center"
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition min-w-[32px] min-h-[32px] flex items-center justify-center"
               title="Hapus pencarian"
               aria-label="Hapus teks pencarian"
             >
@@ -201,7 +224,7 @@ export function PatientSearchAutocomplete({
       </div>
 
       {isOpen && hasSearchQuery && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-2xl z-50 overflow-hidden divide-y divide-slate-100">
+        <div className="absolute left-0 right-0 top-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-card-double z-50 overflow-hidden divide-y divide-slate-100">
           {results.length > 0 ? (
             <div>
               <div className="px-3 py-2 bg-slate-50 text-[11px] font-semibold text-slate-500 flex justify-between items-center">
@@ -227,7 +250,7 @@ export function PatientSearchAutocomplete({
                       onMouseEnter={() => setSelectedIndex(index)}
                       className={cn(
                         'px-4 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition select-none',
-                        isSelected ? 'bg-blue-50/80 border-l-4 border-l-blue-600 pl-3' : 'hover:bg-slate-50'
+                        isSelected ? 'bg-teal-50/80 border-l-4 border-l-teal-600 pl-3' : 'hover:bg-slate-50'
                       )}
                     >
                       <div className="min-w-0 flex-1">
@@ -235,7 +258,7 @@ export function PatientSearchAutocomplete({
                           <span className="font-semibold text-xs text-slate-900 truncate">
                             {fullName}
                           </span>
-                          <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
+                          <span className="font-mono text-[11px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 shrink-0">
                             {patient.no_rm}
                           </span>
                         </div>
@@ -291,7 +314,7 @@ export function PatientSearchAutocomplete({
                             <span>Edit</span>
                           </button>
                         )}
-                        <span className="text-[11px] font-semibold text-blue-600 hover:text-blue-700 px-2 py-1 bg-blue-50 hover:bg-blue-100 rounded border border-blue-200 transition">
+                        <span className="text-[11px] font-semibold text-teal-600 hover:text-teal-700 px-2 py-1 bg-teal-50 hover:bg-teal-100 rounded border border-teal-200 transition">
                           Pilih
                         </span>
                       </div>
@@ -305,10 +328,10 @@ export function PatientSearchAutocomplete({
                 <button
                   type="button"
                   onClick={handleAddNewPatient}
-                  className="text-blue-700 font-semibold hover:underline inline-flex items-center gap-1.5 min-h-[36px]"
+                  className="text-teal-700 font-semibold hover:underline inline-flex items-center gap-1.5 min-h-[36px]"
                 >
                   <UserPlus className="w-3.5 h-3.5" weight="duotone" />
-                  + Daftarkan Sebagai Pasien Baru
+                  <span>Daftarkan Sebagai Pasien Baru</span>
                 </button>
               </div>
             </div>
@@ -328,10 +351,10 @@ export function PatientSearchAutocomplete({
               <button
                 type="button"
                 onClick={handleAddNewPatient}
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-semibold shadow-xs transition w-full sm:w-auto min-h-[44px]"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-btn-primary transition w-full sm:w-auto min-h-[36px] tactile-btn"
               >
                 <UserPlus className="w-3.5 h-3.5" weight="duotone" />
-                + Daftarkan Sebagai Pasien Baru
+                <span>Daftarkan Sebagai Pasien Baru</span>
               </button>
             </div>
           ) : null}

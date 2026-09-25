@@ -103,7 +103,7 @@ export function SuratRujukanModal({
         {/* Header Kontrol (Hanya Tampil di Layar) */}
         <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4 print:hidden">
           <div className="flex items-center gap-2">
-            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50 text-teal-600">
               <ShareNetwork weight="duotone" className="h-5 w-5" />
             </div>
             <div>
@@ -120,7 +120,7 @@ export function SuratRujukanModal({
               variant="outline"
               size="sm"
               onClick={handlePrint}
-              className="gap-2 border-blue-600 text-blue-700 hover:bg-blue-50"
+              className="gap-2 border-teal-600 text-teal-700 hover:bg-teal-50"
             >
               <Printer weight="duotone" className="h-4 w-4" />
               <span>Cetak Surat Rujukan (A4)</span>
@@ -144,7 +144,7 @@ export function SuratRujukanModal({
             <select
               value={faskesTujuan}
               onChange={(e) => setFaskesTujuan(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               {FASKES_RUJUKAN_DEFAULT.map((faskes) => (
                 <option key={faskes} value={faskes}>
@@ -158,7 +158,7 @@ export function SuratRujukanModal({
                 placeholder="Ketik nama rumah sakit tujuan..."
                 value={customFaskes}
                 onChange={(e) => setCustomFaskes(e.target.value)}
-                className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-800 focus:border-blue-500 focus:outline-none"
+                className="mt-1.5 w-full rounded-lg border border-slate-200 bg-white px-3 py-1 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none"
               />
             )}
           </div>
@@ -169,7 +169,7 @@ export function SuratRujukanModal({
             <select
               value={poliTujuan}
               onChange={(e) => setPoliTujuan(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               {POLI_SPESIALIS_DEFAULT.map((poli) => (
                 <option key={poli} value={poli}>
@@ -185,7 +185,7 @@ export function SuratRujukanModal({
             <select
               value={selectedDoctorId}
               onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
             >
               {doctors.map((d) => (
                 <option key={d.id} value={d.id}>
@@ -202,7 +202,7 @@ export function SuratRujukanModal({
               type="text"
               value={alasanRujukan}
               onChange={(e) => setAlasanRujukan(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-blue-500 focus:outline-none"
+              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none"
             />
           </div>
         </div>

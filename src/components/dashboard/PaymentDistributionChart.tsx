@@ -114,33 +114,33 @@ export function PaymentDistributionChart({
   }
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4 flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4">
       {/* Header */}
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-3 border-b border-slate-100">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 border border-blue-200/60 flex items-center justify-center shrink-0">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 border border-teal-200/60 flex items-center justify-center shrink-0">
               <CreditCard weight="duotone" className="w-4 h-4" />
             </div>
-            <div>
-              <h3 className="text-sm font-bold text-slate-900 tracking-tight">
-                Distribusi Penjamin &amp; Pembayaran
+            <div className="min-w-0">
+              <h3 className="text-sm font-bold text-slate-900 tracking-tight truncate">
+                Penjamin &amp; Pembayaran
               </h3>
-              <p className="text-[11px] text-slate-500">
-                Komposisi pembiayaan pasien dan metode transaksi kasir
+              <p className="text-[11px] text-slate-600 font-medium truncate">
+                Komposisi jaminan &amp; transaksi kasir
               </p>
             </div>
           </div>
 
           {/* Toggle Tab */}
-          <div className="inline-flex items-center p-1 bg-slate-100/90 rounded-xl border border-slate-200/80 shadow-well self-start sm:self-auto">
+          <div className="inline-flex items-center p-0.5 bg-slate-50/90 rounded-xl border border-slate-200/90 shadow-2xs self-start sm:self-auto shrink-0">
             <button
               type="button"
               onClick={() => setActiveTab('assurance')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition-all tactile-btn flex items-center gap-1.5 ${
+              className={`h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold transition-all tactile-btn flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'assurance'
-                  ? 'bg-white text-blue-700 shadow-btn-secondary font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-teal-700 font-bold shadow-xs border border-slate-200/70'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
               }`}
             >
               <ShieldCheck weight="duotone" className="w-3.5 h-3.5" />
@@ -149,10 +149,10 @@ export function PaymentDistributionChart({
             <button
               type="button"
               onClick={() => setActiveTab('method')}
-              className={`px-3 py-1.5 rounded-lg text-xs transition-all tactile-btn flex items-center gap-1.5 ${
+              className={`h-7 sm:h-8 px-2.5 sm:px-3 rounded-lg text-xs font-semibold transition-all tactile-btn flex items-center gap-1.5 whitespace-nowrap ${
                 activeTab === 'method'
-                  ? 'bg-white text-blue-700 shadow-btn-secondary font-bold'
-                  : 'text-slate-600 hover:text-slate-900'
+                  ? 'bg-white text-teal-700 font-bold shadow-xs border border-slate-200/70'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
               }`}
             >
               <Money weight="duotone" className="w-3.5 h-3.5" />
@@ -172,8 +172,8 @@ export function PaymentDistributionChart({
                     data={currentChartData}
                     cx="50%"
                     cy="50%"
-                    innerRadius={56}
-                    outerRadius={80}
+                    innerRadius={60}
+                    outerRadius={84}
                     paddingAngle={3}
                     dataKey="value"
                     stroke="#ffffff"
@@ -191,11 +191,11 @@ export function PaymentDistributionChart({
 
               {/* Center Metric */}
               <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center">
-                <span className="text-[10px] text-slate-400 font-semibold uppercase tracking-wider">Total</span>
-                <span className="text-xl font-extrabold font-mono text-slate-900">
+                <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Total</span>
+                <span className="text-2xl font-extrabold font-mono text-slate-900 tracking-tight">
                   {currentTotal.toLocaleString('id-ID')}
                 </span>
-                <span className="text-[11px] text-slate-500 font-medium">
+                <span className="text-[11px] text-slate-500 font-semibold">
                   {activeTab === 'assurance' ? 'Pasien' : 'Transaksi'}
                 </span>
               </div>
@@ -213,25 +213,25 @@ export function PaymentDistributionChart({
         {currentChartData.map((item, idx) => (
           <div
             key={item.name}
-            className="p-3 rounded-xl border border-slate-200/80 bg-slate-50/70 shadow-well flex flex-col justify-between"
+            className="p-3 rounded-2xl border border-slate-200/80 bg-slate-50/70 shadow-well flex flex-col justify-between"
           >
-            <div className="flex items-center gap-1.5 mb-1.5">
+            <div className="flex items-center gap-1.5 mb-1.5 min-w-0">
               <span
                 className="w-2.5 h-2.5 rounded-full shrink-0"
                 style={{ backgroundColor: currentColors[idx % currentColors.length] }}
               />
-              <span className="font-semibold text-slate-700 truncate">{item.name}</span>
+              <span className="font-bold text-slate-800 truncate text-[11px]">{item.name}</span>
             </div>
-            <div className="flex items-baseline justify-between gap-1">
-              <span className="text-base font-extrabold font-mono text-slate-900">
+            <div className="flex items-baseline justify-between gap-1 font-mono">
+              <span className="text-base font-extrabold text-slate-900 tabular-nums">
                 {item.value.toLocaleString('id-ID')}
               </span>
-              <span className="text-xs font-mono font-bold text-slate-500">
+              <span className="text-xs font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200/60">
                 {item.percentage}%
               </span>
             </div>
             {item.revenue !== undefined && item.revenue > 0 && (
-              <div className="text-[11px] font-mono text-slate-500 mt-1 pt-1 border-t border-slate-200/60 truncate">
+              <div className="text-[11px] font-mono font-semibold text-emerald-700 mt-1.5 pt-1.5 border-t border-slate-200/60 truncate">
                 {formatRupiah(item.revenue)}
               </div>
             )}
@@ -246,26 +246,25 @@ function CustomDonutTooltip({ active, payload }: any) {
   if (active && payload && payload.length) {
     const data = payload[0].payload;
     return (
-      <div className="bg-slate-900 text-white p-3 rounded-xl shadow-xl border border-slate-800 text-xs space-y-1.5 min-w-[170px]">
-        <div className="font-bold text-slate-200 border-b border-slate-800 pb-1">
-          {data.name}
+      <div className="bg-slate-900/95 backdrop-blur-md text-white p-3.5 rounded-2xl shadow-xl border border-slate-700/80 text-xs space-y-2 min-w-[190px]">
+        <div className="font-bold text-slate-200 border-b border-slate-700/80 pb-1.5 flex items-center justify-between">
+          <span>{data.name}</span>
+          <span className="font-mono text-[10px] text-teal-400 font-bold">{data.percentage}%</span>
         </div>
-        <div className="flex justify-between items-center text-slate-300">
-          <span>Jumlah:</span>
-          <span className="font-mono font-bold text-white">
-            {data.value.toLocaleString('id-ID')}
-          </span>
-        </div>
-        <div className="flex justify-between items-center text-blue-400">
-          <span>Persentase:</span>
-          <span className="font-mono font-bold">{data.percentage}%</span>
-        </div>
-        {data.revenue > 0 && (
-          <div className="flex justify-between items-center text-emerald-400 pt-1 border-t border-slate-800">
-            <span>Nominal:</span>
-            <span className="font-mono font-bold">{formatRupiah(data.revenue)}</span>
+        <div className="space-y-1 font-mono">
+          <div className="flex justify-between items-center text-slate-300">
+            <span className="font-sans">Frekuensi:</span>
+            <span className="font-bold text-white">
+              {data.value.toLocaleString('id-ID')} {data.revenue !== undefined ? 'kasus' : ''}
+            </span>
           </div>
-        )}
+          {data.revenue > 0 && (
+            <div className="flex justify-between items-center text-emerald-400 pt-1.5 border-t border-slate-700/80 font-bold">
+              <span className="font-sans">Akumulasi:</span>
+              <span>{formatRupiah(data.revenue)}</span>
+            </div>
+          )}
+        </div>
       </div>
     );
   }

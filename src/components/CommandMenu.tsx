@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   House,
@@ -9,29 +9,42 @@ import {
   Heartbeat,
   Wallet,
   FileXls,
-  MagnifyingGlass,
   Scissors,
   Pill,
   User,
   ArrowRight,
+  Sparkle,
+  CircleNotch,
 } from '@phosphor-icons/react';
 import {
   CommandDialog,
   CommandInput,
   CommandList,
-  CommandEmpty,
   CommandGroup,
   CommandItem,
   CommandSeparator,
 } from '@/components/ui/command';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
+import { PatientQuickProfileModal } from '@/components/pendaftaran/PatientQuickProfileModal';
+
+interface MenuItem {
+  id: string;
+  title: string;
+  subtitle?: string;
+  icon: React.ElementType;
+  iconColor: string;
+  href: string;
+  keywords: string[];
+}
 
 export function CommandMenu() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState('');
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(false);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+  const [isQuickProfileOpen, setIsQuickProfileOpen] = useState(false);
   const router = useRouter();
 
   // Keyboard shortcut Ctrl+K or Cmd+K
@@ -39,7 +52,7 @@ export function CommandMenu() {
     const down = (e: KeyboardEvent) => {
       if (e.key === 'k' && (e.metaKey || e.ctrlKey)) {
         e.preventDefault();
-        setOpen((open) => !open);
+        setOpen((prev) => !prev);
       }
     };
 
@@ -47,10 +60,10 @@ export function CommandMenu() {
     return () => document.removeEventListener('keydown', down);
   }, []);
 
-  // Debounced search patients
+  // Debounced search patients against Supabase
   useEffect(() => {
     const trimmed = query.trim();
-    if (trimmed.length < 2) {
+    if (trimmed.length < 1) {
       setPatients([]);
       setLoading(false);
       return;
@@ -61,116 +74,381 @@ export function CommandMenu() {
       try {
         const supabase = createClient();
         const clean = trimmed.replace(/[,()]/g, '');
-        const { data } = await supabase
+        const { data, error } = await supabase
           .from('patients')
-          .select('id, no_rm, nama, desa, usia, jenis_kelamin')
-          .or(`nama.ilike.%${clean}%,no_rm.ilike.%${clean}%,desa.ilike.%${clean}%`)
-          .limit(5);
+          .select('*')
+          .or(`nama.ilike.%${clean}%,no_rm.ilike.%${clean}%,no_ktp.ilike.%${clean}%,no_bpjs.ilike.%${clean}%,desa.ilike.%${clean}%`)
+          .limit(8);
 
-        setPatients((data as unknown as Patient[]) || []);
+        if (!error && data) {
+          setPatients(data as unknown as Patient[]);
+        } else {
+          setPatients([]);
+        }
       } catch (err) {
-        console.error('Error in cmdk patient search:', err);
+        console.error('Error searching patients:', err);
+        setPatients([]);
       } finally {
         setLoading(false);
       }
-    }, 250);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [query]);
 
-  const handleSelect = (callback: () => void) => {
+  // Predefined Quick Actions
+  const quickActions: MenuItem[] = useMemo(
+    () => [
+      {
+        id: 'act-new-patient',
+        title: 'Daftarkan Pasien Baru',
+        subtitle: 'Input data identitas & rekam medis awal',
+        icon: UserPlus,
+        iconColor: 'text-teal-600',
+        href: '/pendaftaran?action=new',
+        keywords: ['daftar', 'pasien baru', 'registrasi', 'tambah pasien', 'rm baru'],
+      },
+      {
+        id: 'act-circumcision',
+        title: 'Catat Tindakan Sirkumsisi (Sunat)',
+        subtitle: 'Registrasi paket tindakan bedah sunat',
+        icon: Scissors,
+        iconColor: 'text-emerald-600',
+        href: '/program-khusus?tab=circumcision&action=new',
+        keywords: ['sunat', 'sirkumsisi', 'khitan', 'bedah', 'tindakan'],
+      },
+      {
+        id: 'act-tbc',
+        title: 'Buka Kartu Kendali TBC 6 Bulan',
+        subtitle: 'Kohort pemantauan minum obat OAT DOTS',
+        icon: Pill,
+        iconColor: 'text-rose-600',
+        href: '/program-khusus?tab=tbc&action=new',
+        keywords: ['tbc', 'tb', 'paru', 'oat', 'dots', 'kendali'],
+      },
+      {
+        id: 'act-cashflow',
+        title: 'Catat Mutasi Buku Kas Tunai',
+        subtitle: 'Pencatatan pengeluaran atau pendapatan klinik',
+        icon: Wallet,
+        iconColor: 'text-amber-600',
+        href: '/buku-kas?action=new',
+        keywords: ['kas', 'buku kas', 'keuangan', 'uang', 'mutasi', 'biaya', 'keluar', 'masuk'],
+      },
+    ],
+    []
+  );
+
+  // Predefined Navigation Modules
+  const navigationModules: MenuItem[] = useMemo(
+    () => [
+      {
+        id: 'nav-dashboard',
+        title: 'Dashboard Eksekutif & Ringkasan',
+        subtitle: 'KPI pendapatan harian, tren pasien, & morbiiditas',
+        icon: House,
+        iconColor: 'text-slate-700',
+        href: '/',
+        keywords: ['dashboard', 'ringkasan', 'kpi', 'beranda', 'home', 'eksekutif'],
+      },
+      {
+        id: 'nav-pendaftaran',
+        title: 'Loket Pendaftaran & Kasir Pasien',
+        subtitle: 'Antrean loket, kasir POS, & data master pasien',
+        icon: UserPlus,
+        iconColor: 'text-teal-600',
+        href: '/pendaftaran',
+        keywords: ['pendaftaran', 'loket', 'kasir', 'pos', 'antrean', 'bayar'],
+      },
+      {
+        id: 'nav-rekam-medis',
+        title: 'Pemeriksaan Dokter (E-Rekam Medis)',
+        subtitle: 'Pemeriksaan klinis dokter, diagnosa ICD-10, & resep',
+        icon: Stethoscope,
+        iconColor: 'text-emerald-600',
+        href: '/rekam-medis',
+        keywords: ['rekam medis', 'dokter', 'periksa', 'poli', 'anamnesa', 'icd10', 'obat', 'resep'],
+      },
+      {
+        id: 'nav-program-khusus',
+        title: 'Program Khusus Medis (TBC, Sunat, Pos-Rawat)',
+        subtitle: 'Registrasi program spesifik & pemantauan pasien',
+        icon: Heartbeat,
+        iconColor: 'text-rose-600',
+        href: '/program-khusus',
+        keywords: ['program khusus', 'tbc', 'sunat', 'pos rawat', 'khusus'],
+      },
+      {
+        id: 'nav-buku-kas',
+        title: 'Buku Kas Operasional & Likuiditas',
+        subtitle: 'Pencatatan arus kas, kapitasi BPJS, & saldo operasional',
+        icon: Wallet,
+        iconColor: 'text-amber-600',
+        href: '/buku-kas',
+        keywords: ['buku kas', 'keuangan', 'arus kas', 'mutasi', 'kapitasi'],
+      },
+      {
+        id: 'nav-laporan',
+        title: 'Pusat Laporan & Ekspor Excel',
+        subtitle: 'Rekapitulasi rawat jalan & ekspor file spreadsheet',
+        icon: FileXls,
+        iconColor: 'text-emerald-600',
+        href: '/laporan',
+        keywords: ['laporan', 'ekspor', 'excel', 'rekap', 'morbiditas', 'surveilans'],
+      },
+    ],
+    []
+  );
+
+  const trimmedQuery = query.trim().toLowerCase();
+
+  // Strict keyword matching for actions and navigation (prevents loose fuzzy matches)
+  const filteredActions = useMemo(() => {
+    if (!trimmedQuery) return quickActions;
+    return quickActions.filter(
+      (a) =>
+        a.title.toLowerCase().includes(trimmedQuery) ||
+        (a.subtitle && a.subtitle.toLowerCase().includes(trimmedQuery)) ||
+        a.keywords.some((k) => k.includes(trimmedQuery))
+    );
+  }, [trimmedQuery, quickActions]);
+
+  const filteredNavigation = useMemo(() => {
+    if (!trimmedQuery) return navigationModules;
+    return navigationModules.filter(
+      (n) =>
+        n.title.toLowerCase().includes(trimmedQuery) ||
+        (n.subtitle && n.subtitle.toLowerCase().includes(trimmedQuery)) ||
+        n.keywords.some((k) => k.includes(trimmedQuery))
+    );
+  }, [trimmedQuery, navigationModules]);
+
+  const handleSelectPatient = (patient: Patient) => {
     setOpen(false);
-    callback();
+    setSelectedPatient(patient);
+    setIsQuickProfileOpen(true);
   };
 
+  const handleSelectNav = (href: string) => {
+    setOpen(false);
+    router.push(href);
+  };
+
+  const isSearching = trimmedQuery.length > 0;
+  const hasNoResults =
+    isSearching &&
+    !loading &&
+    patients.length === 0 &&
+    filteredActions.length === 0 &&
+    filteredNavigation.length === 0;
+
   return (
-    <CommandDialog open={open} onOpenChange={setOpen}>
-      <CommandInput
-        placeholder="Cari pasien (Nama, No RM), menu klinik, atau tindakan... (Ctrl+K)"
-        value={query}
-        onValueChange={setQuery}
-      />
-      <CommandList>
-        <CommandEmpty>
-          {loading ? 'Mencari rekam medis...' : 'Tidak ada hasil yang ditemukan.'}
-        </CommandEmpty>
+    <>
+      <CommandDialog
+        open={open}
+        onOpenChange={setOpen}
+        shouldFilter={false} // Disable internal cmdk fuzzy match to eliminate confusing results
+      >
+        <CommandInput
+          placeholder="Cari pasien (Nama, No RM, NIK, Desa) atau menu... (Ctrl+K)"
+          value={query}
+          onValueChange={setQuery}
+        />
 
-        {/* Pasien Terkait */}
-        {patients.length > 0 && (
-          <CommandGroup heading="Hasil Rekam Medis Pasien">
-            {patients.map((p) => (
-              <CommandItem
-                key={p.id}
-                onSelect={() =>
-                  handleSelect(() => router.push(`/rekam-medis?search=${encodeURIComponent(p.no_rm)}`))
-                }
+        <CommandList className="max-h-[380px]">
+          {/* Loading Indicator */}
+          {loading && (
+            <div className="py-4 px-3 flex items-center justify-center gap-2 text-xs text-teal-600 font-semibold bg-teal-50/50">
+              <CircleNotch className="w-4 h-4 animate-spin" />
+              <span>Mencari data rekam medis pasien...</span>
+            </div>
+          )}
+
+          {/* 1. HASIL PENCARIAN PASIEN SUPABASE */}
+          {patients.length > 0 && (
+            <CommandGroup heading={`Hasil Rekam Medis Pasien (${patients.length} Ditemukan)`}>
+              {patients.map((p) => {
+                const isBpjs = Boolean(p.no_bpjs && p.no_bpjs.trim().length > 0);
+                return (
+                  <CommandItem
+                    key={p.id}
+                    onSelect={() => handleSelectPatient(p)}
+                    className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer hover:bg-teal-50/70 border border-transparent hover:border-teal-200 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0 flex-1">
+                      <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-700 font-extrabold text-xs flex items-center justify-center shrink-0 border border-teal-200/80">
+                        {p.nama.slice(0, 2).toUpperCase()}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="font-bold text-slate-900 text-xs truncate">
+                            {p.gelar ? `${p.gelar} ` : ''}
+                            {p.nama}
+                          </span>
+                          <span className="font-mono text-[10px] font-bold px-1.5 py-0.5 rounded bg-teal-50 text-teal-700 border border-teal-200/80 shrink-0">
+                            {p.no_rm}
+                          </span>
+                          <span
+                            className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border shrink-0 ${
+                              isBpjs
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                                : 'bg-teal-50 text-teal-800 border-teal-200'
+                            }`}
+                          >
+                            {isBpjs ? 'BPJS' : 'UMUM'}
+                          </span>
+                        </div>
+                        <div className="text-[10px] text-slate-500 font-medium flex items-center gap-2 mt-0.5 truncate">
+                          <span>Desa {p.desa}</span>
+                          <span>•</span>
+                          <span>Usia {p.usia || '-'} thn</span>
+                          {p.no_ktp && (
+                            <>
+                              <span>•</span>
+                              <span className="font-mono">NIK: {p.no_ktp}</span>
+                            </>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-[11px] font-bold text-teal-600 flex items-center gap-1 shrink-0 ml-2">
+                      <span className="hidden sm:inline">Lihat Profil</span>
+                      <ArrowRight className="w-3.5 h-3.5" weight="bold" />
+                    </div>
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          )}
+
+          {/* Separator if both patients and actions/nav exist */}
+          {patients.length > 0 && (filteredActions.length > 0 || filteredNavigation.length > 0) && (
+            <CommandSeparator />
+          )}
+
+          {/* 2. AKSI TINDAKAN CEPAT */}
+          {filteredActions.length > 0 && (
+            <CommandGroup heading={isSearching ? 'Aksi Terkait' : 'Aksi Tindakan Cepat'}>
+              {filteredActions.map((act) => {
+                const Icon = act.icon;
+                return (
+                  <CommandItem
+                    key={act.id}
+                    onSelect={() => handleSelectNav(act.href)}
+                    className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/80">
+                        <Icon className={`w-4 h-4 ${act.iconColor}`} weight="duotone" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-800 text-xs truncate">
+                          {act.title}
+                        </div>
+                        {act.subtitle && (
+                          <div className="text-[10px] text-slate-500 font-medium truncate">
+                            {act.subtitle}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-2" />
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          )}
+
+          {/* Separator between actions and navigation */}
+          {filteredActions.length > 0 && filteredNavigation.length > 0 && (
+            <CommandSeparator />
+          )}
+
+          {/* 3. NAVIGASI MODUL KLINIK */}
+          {filteredNavigation.length > 0 && (
+            <CommandGroup heading={isSearching ? 'Modul Terkait' : 'Navigasi Modul Klinik'}>
+              {filteredNavigation.map((nav) => {
+                const Icon = nav.icon;
+                return (
+                  <CommandItem
+                    key={nav.id}
+                    onSelect={() => handleSelectNav(nav.href)}
+                    className="flex items-center justify-between p-2.5 rounded-xl cursor-pointer hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="flex items-center gap-3 min-w-0">
+                      <div className="w-8 h-8 rounded-xl bg-slate-100 flex items-center justify-center shrink-0 border border-slate-200/80">
+                        <Icon className={`w-4 h-4 ${nav.iconColor}`} weight="duotone" />
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-bold text-slate-800 text-xs truncate">
+                          {nav.title}
+                        </div>
+                        {nav.subtitle && (
+                          <div className="text-[10px] text-slate-500 font-medium truncate">
+                            {nav.subtitle}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <ArrowRight className="w-3.5 h-3.5 text-slate-400 shrink-0 ml-2" />
+                  </CommandItem>
+                );
+              })}
+            </CommandGroup>
+          )}
+
+          {/* 4. EMPTY STATE WITH ACTIONABLE CTA */}
+          {hasNoResults && (
+            <div className="py-8 px-4 text-center">
+              <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto mb-3 border border-teal-100 shadow-2xs">
+                <User className="w-6 h-6" weight="duotone" />
+              </div>
+              <p className="text-xs font-bold text-slate-900">
+                Tidak ditemukan pasien dengan kata kunci &quot;{query}&quot;
+              </p>
+              <p className="text-[11px] text-slate-500 mt-1 max-w-xs mx-auto">
+                Periksa kembali ejaan nama, No. RM, NIK, atau daftarkan sebagai pasien baru di loket.
+              </p>
+              <button
+                type="button"
+                onClick={() => {
+                  setOpen(false);
+                  router.push(`/pendaftaran?action=new&name=${encodeURIComponent(query)}`);
+                }}
+                className="mt-3.5 inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700/80 tactile-btn"
               >
-                <User className="w-4 h-4 text-blue-600 shrink-0" weight="duotone" />
-                <div className="flex-1 min-w-0">
-                  <div className="font-bold text-slate-900 truncate">
-                    {p.nama}{' '}
-                    <span className="font-mono text-[10px] text-slate-500 font-normal">
-                      ({p.no_rm})
-                    </span>
-                  </div>
-                  <div className="text-[10px] text-slate-400">
-                    Desa {p.desa} • Usia {p.usia || '-'} thn
-                  </div>
-                </div>
-                <ArrowRight className="w-3.5 h-3.5 text-slate-400" />
-              </CommandItem>
-            ))}
-          </CommandGroup>
-        )}
+                <span>+ Daftarkan &quot;{query}&quot; Sebagai Pasien Baru</span>
+              </button>
+            </div>
+          )}
+        </CommandList>
 
-        <CommandSeparator />
+        {/* Footer Shortcut Helper */}
+        <div className="px-3.5 py-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[10px] text-slate-500">
+          <div className="flex items-center gap-2">
+            <span>Tekan</span>
+            <kbd className="px-1.5 py-0.5 bg-white border border-slate-200 rounded font-mono text-slate-600 shadow-2xs">
+              ESC
+            </kbd>
+            <span>untuk menutup</span>
+          </div>
+          <div className="flex items-center gap-1.5 font-medium text-teal-700">
+            <Sparkle className="w-3 h-3 text-teal-600" weight="fill" />
+            <span>Pencarian Cerdas SIM Cikidang Medika</span>
+          </div>
+        </div>
+      </CommandDialog>
 
-        {/* Navigasi Cepat Modul */}
-        <CommandGroup heading="Navigasi Menu Utama">
-          <CommandItem onSelect={() => handleSelect(() => router.push('/'))}>
-            <House className="w-4 h-4 text-slate-600" weight="duotone" />
-            <span>Dashboard Eksekutif & Ringkasan</span>
-          </CommandItem>
-          <CommandItem onSelect={() => handleSelect(() => router.push('/pendaftaran'))}>
-            <UserPlus className="w-4 h-4 text-blue-600" weight="duotone" />
-            <span>Loket Pendaftaran & Kasir Pasien</span>
-          </CommandItem>
-          <CommandItem onSelect={() => handleSelect(() => router.push('/rekam-medis'))}>
-            <Stethoscope className="w-4 h-4 text-emerald-600" weight="duotone" />
-            <span>Pemeriksaan Dokter (E-Rekam Medis)</span>
-          </CommandItem>
-          <CommandItem onSelect={() => handleSelect(() => router.push('/program-khusus'))}>
-            <Heartbeat className="w-4 h-4 text-rose-600" weight="duotone" />
-            <span>Program Khusus Medis (TBC, Sunat, Pos-Rawat)</span>
-          </CommandItem>
-          <CommandItem onSelect={() => handleSelect(() => router.push('/buku-kas'))}>
-            <Wallet className="w-4 h-4 text-amber-600" weight="duotone" />
-            <span>Buku Kas Operasional & Likuiditas</span>
-          </CommandItem>
-          <CommandItem onSelect={() => handleSelect(() => router.push('/laporan'))}>
-            <FileXls className="w-4 h-4 text-emerald-600" weight="duotone" />
-            <span>Pusat Laporan & Ekspor Excel</span>
-          </CommandItem>
-        </CommandGroup>
-
-        <CommandSeparator />
-
-        {/* Tindakan Cepat */}
-        <CommandGroup heading="Aksi Tindakan Cepat">
-          <CommandItem onSelect={() => handleSelect(() => router.push('/pendaftaran?action=new'))}>
-            <UserPlus className="w-4 h-4 text-blue-600" weight="duotone" />
-            <span>+ Daftarkan Pasien Baru</span>
-          </CommandItem>
-          <CommandItem onSelect={() => handleSelect(() => router.push('/program-khusus?tab=circumcision&action=new'))}>
-            <Scissors className="w-4 h-4 text-blue-600" weight="duotone" />
-            <span>+ Catat Tindakan Sunat (Sirkumsisi)</span>
-          </CommandItem>
-          <CommandItem onSelect={() => handleSelect(() => router.push('/program-khusus?tab=tbc&action=new'))}>
-            <Pill className="w-4 h-4 text-rose-600" weight="duotone" />
-            <span>+ Buka Kartu Kendali TBC 6 Bulan</span>
-          </CommandItem>
-        </CommandGroup>
-      </CommandList>
-    </CommandDialog>
+      {/* Patient Quick Profile Sheet Modal */}
+      <PatientQuickProfileModal
+        patient={selectedPatient}
+        isOpen={isQuickProfileOpen}
+        onClose={() => {
+          setIsQuickProfileOpen(false);
+          setSelectedPatient(null);
+        }}
+      />
+    </>
   );
 }

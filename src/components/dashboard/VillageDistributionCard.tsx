@@ -42,18 +42,18 @@ export function VillageDistributionCard({
   const umumPct = totalAssurance > 0 ? (umumCount / totalAssurance) * 100 : 0;
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double">
       <div>
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 mb-4">
-          <div className="flex items-center gap-2">
-            <div className="p-2 bg-blue-50 text-blue-600 rounded-xl shrink-0">
-              <Buildings className="w-5 h-5 text-blue-600" weight="duotone" />
+          <div className="flex items-center gap-2 min-w-0">
+            <div className="p-2 bg-teal-50 text-teal-600 rounded-xl shrink-0">
+              <Buildings className="w-5 h-5 text-teal-600" weight="duotone" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 tracking-tight">
-                Asal Pasien per Wilayah & Jaminan
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-slate-900 tracking-tight truncate">
+                Asal Wilayah &amp; Jaminan Pasien
               </h2>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-600 font-medium truncate">
                 Sebaran domisili desa dan proporsi penjamin
               </p>
             </div>
@@ -71,7 +71,7 @@ export function VillageDistributionCard({
               <span>BPJS: {bpjsCount.toLocaleString('id-ID')} ({bpjsPct.toFixed(1)}%)</span>
             </div>
             <div className="flex items-center gap-1.5 font-semibold text-slate-700">
-              <User className="w-4 h-4 text-blue-600" weight="duotone" />
+              <User className="w-4 h-4 text-teal-600" weight="duotone" />
               <span>Umum: {umumCount.toLocaleString('id-ID')} ({umumPct.toFixed(1)}%)</span>
             </div>
           </div>
@@ -82,7 +82,7 @@ export function VillageDistributionCard({
               title={`BPJS ${bpjsPct.toFixed(1)}%`}
             />
             <div
-              className="bg-blue-600 h-2 transition-all duration-300"
+              className="bg-teal-600 h-2 transition-all duration-300"
               style={{ width: `${umumPct}%` }}
               title={`Umum ${umumPct.toFixed(1)}%`}
             />
@@ -112,7 +112,7 @@ export function VillageDistributionCard({
                   <span className="font-bold text-slate-900">
                     {v.count.toLocaleString('id-ID')}
                   </span>
-                  <span className="text-blue-700 bg-blue-50 border border-blue-100 px-2 py-0.5 rounded-md font-semibold text-[11px] w-12 text-center">
+                  <span className="text-teal-700 bg-teal-50 border border-teal-100 px-2 py-0.5 rounded-md font-semibold text-[11px] w-12 text-center">
                     {v.percentage.toFixed(1)}%
                   </span>
                 </div>

@@ -32,7 +32,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
     return (
       <div className="w-full space-y-1">
         {label && (
-          <label htmlFor={inputId} className="block text-xs font-semibold text-slate-700">
+          <label htmlFor={inputId} className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             {label}
             {requiredIndicator && <span className="text-rose-500 ml-0.5">*</span>}
           </label>
@@ -40,7 +40,7 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
 
         <div className="relative flex items-center">
           {leftElement && (
-            <div className="absolute left-3 flex items-center pointer-events-none text-slate-400">
+            <div className="absolute left-3.5 flex items-center pointer-events-none text-slate-400">
               {leftElement}
             </div>
           )}
@@ -49,12 +49,12 @@ export const Input = React.forwardRef<HTMLInputElement, InputProps>(
             id={inputId}
             ref={ref}
             className={cn(
-              'w-full py-2.5 px-3 text-sm sm:text-xs min-h-[44px] bg-white border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 transition',
-              'focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent',
+              'w-full py-2.5 px-3.5 text-xs sm:text-sm min-h-[44px] bg-slate-50 border border-slate-300 rounded-xl text-slate-900 placeholder-slate-400 font-medium transition-colors',
+              'focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 focus:bg-white',
               'disabled:bg-slate-100 disabled:text-slate-400 disabled:cursor-not-allowed',
               leftElement && 'pl-10',
               rightElement && 'pr-10',
-              error && 'border-rose-500 focus:ring-rose-500',
+              error && 'border-rose-500 focus:ring-rose-500/15 focus:border-rose-600',
               className
             )}
             {...props}

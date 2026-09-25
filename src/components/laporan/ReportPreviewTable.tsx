@@ -5,8 +5,8 @@ import {
   MagnifyingGlass,
   CaretLeft,
   CaretRight,
-  FileText,
   WarningCircle,
+  XCircle,
 } from '@phosphor-icons/react';
 import { formatRupiah } from '@/lib/utils';
 import type {
@@ -115,7 +115,7 @@ export function ReportPreviewTable({
 
   if (isLoading) {
     return (
-      <div className="bg-white p-8 rounded-2xl border border-slate-200 shadow-xs space-y-4 animate-pulse">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl border border-slate-200/90 shadow-card-double space-y-4 animate-pulse">
         <div className="h-6 w-56 bg-slate-200 rounded"></div>
         <div className="h-10 bg-slate-100 rounded-xl"></div>
         <div className="space-y-2 pt-2">
@@ -128,11 +128,12 @@ export function ReportPreviewTable({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden space-y-0">
-      <div className="p-4 border-b border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 bg-slate-50/50">
-        <div className="relative w-full sm:w-80">
+    <div className="bg-white rounded-2xl border border-slate-200/90 shadow-card-double overflow-hidden flex flex-col justify-between">
+      {/* Table Toolbar */}
+      <div className="p-3.5 sm:p-4 border-b border-slate-100 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 bg-slate-50/60">
+        <div className="relative flex-1 max-w-sm">
           <MagnifyingGlass
-            weight="duotone"
+            weight="bold"
             className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
           />
           <input
@@ -143,75 +144,88 @@ export function ReportPreviewTable({
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
-            className="w-full pl-9 pr-3 py-2 min-h-[44px] text-xs bg-white border border-slate-200 rounded-xl focus:border-blue-600 focus-visible:outline-none transition"
+            className="w-full pl-9 pr-8 py-2 min-h-[38px] text-xs bg-white border border-slate-300 rounded-xl text-slate-900 placeholder:text-slate-400 focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none transition"
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                setCurrentPage(1);
+              }}
+              className="absolute inset-y-0 right-0 pr-2.5 flex items-center text-slate-400 hover:text-slate-600"
+            >
+              <XCircle className="w-4 h-4" weight="fill" />
+            </button>
+          )}
         </div>
 
-        <div className="flex items-center gap-2 text-xs text-slate-500 w-full sm:w-auto justify-between sm:justify-end">
-          <span>Tampilkan per halaman:</span>
+        <div className="flex items-center gap-2 text-xs text-slate-500 justify-between sm:justify-end">
+          <span className="text-[11px] font-medium text-slate-500">Tampilkan per halaman:</span>
           <select
             value={pageSize}
             onChange={(e) => {
               setPageSize(Number(e.target.value));
               setCurrentPage(1);
             }}
-            className="px-3 py-2 min-h-[44px] bg-white border border-slate-200 rounded-xl text-xs font-semibold focus-visible:outline-none"
+            className="px-3 py-1.5 min-h-[38px] bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 shadow-2xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none transition cursor-pointer"
           >
-            <option value={15}>15</option>
-            <option value={25}>25</option>
-            <option value={50}>50</option>
-            <option value={100}>100</option>
+            <option value={15}>15 baris</option>
+            <option value={25}>25 baris</option>
+            <option value={50}>50 baris</option>
+            <option value={100}>100 baris</option>
           </select>
         </div>
       </div>
 
+      {/* Table Matrix */}
       <div className="overflow-x-auto w-full">
         {pageRows.length === 0 ? (
           <div className="py-16 text-center text-slate-400 space-y-2">
             <WarningCircle weight="duotone" className="w-10 h-10 mx-auto text-slate-300" />
-            <p className="text-sm font-semibold text-slate-600">Tidak ada data ditemukan</p>
-            <p className="text-xs text-slate-400 max-w-sm mx-auto">
+            <p className="text-sm font-bold text-slate-700">Tidak ada data ditemukan</p>
+            <p className="text-xs text-slate-500 max-w-sm mx-auto">
               Cobalah mengatur ulang parameter filter tanggal atau kata kunci pencarian.
             </p>
           </div>
         ) : (
           <table className="w-full text-left text-xs text-slate-600">
             {activeTab === 'kunjungan' && (
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 select-none whitespace-nowrap">
+              <thead className="bg-slate-50/90 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
                 <tr>
-                  <th className="py-3.5 px-3">No RM</th>
-                  <th className="py-3.5 px-3">Nama Pasien</th>
-                  <th className="py-3.5 px-3">L/P</th>
-                  <th className="py-3.5 px-3">Desa</th>
-                  <th className="py-3.5 px-3">Tanggal</th>
-                  <th className="py-3.5 px-3">Dokter</th>
-                  <th className="py-3.5 px-3">Diagnosa ICD-10</th>
-                  <th className="py-3.5 px-3">Jenis Pasien</th>
-                  <th className="py-3.5 px-3 text-right">Biaya Kasir</th>
+                  <th className="py-3 px-3.5">No RM</th>
+                  <th className="py-3 px-3.5">Nama Pasien</th>
+                  <th className="py-3 px-3.5">L/P</th>
+                  <th className="py-3 px-3.5">Desa</th>
+                  <th className="py-3 px-3.5">Tanggal</th>
+                  <th className="py-3 px-3.5">Dokter</th>
+                  <th className="py-3 px-3.5">Diagnosa ICD-10</th>
+                  <th className="py-3 px-3.5">Jenis Pasien</th>
+                  <th className="py-3 px-3.5 text-right">Biaya Kasir</th>
                 </tr>
               </thead>
             )}
 
             {activeTab === 'morbiditas' && (
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 select-none whitespace-nowrap">
+              <thead className="bg-slate-50/90 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
                 <tr>
-                  <th className="py-3.5 px-3 w-16 text-center">Peringkat</th>
-                  <th className="py-3.5 px-3">Kode ICD-10</th>
-                  <th className="py-3.5 px-3">Nama Diagnosa Medis</th>
-                  <th className="py-3.5 px-3 text-right">Jumlah Kasus</th>
-                  <th className="py-3.5 px-3 text-right">Persentase</th>
+                  <th className="py-3 px-3.5 w-16 text-center">Peringkat</th>
+                  <th className="py-3 px-3.5">Kode ICD-10</th>
+                  <th className="py-3 px-3.5">Nama Diagnosa Medis</th>
+                  <th className="py-3 px-3.5 text-right">Jumlah Kasus</th>
+                  <th className="py-3 px-3.5 text-right">Persentase</th>
                 </tr>
               </thead>
             )}
 
             {activeTab === 'buku_kas' && (
-              <thead className="bg-slate-50 text-slate-600 font-semibold border-b border-slate-200 select-none whitespace-nowrap">
+              <thead className="bg-slate-50/90 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
                 <tr>
-                  <th className="py-3.5 px-3">Tanggal</th>
-                  <th className="py-3.5 px-3">Jenis</th>
-                  <th className="py-3.5 px-3">Kategori Arus Kas</th>
-                  <th className="py-3.5 px-3">Keterangan</th>
-                  <th className="py-3.5 px-3 text-right">Nominal (Rp)</th>
+                  <th className="py-3 px-3.5">Tanggal</th>
+                  <th className="py-3 px-3.5">Jenis</th>
+                  <th className="py-3 px-3.5">Kategori Arus Kas</th>
+                  <th className="py-3 px-3.5">Keterangan</th>
+                  <th className="py-3 px-3.5 text-right">Nominal (Rp)</th>
                 </tr>
               </thead>
             )}
@@ -219,41 +233,43 @@ export function ReportPreviewTable({
             <tbody className="divide-y divide-slate-100 whitespace-nowrap">
               {activeTab === 'kunjungan' &&
                 (pageRows as VisitExportRow[]).map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-3 font-mono font-bold text-blue-700">
-                      {row.no_rm}
+                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3.5 font-mono font-bold text-teal-700">
+                      <span className="bg-teal-50 text-teal-700 border border-teal-200/80 px-2 py-0.5 rounded-lg text-[11px]">
+                        {row.no_rm}
+                      </span>
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-900">
+                    <td className="py-3 px-3.5 font-semibold text-slate-900">
                       {row.nama_pasien}
                     </td>
-                    <td className="py-3 px-3 text-slate-500">{row.jenis_kelamin}</td>
-                    <td className="py-3 px-3">{row.desa}</td>
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
+                    <td className="py-3 px-3.5 text-slate-500">{row.jenis_kelamin}</td>
+                    <td className="py-3 px-3.5 text-slate-600">{row.desa}</td>
+                    <td className="py-3 px-3.5 font-mono text-[11px] text-slate-500">
                       {row.tanggal_periksa}
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-700">
+                    <td className="py-3 px-3.5 font-medium text-slate-700">
                       {row.nama_dokter}
                     </td>
-                    <td className="py-3 px-3">
-                      <span className="font-mono font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded text-[11px] mr-1.5">
+                    <td className="py-3 px-3.5">
+                      <span className="font-mono font-bold text-teal-700 bg-teal-50 border border-teal-200/80 px-1.5 py-0.5 rounded text-[11px] mr-1.5">
                         {row.kode_icd10 || '-'}
                       </span>
-                      <span className="truncate inline-block max-w-xs align-bottom">
+                      <span className="truncate inline-block max-w-xs align-bottom text-slate-800">
                         {row.diagnosa_deskripsi || '-'}
                       </span>
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3.5">
                       <span
-                        className={`px-2 py-0.5 rounded-md font-semibold text-[10px] ${
+                        className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
                           row.jenis_pasien === 'BPJS'
-                            ? 'bg-teal-50 text-teal-700 border border-teal-200'
-                            : 'bg-blue-50 text-blue-700 border border-blue-200'
+                            ? 'bg-teal-50 text-teal-700 border border-teal-200/80'
+                            : 'bg-teal-50 text-teal-700 border border-teal-200/80'
                         }`}
                       >
                         {row.jenis_pasien}
                       </span>
                     </td>
-                    <td className="py-3 px-3 text-right font-mono font-semibold text-slate-900">
+                    <td className="py-3 px-3.5 text-right font-mono font-bold text-slate-900">
                       {formatRupiah(row.total_biaya)}
                     </td>
                   </tr>
@@ -261,20 +277,22 @@ export function ReportPreviewTable({
 
               {activeTab === 'morbiditas' &&
                 (pageRows as MorbidityExportRow[]).map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-3 text-center font-mono font-bold text-slate-700">
+                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3.5 text-center font-mono font-bold text-slate-500">
                       #{row.rank}
                     </td>
-                    <td className="py-3 px-3 font-mono font-bold text-teal-700">
-                      {row.kode_icd10}
+                    <td className="py-3 px-3.5 font-mono font-bold text-teal-700">
+                      <span className="bg-teal-50 text-teal-700 border border-teal-200/80 px-2 py-0.5 rounded-lg text-[11px]">
+                        {row.kode_icd10}
+                      </span>
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-900">
+                    <td className="py-3 px-3.5 font-semibold text-slate-900">
                       {row.diagnosa_deskripsi}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono font-bold text-slate-900">
+                    <td className="py-3 px-3.5 text-right font-mono font-bold text-slate-900">
                       {row.jumlah_kasus.toLocaleString('id-ID')}
                     </td>
-                    <td className="py-3 px-3 text-right font-mono font-medium text-slate-600">
+                    <td className="py-3 px-3.5 text-right font-mono font-semibold text-slate-600">
                       {row.persentase.toFixed(2)}%
                     </td>
                   </tr>
@@ -282,30 +300,30 @@ export function ReportPreviewTable({
 
               {activeTab === 'buku_kas' &&
                 (pageRows as CashFlowExportRow[]).map((row, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="py-3 px-3 font-mono text-[11px] text-slate-500">
+                  <tr key={idx} className="hover:bg-slate-50/80 transition-colors">
+                    <td className="py-3 px-3.5 font-mono text-[11px] text-slate-500">
                       {row.tanggal}
                     </td>
-                    <td className="py-3 px-3">
+                    <td className="py-3 px-3.5">
                       <span
-                        className={`px-2 py-0.5 rounded-md font-semibold text-[10px] ${
+                        className={`px-2 py-0.5 rounded-md font-bold text-[10px] ${
                           row.jenis === 'Masuk'
-                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
-                            : 'bg-rose-50 text-rose-700 border border-rose-200'
+                            ? 'bg-emerald-50 text-emerald-700 border border-emerald-200/80'
+                            : 'bg-rose-50 text-rose-700 border border-rose-200/80'
                         }`}
                       >
                         {row.jenis}
                       </span>
                     </td>
-                    <td className="py-3 px-3 font-medium text-slate-800">
+                    <td className="py-3 px-3.5 font-semibold text-slate-900">
                       {row.kategori}
                     </td>
-                    <td className="py-3 px-3 text-slate-500 truncate max-w-xs">
+                    <td className="py-3 px-3.5 text-slate-500 truncate max-w-xs">
                       {row.keterangan || '-'}
                     </td>
                     <td
-                      className={`py-3 px-3 text-right font-mono font-bold ${
-                        row.jenis === 'Masuk' ? 'text-emerald-600' : 'text-rose-600'
+                      className={`py-3 px-3.5 text-right font-mono font-bold ${
+                        row.jenis === 'Masuk' ? 'text-emerald-700' : 'text-rose-700'
                       }`}
                     >
                       {row.jenis === 'Masuk' ? '+' : '-'} {formatRupiah(row.nominal)}
@@ -317,58 +335,60 @@ export function ReportPreviewTable({
         )}
       </div>
 
-      <div className="p-4 bg-slate-50 border-t border-slate-200 flex flex-col md:flex-row items-center justify-between gap-3 text-xs">
-        <div className="flex flex-wrap items-center gap-4 text-slate-600 font-medium">
-          <span>
-            Total Data Terpilih: <strong className="text-slate-900 font-mono">{totalRows.toLocaleString('id-ID')}</strong> baris
+      {/* Footer Summary Banner with Metric Chips & Tactile Steppers */}
+      <div className="p-3.5 sm:p-4 bg-slate-50/80 border-t border-slate-100 flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+        <div className="flex flex-wrap items-center gap-2 text-slate-600 font-medium">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-white border border-slate-200/90 text-slate-700 font-medium shadow-2xs">
+            <span>Total Data:</span>
+            <strong className="text-slate-900 font-mono font-bold">{totalRows.toLocaleString('id-ID')}</strong>
+            <span>baris</span>
           </span>
 
           {activeTab === 'kunjungan' && (
             <>
-              <span>•</span>
-              <span>
-                Umum: <strong className="text-blue-700 font-mono">{visitsSummary.umumCount}</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-200/80 text-teal-800 font-medium shadow-2xs">
+                <span>Umum:</span>
+                <strong className="font-mono font-bold">{visitsSummary.umumCount}</strong>
               </span>
-              <span>•</span>
-              <span>
-                BPJS: <strong className="text-teal-700 font-mono">{visitsSummary.bpjsCount}</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-200/80 text-teal-800 font-medium shadow-2xs">
+                <span>BPJS:</span>
+                <strong className="font-mono font-bold">{visitsSummary.bpjsCount}</strong>
               </span>
-              <span>•</span>
-              <span>
-                Total Omzet: <strong className="text-emerald-700 font-mono">{formatRupiah(visitsSummary.totalBiaya)}</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 font-medium shadow-2xs">
+                <span>Total Billing:</span>
+                <strong className="font-mono font-bold">{formatRupiah(visitsSummary.totalBiaya)}</strong>
               </span>
             </>
           )}
 
           {activeTab === 'morbiditas' && (
-            <>
-              <span>•</span>
-              <span>
-                Total Kasus Morbiditas: <strong className="text-teal-700 font-mono">{morbiditySummary.totalCases.toLocaleString('id-ID')}</strong>
-              </span>
-            </>
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-teal-50 border border-teal-200/80 text-teal-800 font-medium shadow-2xs">
+              <span>Total Kasus Morbiditas:</span>
+              <strong className="font-mono font-bold">{morbiditySummary.totalCases.toLocaleString('id-ID')}</strong>
+            </span>
           )}
 
           {activeTab === 'buku_kas' && (
             <>
-              <span>•</span>
-              <span>
-                Total Masuk: <strong className="text-emerald-700 font-mono">{formatRupiah(cashFlowSummary.totalMasuk)}</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-emerald-50 border border-emerald-200/80 text-emerald-800 font-medium shadow-2xs">
+                <span>Masuk:</span>
+                <strong className="font-mono font-bold">{formatRupiah(cashFlowSummary.totalMasuk)}</strong>
               </span>
-              <span>•</span>
-              <span>
-                Total Keluar: <strong className="text-rose-700 font-mono">{formatRupiah(cashFlowSummary.totalKeluar)}</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-rose-50 border border-rose-200/80 text-rose-800 font-medium shadow-2xs">
+                <span>Keluar:</span>
+                <strong className="font-mono font-bold">{formatRupiah(cashFlowSummary.totalKeluar)}</strong>
               </span>
-              <span>•</span>
-              <span>
-                Saldo Bersih: <strong className="text-slate-900 font-mono">{formatRupiah(cashFlowSummary.net)}</strong>
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-indigo-50 border border-indigo-200/80 text-indigo-800 font-medium shadow-2xs">
+                <span>Saldo Bersih:</span>
+                <strong className="font-mono font-bold">{formatRupiah(cashFlowSummary.net)}</strong>
               </span>
             </>
           )}
         </div>
 
-        <div className="flex items-center gap-2 self-end md:self-auto">
-          <span className="text-slate-500 text-[11px]">
+        {/* Tactile Pagination Steppers */}
+        <div className="flex items-center gap-2 self-end md:self-auto shrink-0">
+          <span className="text-slate-500 text-[11px] font-medium font-mono">
             Halaman {safePage} dari {totalPages}
           </span>
           <button
@@ -376,18 +396,18 @@ export function ReportPreviewTable({
             onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
             disabled={safePage <= 1}
             aria-label="Halaman sebelumnya"
-            className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 transition"
+            className="p-2 min-h-[38px] min-w-[38px] inline-flex items-center justify-center bg-white border border-slate-300 rounded-xl hover:bg-slate-100 disabled:opacity-40 transition shadow-btn-secondary tactile-btn"
           >
-            <CaretLeft weight="bold" className="w-4 h-4 text-slate-600" />
+            <CaretLeft weight="bold" className="w-4 h-4 text-slate-700" />
           </button>
           <button
             type="button"
             onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
             disabled={safePage >= totalPages}
             aria-label="Halaman selanjutnya"
-            className="p-2 min-h-[44px] min-w-[44px] inline-flex items-center justify-center bg-white border border-slate-200 rounded-xl hover:bg-slate-100 disabled:opacity-40 transition"
+            className="p-2 min-h-[38px] min-w-[38px] inline-flex items-center justify-center bg-white border border-slate-300 rounded-xl hover:bg-slate-100 disabled:opacity-40 transition shadow-btn-secondary tactile-btn"
           >
-            <CaretRight weight="bold" className="w-4 h-4 text-slate-600" />
+            <CaretRight weight="bold" className="w-4 h-4 text-slate-700" />
           </button>
         </div>
       </div>

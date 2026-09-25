@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { toast } from 'sonner';
 import {
   DownloadSimple,
@@ -25,6 +25,7 @@ import {
 } from '@/components/laporan/ReportTabs';
 import { ReportFilterBar } from '@/components/laporan/ReportFilterBar';
 import { ReportPreviewTable } from '@/components/laporan/ReportPreviewTable';
+import { ReportKpis } from '@/components/laporan/ReportKpis';
 
 export default function LaporanPage() {
   const currentDate = new Date();
@@ -261,26 +262,70 @@ export default function LaporanPage() {
     }
   };
 
+  // Compute dynamic KPI summary metrics
+  const kpiSummaryData = useMemo(() => {
+    const totalVisits = visitsData.length;
+    const umumCount = visitsData.filter((v) => v.jenis_pasien !== 'BPJS').length;
+    const bpjsCount = visitsData.filter((v) => v.jenis_pasien === 'BPJS').length;
+    const totalBilling = visitsData.reduce((sum, v) => sum + (v.total_biaya || 0), 0);
+
+    const totalKasMasuk = cashFlowData
+      .filter((c) => c.jenis === 'Masuk')
+      .reduce((sum, c) => sum + (c.nominal || 0), 0);
+    const totalKasKeluar = cashFlowData
+      .filter((c) => c.jenis === 'Keluar')
+      .reduce((sum, c) => sum + (c.nominal || 0), 0);
+    const netIncome = totalKasMasuk - totalKasKeluar;
+
+    return {
+      totalVisits,
+      umumCount,
+      bpjsCount,
+      totalBilling,
+      totalKasMasuk,
+      totalKasKeluar,
+      netIncome,
+    };
+  }, [visitsData, cashFlowData]);
+
   return (
-    <div className="space-y-6 min-w-0 w-full">
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+    <div className="space-y-6 min-w-0 w-full pb-10">
+      {/* 1. Master Report Header & Integrated Action Ribbon */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-1">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-            Pusat Laporan & Ekspor Excel
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            Unduh rekapitulasi data kunjungan, morbiditas ICD-10, dan mutasi kas klinik format .xlsx
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Pusat Laporan &amp; Ekspor Excel
+            </h1>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              SheetJS Engine
+            </span>
+          </div>
+          <p className="text-xs text-slate-600 font-medium mt-0.5">
+            Konsolidasi data operasional rawat jalan, surveilans morbiditas ICD-10, dan mutasi arus kas klinik format .xlsx
           </p>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full lg:w-auto">
+        {/* Action Ribbon: Reload + Single Tab Export + Full 3-Sheet Workbook Export */}
+        <div className="flex items-center gap-2 w-full lg:w-auto">
+          <button
+            type="button"
+            onClick={fetchReportData}
+            disabled={isLoading}
+            title="Muat Ulang Data Laporan"
+            className="p-2 sm:p-2.5 rounded-xl text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200/90 shadow-btn-secondary tactile-btn transition disabled:opacity-50 flex items-center justify-center min-h-[40px] min-w-[40px] sm:min-h-[38px] sm:min-w-[38px]"
+          >
+            <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-teal-600' : ''}`} weight="bold" />
+          </button>
+
           <button
             type="button"
             onClick={handleExportActiveTab}
             disabled={isLoading || (activeTab === 'kunjungan' && visitsData.length === 0)}
-            className="inline-flex items-center justify-center gap-2 bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-2xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700/80 tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none"
           >
-            <DownloadSimple weight="duotone" className="w-4 h-4 shrink-0 text-slate-500" />
+            <DownloadSimple weight="bold" className="w-3.5 h-3.5" />
             <span>Unduh Tab Ini (.xlsx)</span>
           </button>
 
@@ -288,19 +333,20 @@ export default function LaporanPage() {
             type="button"
             onClick={handleExportFullWorkbook}
             disabled={isLoading || (visitsData.length === 0 && cashFlowData.length === 0)}
-            className="inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 min-h-[44px] rounded-xl text-xs font-semibold shadow-2xs transition w-full sm:w-auto disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-emerald-700/80 tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
           >
-            <Stack weight="duotone" className="w-4 h-4 shrink-0" />
-            <span>Unduh Rekap Lengkap (3 Sheet)</span>
+            <Stack weight="bold" className="w-3.5 h-3.5" />
+            <span>Rekap Lengkap (3 Sheet)</span>
           </button>
         </div>
       </div>
 
+      {/* Error Alert Strip if any */}
       {errorMessage && (
-        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3">
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3 shadow-2xs">
           <div className="flex items-center gap-2">
             <WarningCircle weight="duotone" className="w-4 h-4 shrink-0 text-rose-600" />
-            <span>{errorMessage}</span>
+            <span className="font-medium">{errorMessage}</span>
           </div>
           <button
             type="button"
@@ -312,6 +358,10 @@ export default function LaporanPage() {
         </div>
       )}
 
+      {/* 2. Executive Report Summary KPI Row */}
+      <ReportKpis data={kpiSummaryData} isLoading={isLoading} />
+
+      {/* 3. Filter Parameter Laporan Card */}
       <ReportFilterBar
         startDate={startDate}
         endDate={endDate}
@@ -328,6 +378,7 @@ export default function LaporanPage() {
         isLoading={isLoading}
       />
 
+      {/* 4. Recessed Track Segmented Sub-Tab Switcher */}
       <ReportTabs
         activeTab={activeTab}
         onChangeTab={setActiveTab}
@@ -338,6 +389,7 @@ export default function LaporanPage() {
         }}
       />
 
+      {/* 5. Consolidated Preview Table */}
       <ReportPreviewTable
         activeTab={activeTab}
         visitsData={visitsData}

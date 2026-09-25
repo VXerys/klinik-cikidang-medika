@@ -4,13 +4,16 @@ import React, { useState, useEffect, useRef } from 'react';
 import {
   Scissors,
   Camera,
-  Images,
+  FolderOpen,
   Trash,
   CheckCircle,
   WarningCircle,
   CircleNotch,
   FileImage,
   ArrowClockwise,
+  CaretDown,
+  Check,
+  ShieldCheck,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import type { Patient } from '@/types/database';
@@ -44,8 +47,14 @@ const initialSlotState: PhotoSlotState = {
   isCompressing: false,
 };
 
-export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatient }: NewCircumcisionModalProps) {
+export function NewCircumcisionModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  initialPatient,
+}: NewCircumcisionModalProps) {
   const [selectedPatient, setSelectedPatient] = useState<Patient | null>(initialPatient || null);
+  const [hasShaken, setHasShaken] = useState(false);
 
   useEffect(() => {
     if (initialPatient) {
@@ -59,6 +68,9 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
   const [biaya, setBiaya] = useState(750000);
   const [kondisiLuka, setKondisiLuka] = useState('Luka bersih, perdarahan terkontrol');
   const [catatan, setCatatan] = useState('');
+
+  // Dropdown states for custom popovers
+  const [activeDropdown, setActiveDropdown] = useState<'dokter' | 'metode' | null>(null);
 
   const [slot1, setSlot1] = useState<PhotoSlotState>(initialSlotState);
   const [slot2, setSlot2] = useState<PhotoSlotState>(initialSlotState);
@@ -98,6 +110,7 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
         compressedSizeKb: compKb,
         isCompressing: false,
       }));
+      toast.success(`Foto ${slotNumber} dikompresi: ${origKb} KB -> ${compKb} KB (WebP)`);
     } catch (err) {
       console.error('Error compressing medical photo:', err);
       updateState((prev) => ({
@@ -126,6 +139,8 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
     e.preventDefault();
     if (!selectedPatient) {
       setErrorMsg('Silakan cari dan pilih pasien terlebih dahulu');
+      setHasShaken(true);
+      setTimeout(() => setHasShaken(false), 500);
       return;
     }
 
@@ -141,52 +156,61 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
       let foto2Url: string | null = null;
       let usedProvider: 'supabase' | 'cloudinary' = 'supabase';
 
-      if (slot1.compressedBlob || slot1.file) {
-        setUploadProgress('Mengunggah Foto 1 ke penyimpanan privat...');
-        const payload1 = slot1.compressedBlob || slot1.file!;
-        const res1 = await uploadMedicalPhoto(payload1, selectedPatient.id, `${tindakanTempId}_1`);
+      // 1. Upload Foto 1 jika ada
+      if (slot1.compressedBlob) {
+        setUploadProgress('Mengunggah Foto Paska Tindakan (WebP)...');
+        const res1 = await uploadMedicalPhoto(
+          slot1.compressedBlob,
+          selectedPatient.id,
+          `${tindakanTempId}_1`,
+          'supabase'
+        );
         foto1Url = res1.path;
         usedProvider = res1.provider;
       }
 
-      if (slot2.compressedBlob || slot2.file) {
-        setUploadProgress('Mengunggah Foto 2 ke penyimpanan privat...');
-        const payload2 = slot2.compressedBlob || slot2.file!;
-        const res2 = await uploadMedicalPhoto(payload2, selectedPatient.id, `${tindakanTempId}_2`);
+      // 2. Upload Foto 2 jika ada
+      if (slot2.compressedBlob) {
+        setUploadProgress('Mengunggah Foto Evaluasi Kontrol (WebP)...');
+        const res2 = await uploadMedicalPhoto(
+          slot2.compressedBlob,
+          selectedPatient.id,
+          `${tindakanTempId}_2`,
+          usedProvider
+        );
         foto2Url = res2.path;
-        usedProvider = res2.provider;
       }
 
-      setUploadProgress('Menyimpan rekam medis sirkumsisi ke database...');
-
-      const { data: doctors } = await supabase
+      // 3. Cari id dokter dari tabel doctors
+      setUploadProgress('Merekam ke database klinik...');
+      const { data: docData } = await supabase
         .from('doctors')
         .select('id')
-        .ilike('nama', `%${dokterNama}%`)
-        .limit(1);
-      const dokterId = doctors && doctors.length > 0 ? doctors[0].id : null;
+        .ilike('nama', `%${dokterNama.replace('dr. ', '')}%`)
+        .maybeSingle();
 
-      const { error } = await supabase.from('circumcisions').insert({
+      // 4. Insert data sirkumsisi
+      const { error: insertErr } = await supabase.from('circumcisions').insert({
         pasien_id: selectedPatient.id,
-        dokter_id: dokterId,
+        dokter_id: docData?.id || null,
         tanggal_tindakan: tanggalTindakan,
         metode,
+        biaya,
         kondisi_luka: kondisiLuka.trim() || null,
+        catatan: catatan.trim() || null,
         foto_1_url: foto1Url,
         foto_2_url: foto2Url,
         storage_provider: usedProvider,
-        biaya,
-        catatan: catatan.trim() || null,
       });
 
-      if (error) throw error;
+      if (insertErr) throw insertErr;
 
-      toast.success(`Tindakan sirkumsisi untuk ${selectedPatient.nama} berhasil didokumentasikan`);
+      toast.success(`Tindakan sirkumsisi pasien ${selectedPatient.nama} berhasil didokumentasikan`);
       onSuccess();
       onClose();
     } catch (err) {
-      console.error('Error recording circumcision:', err);
-      setErrorMsg(err instanceof Error ? err.message : 'Gagal menyimpan rekam medis sirkumsisi');
+      console.error('Error saving circumcision record:', err);
+      setErrorMsg(err instanceof Error ? err.message : 'Gagal menyimpan data sirkumsisi');
       toast.error('Gagal mendokumentasikan tindakan sirkumsisi');
     } finally {
       setIsSubmitting(false);
@@ -200,7 +224,7 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
     const galleryRef = slotNumber === 1 ? slot1GalleryRef : slot2GalleryRef;
 
     return (
-      <div className="border border-slate-200 rounded-2xl p-3.5 bg-slate-50/50 flex flex-col justify-between">
+      <div className="border border-slate-200/90 rounded-2xl p-4 bg-slate-50/70 flex flex-col justify-between shadow-xs">
         <div>
           <div className="flex items-center justify-between gap-1 mb-1">
             <span className="font-bold text-slate-800 text-xs">{label}</span>
@@ -209,7 +233,7 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
 
           {slot.previewUrl ? (
             <div className="space-y-2 mt-2">
-              <div className="relative rounded-xl overflow-hidden border border-slate-200 bg-black aspect-video flex items-center justify-center">
+              <div className="relative rounded-xl overflow-hidden border border-slate-300 bg-slate-950 aspect-video flex items-center justify-center">
                 <img
                   src={slot.previewUrl}
                   alt={label}
@@ -222,50 +246,50 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
                   aria-label="Hapus foto"
                   title="Hapus foto"
                 >
-                  <Trash weight="duotone" className="w-4 h-4" />
+                  <Trash weight="bold" className="w-4 h-4" />
                 </button>
               </div>
 
               {slot.isCompressing ? (
-                <div className="flex items-center gap-1.5 text-[11px] text-blue-600 font-medium">
+                <div className="flex items-center gap-1.5 text-[11px] text-teal-600 font-medium">
                   <CircleNotch weight="bold" className="w-3.5 h-3.5 animate-spin" />
                   <span>Mengompresi ke WebP &lt; 300KB...</span>
                 </div>
               ) : slot.compressedSizeKb ? (
-                <div className="flex items-center justify-between text-[10px] text-emerald-700 bg-emerald-50 px-2 py-1 rounded-lg border border-emerald-200/80">
-                  <span className="flex items-center gap-1 font-semibold">
-                    <CheckCircle weight="duotone" className="w-3.5 h-3.5 text-emerald-600" />
-                    WebP Teroptimasi
+                <div className="flex items-center justify-between text-[11px] text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200 font-medium">
+                  <span className="flex items-center gap-1 font-bold">
+                    <ShieldCheck weight="bold" className="w-3.5 h-3.5 text-emerald-600" />
+                    WebP Siap
                   </span>
-                  <span className="font-mono text-emerald-800">
+                  <span className="font-mono font-bold">
                     {slot.originalSizeKb} KB &rarr; {slot.compressedSizeKb} KB
                   </span>
                 </div>
               ) : null}
             </div>
           ) : (
-            <div className="mt-2 text-center border border-dashed border-slate-300 rounded-xl p-3 bg-white">
-              <FileImage weight="duotone" className="w-8 h-8 text-slate-300 mx-auto mb-1.5" />
-              <p className="text-[11px] font-medium text-slate-600 mb-2">
-                Dokumentasi luka paska tindakan
+            <div className="mt-2 text-center border border-dashed border-slate-300 rounded-xl p-3.5 bg-white">
+              <FileImage weight="duotone" className="w-8 h-8 text-teal-300 mx-auto mb-1.5" />
+              <p className="text-[11px] font-medium text-slate-600 mb-2.5">
+                Dokumentasi foto medis luka
               </p>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
                   onClick={() => cameraRef.current?.click()}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-blue-50 hover:bg-blue-100 text-blue-700 border border-blue-200 rounded-xl text-xs font-semibold transition min-h-[44px]"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 rounded-xl text-xs font-bold tactile-btn transition min-h-[44px]"
                 >
-                  <Camera weight="duotone" className="w-4 h-4 shrink-0" />
-                  <span>Kamera</span>
+                  <Camera weight="bold" className="w-4 h-4 text-teal-600 shrink-0" />
+                  <span>Kamera HP</span>
                 </button>
                 <button
                   type="button"
                   onClick={() => galleryRef.current?.click()}
-                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200 rounded-xl text-xs font-semibold transition min-h-[44px]"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold tactile-btn transition min-h-[44px]"
                 >
-                  <Images weight="duotone" className="w-4 h-4 shrink-0" />
-                  <span>Galeri</span>
+                  <FolderOpen weight="bold" className="w-4 h-4 text-slate-600 shrink-0" />
+                  <span>Galeri File</span>
                 </button>
               </div>
 
@@ -299,198 +323,262 @@ export function NewCircumcisionModal({ isOpen, onClose, onSuccess, initialPatien
       isOpen={isOpen}
       onClose={onClose}
       title="Pencatatan Tindakan Sunat (Sirkumsisi) Modern"
-      description="Dokumentasi metode, operator medis, dan evaluasi foto luka WebP privat"
+      description="Dokumentasi metode bedah minor, operator medis, dan evaluasi foto luka WebP privat"
       icon={
-        <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+        <div className="p-2.5 bg-teal-50 text-teal-700 rounded-xl border border-teal-200">
           <Scissors weight="duotone" className="w-5 h-5" />
         </div>
       }
       maxWidth="xl"
     >
       <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
-        <div className="p-4 sm:p-6 space-y-4 text-xs">
-        {errorMsg && (
-          <div className="p-3 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl flex items-center gap-2">
-            <WarningCircle weight="duotone" className="w-4 h-4 shrink-0" />
-            <span>{errorMsg}</span>
-          </div>
-        )}
-
-        {/* Cari & Pilih Pasien */}
-        <div>
-          <label className="block font-semibold text-slate-700 mb-1.5">
-            Cari & Pilih Pasien <span className="text-rose-500">*</span>
-          </label>
-          {selectedPatient ? (
-            <div className="p-3 bg-blue-50 border border-blue-200 rounded-xl flex items-center justify-between">
-              <div>
-                <div className="font-bold text-blue-900">
-                  {selectedPatient.nama} ({selectedPatient.no_rm})
-                </div>
-                <div className="text-[11px] text-blue-700">
-                  Desa {selectedPatient.desa} • Usia {selectedPatient.usia || '-'} thn
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setSelectedPatient(null)}
-                className="text-xs text-blue-700 font-semibold underline hover:no-underline p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
-              >
-                Ganti
-              </button>
+        <div className="p-5 sm:p-6 space-y-4 text-xs">
+          {errorMsg && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-2.5">
+              <WarningCircle weight="duotone" className="w-4 h-4 shrink-0 text-rose-600" />
+              <span className="font-medium">{errorMsg}</span>
             </div>
-          ) : (
-            <PatientSearchAutocomplete
-              onSelectPatient={(p) => setSelectedPatient(p)}
-              onAddNewPatient={() => toast.info('Silakan daftarkan pasien baru pada modul Pendaftaran')}
-              placeholder="Ketik Nama, No RM, atau Desa..."
-            />
           )}
-        </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1.5">
-              Tanggal Tindakan <span className="text-rose-500">*</span>
+          {/* Cari & Pilih Pasien */}
+          <div className={hasShaken && !selectedPatient ? 'animate-shake' : ''}>
+            <label className="block font-bold text-slate-800 mb-1.5">
+              Pilih Pasien Terdaftar <span className="text-rose-500">*</span>
             </label>
-            <input
-              type="date"
-              value={tanggalTindakan}
-              onChange={(e) => setTanggalTindakan(e.target.value)}
-              required
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px]"
-            />
-          </div>
-
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1.5">
-              Dokter / Operator Pelaksana
-            </label>
-            <select
-              value={dokterNama}
-              onChange={(e) => setDokterNama(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px]"
-            >
-              <option value="dr. Ovan">dr. Ovan (Dokter Umum)</option>
-              <option value="dr. Neneng">dr. Neneng (Dokter Umum)</option>
-              <option value="Admin/Bdn.Resa">Admin / Bdn. Resa</option>
-            </select>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1.5">
-              Metode Sirkumsisi
-            </label>
-            <select
-              value={metode}
-              onChange={(e) => setMetode(e.target.value)}
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px]"
-            >
-              <option value="Laser / Kauter">Laser / Kauter (Flash Cutter)</option>
-              <option value="Klamp / Smart Klamp">Klamp / Smart Klamp (Tanpa Jahit)</option>
-              <option value="Konvensional / Bedah Minor">Konvensional / Bedah Minor</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block font-semibold text-slate-700 mb-1.5">
-              Biaya Tindakan (Rp)
-            </label>
-            <input
-              type="number"
-              value={biaya}
-              onChange={(e) => setBiaya(Number(e.target.value))}
-              step="10000"
-              className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px] font-mono"
-            />
-          </div>
-        </div>
-
-        <div>
-          <label className="block font-semibold text-slate-700 mb-1.5">
-            Evaluasi Kondisi Luka / Observasi Klinis
-          </label>
-          <input
-            type="text"
-            value={kondisiLuka}
-            onChange={(e) => setKondisiLuka(e.target.value)}
-            placeholder="Contoh: Luka bersih, tidak ada perdarahan aktif, edema minimal"
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none min-h-[44px]"
-          />
-        </div>
-
-        {/* Upload Foto Luka Medis (Maksimal 2 Foto, WebP < 300KB) */}
-        <div className="space-y-2 pt-2 border-t border-slate-100">
-          <div className="flex items-center justify-between">
-            <label className="font-semibold text-slate-700">
-              Dokumentasi Foto Medis (Privat &amp; Terenkripsi)
-            </label>
-            <span className="text-[10px] text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              Otomatis WebP &lt; 300KB
-            </span>
-          </div>
-          <p className="text-[11px] text-slate-500">
-            Pilih kamera langsung pada tablet/ponsel klinik atau pilih dari berkas penyimpanan di laptop/komputer.
-          </p>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {renderPhotoSlot(1, 'Foto 1: Paska Tindakan', 'Saat tindakan selesai')}
-            {renderPhotoSlot(2, 'Foto 2: Evaluasi / Kontrol', 'Kunjungan kontrol berikutnya')}
-          </div>
-        </div>
-
-        <div>
-          <label className="block font-semibold text-slate-700 mb-1.5">
-            Catatan Tambahan &amp; Terapi Pulang
-          </label>
-          <textarea
-            value={catatan}
-            onChange={(e) => setCatatan(e.target.value)}
-            placeholder="Instruksi perawatan luka di rumah, obat pulang (antibiotik & analgetik)..."
-            rows={2}
-            className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-600 focus:outline-none"
-          />
-        </div>
-
-        </div>
-
-        {/* Sticky Footer Actions */}
-        <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-200 p-4 sm:px-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 z-10">
-          <div className="text-[11px] text-slate-500">
-            {uploadProgress && (
-              <span className="flex items-center gap-1.5 text-blue-600 font-semibold">
-                <CircleNotch weight="bold" className="w-3.5 h-3.5 animate-spin" />
-                {uploadProgress}
-              </span>
+            {selectedPatient ? (
+              <div className="p-3.5 bg-teal-50/70 border border-teal-200 rounded-xl flex items-center justify-between shadow-xs">
+                <div>
+                  <div className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <span>{selectedPatient.nama}</span>
+                    <span className="text-[11px] font-mono font-bold text-teal-800 bg-white px-2 py-0.5 rounded border border-teal-200">
+                      {selectedPatient.no_rm}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-0.5">
+                    Desa {selectedPatient.desa} • {selectedPatient.jenis_kelamin} • Usia {selectedPatient.usia || '-'} thn
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPatient(null)}
+                  className="text-xs text-teal-800 font-bold underline hover:no-underline p-1 min-h-[44px] min-w-[44px] flex items-center justify-center"
+                >
+                  Ganti Pasien
+                </button>
+              </div>
+            ) : (
+              <PatientSearchAutocomplete
+                onSelectPatient={(p) => setSelectedPatient(p)}
+                onAddNewPatient={() => toast.info('Silakan daftarkan pasien baru pada modul Pendaftaran')}
+                placeholder="Ketik Nama, No. RM, atau Desa pasien..."
+              />
             )}
           </div>
 
-          <div className="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5">
-            <button
-              type="button"
-              onClick={onClose}
-              disabled={isSubmitting}
-              className="px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl transition min-h-[44px] w-full sm:w-auto"
-            >
-              Batal
-            </button>
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-5 py-2.5 text-xs font-semibold text-white bg-blue-600 hover:bg-blue-700 rounded-xl transition min-h-[44px] flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none shadow-xs w-full sm:w-auto"
-            >
-              {isSubmitting ? (
-                <>
-                  <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
-                  <span>Menyimpan...</span>
-                </>
-              ) : (
-                'Simpan Rekam Sirkumsisi'
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Tanggal Tindakan */}
+            <div>
+              <label className="block font-bold text-slate-800 mb-1.5">
+                Tanggal Tindakan <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="date"
+                value={tanggalTindakan}
+                onChange={(e) => setTanggalTindakan(e.target.value)}
+                required
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 min-h-[44px] transition"
+              />
+            </div>
+
+            {/* Custom Popover: Dokter / Operator Pelaksana */}
+            <div className="relative">
+              <label className="block font-bold text-slate-800 mb-1.5">
+                Dokter / Operator Pelaksana:
+              </label>
+              <button
+                type="button"
+                onClick={() => setActiveDropdown(activeDropdown === 'dokter' ? null : 'dokter')}
+                className="w-full px-3.5 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl flex items-center justify-between text-left text-xs font-medium text-slate-900 shadow-xs focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 min-h-[44px] transition"
+              >
+                <span className="font-bold text-slate-900">{dokterNama}</span>
+                <CaretDown
+                  className={`w-4 h-4 text-slate-500 transition-transform ${
+                    activeDropdown === 'dokter' ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {activeDropdown === 'dokter' && (
+                <div className="absolute top-full mt-1.5 inset-x-0 z-50 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl shadow-popover p-1.5 space-y-1 animate-popover">
+                  {(
+                    [
+                      { id: 'dr. Ovan', desc: 'Dokter Umum / Penanggung Jawab Medis' },
+                      { id: 'dr. Neneng', desc: 'Dokter Umum' },
+                      { id: 'Admin/Bdn.Resa', desc: 'Admin / Bidan Resa' },
+                    ] as const
+                  ).map((doc) => (
+                    <div
+                      key={doc.id}
+                      onClick={() => {
+                        setDokterNama(doc.id);
+                        setActiveDropdown(null);
+                      }}
+                      className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
+                        dokterNama === doc.id
+                          ? 'bg-teal-50 text-teal-900 font-bold'
+                          : 'hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div>{doc.id}</div>
+                        <div className="text-[10px] text-slate-500 font-normal">{doc.desc}</div>
+                      </div>
+                      {dokterNama === doc.id && <Check className="w-4 h-4 text-teal-600" weight="bold" />}
+                    </div>
+                  ))}
+                </div>
               )}
-            </button>
+            </div>
           </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+            {/* Custom Popover: Metode Sirkumsisi */}
+            <div className="relative">
+              <label className="block font-bold text-slate-800 mb-1.5">
+                Metode Bedah Sirkumsisi:
+              </label>
+              <button
+                type="button"
+                onClick={() => setActiveDropdown(activeDropdown === 'metode' ? null : 'metode')}
+                className="w-full px-3.5 py-2.5 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl flex items-center justify-between text-left text-xs font-medium text-slate-900 shadow-xs focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 min-h-[44px] transition"
+              >
+                <span className="font-bold text-slate-900">{metode}</span>
+                <CaretDown
+                  className={`w-4 h-4 text-slate-500 transition-transform ${
+                    activeDropdown === 'metode' ? 'rotate-180' : ''
+                  }`}
+                />
+              </button>
+
+              {activeDropdown === 'metode' && (
+                <div className="absolute top-full mt-1.5 inset-x-0 z-50 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl shadow-popover p-1.5 space-y-1 animate-popover">
+                  {(
+                    [
+                      { id: 'Laser / Kauter', desc: 'Pemotongan dengan panas elektrokauter, minim perdarahan' },
+                      { id: 'Klamp / Smart Klamp', desc: 'Teknik klamp cincin higienis tanpa jahitan dan perban' },
+                      { id: 'Konvensional / Bedah Minor', desc: 'Teknik bedah minor standar dengan penjahitan' },
+                    ] as const
+                  ).map((m) => (
+                    <div
+                      key={m.id}
+                      onClick={() => {
+                        setMetode(m.id);
+                        setActiveDropdown(null);
+                      }}
+                      className={`flex items-center justify-between p-2 rounded-xl cursor-pointer transition ${
+                        metode === m.id
+                          ? 'bg-teal-50 text-teal-900 font-bold'
+                          : 'hover:bg-slate-100 text-slate-700'
+                      }`}
+                    >
+                      <div>
+                        <div>{m.id}</div>
+                        <div className="text-[10px] text-slate-500 font-normal">{m.desc}</div>
+                      </div>
+                      {metode === m.id && <Check className="w-4 h-4 text-teal-600" weight="bold" />}
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Tarif Tindakan */}
+            <div>
+              <label className="block font-bold text-slate-800 mb-1.5">
+                Biaya Tindakan (Rp):
+              </label>
+              <input
+                type="number"
+                value={biaya}
+                onChange={(e) => setBiaya(Number(e.target.value))}
+                step="10000"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 min-h-[44px] transition"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block font-bold text-slate-800 mb-1.5">
+              Evaluasi Kondisi Luka / Observasi Klinis:
+            </label>
+            <input
+              type="text"
+              value={kondisiLuka}
+              onChange={(e) => setKondisiLuka(e.target.value)}
+              placeholder="Contoh: Luka bersih, tidak ada perdarahan aktif, edema minimal..."
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs text-slate-900 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 min-h-[44px] transition"
+            />
+          </div>
+
+          {/* Upload Foto Medis (2 Slot) */}
+          <div className="space-y-2 pt-2 border-t border-slate-100">
+            <div className="flex items-center justify-between">
+              <label className="font-bold text-slate-800">
+                Dokumentasi Foto Medis (Privat &amp; Terenkripsi):
+              </label>
+              <span className="text-[10px] text-emerald-800 font-bold bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
+                Otomatis WebP &lt; 300KB
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-500">
+              Pilih kamera langsung pada tablet/smartphone klinik atau unggah berkas dari komputer.
+            </p>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
+              {renderPhotoSlot(1, 'Foto 1: Paska Tindakan', 'Saat tindakan selesai')}
+              {renderPhotoSlot(2, 'Foto 2: Evaluasi / Kontrol H+7', 'Opsional / saat kunjungan kontrol')}
+            </div>
+          </div>
+
+          {/* Catatan / Terapi Pulang */}
+          <div>
+            <label className="block font-bold text-slate-800 mb-1.5">
+              Catatan Tambahan &amp; Terapi Obat Pulang:
+            </label>
+            <textarea
+              value={catatan}
+              onChange={(e) => setCatatan(e.target.value)}
+              placeholder="Contoh: Amoxicillin 3x1 sirup, Paracetamol 3x1 sirup prn demam, edukasi luka tidak boleh basah 3 hari..."
+              rows={2}
+              className="w-full px-3.5 py-2.5 border border-slate-300 rounded-xl focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 focus:outline-none text-xs text-slate-900 placeholder:text-slate-400 transition"
+            />
+          </div>
+        </div>
+
+        {/* Sticky Footer Actions */}
+        <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-100 p-4 sm:px-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 z-10">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="px-4 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl transition min-h-[38px] shadow-btn-secondary tactile-btn w-full sm:w-auto"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 rounded-xl transition min-h-[38px] flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none shadow-btn-primary tactile-btn border border-teal-700/80 w-full sm:w-auto"
+          >
+            {isSubmitting ? (
+              <>
+                <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                <span>{uploadProgress || 'Menyimpan Tindakan...'}</span>
+              </>
+            ) : (
+              'Simpan Tindakan Sirkumsisi'
+            )}
+          </button>
         </div>
       </form>
     </Modal>

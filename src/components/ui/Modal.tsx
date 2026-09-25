@@ -1,6 +1,7 @@
 'use client';
 
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -25,6 +26,12 @@ export function Modal({
   className,
   maxWidth = '2xl',
 }: ModalProps) {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') onClose();
@@ -41,7 +48,7 @@ export function Modal({
     };
   }, [isOpen, onClose]);
 
-  if (!isOpen) return null;
+  if (!isOpen || !mounted) return null;
 
   const maxWidthMap = {
     sm: 'max-w-sm',
@@ -51,36 +58,44 @@ export function Modal({
     '2xl': 'max-w-2xl',
   };
 
-  return (
+  const modalContent = (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150 print:p-0 print:bg-white print:static"
+      className="fixed inset-0 z-[100] flex items-center justify-center p-3 sm:p-4 bg-slate-900/60 backdrop-blur-xs animate-in fade-in duration-150 print:p-0 print:bg-white print:static"
       onClick={onClose}
     >
       <div
         className={cn(
-          'relative w-full bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[90vh] min-h-0 print:max-h-none print:shadow-none print:border-none print:w-full print:rounded-none',
+          'relative w-full bg-white rounded-3xl shadow-dialog border border-slate-200/90 overflow-hidden flex flex-col max-h-[94vh] sm:max-h-[90vh] min-h-0 animate-in zoom-in-95 duration-150 print:max-h-none print:shadow-none print:border-none print:w-full print:rounded-none',
           maxWidthMap[maxWidth],
           className
         )}
         onClick={(e) => e.stopPropagation()}
       >
-        {/* Header */}
+        {/* Header (Clean Modern Header per component-showcase.html) */}
         {(title || icon) && (
-          <div className="shrink-0 px-4 sm:px-6 py-3.5 bg-slate-50 border-b border-slate-200 flex items-center justify-between print:hidden">
+          <div className="shrink-0 px-5 sm:px-6 pt-5 pb-4 border-b border-slate-100 flex items-center justify-between print:hidden">
             <div className="flex items-center gap-3 min-w-0 mr-2">
               {icon && <div className="shrink-0">{icon}</div>}
               <div className="min-w-0">
-                {title && <h2 className="text-sm sm:text-base font-bold text-slate-800 truncate">{title}</h2>}
-                {description && <p className="text-xs text-slate-500 mt-0.5 line-clamp-1">{description}</p>}
+                {title && (
+                  <h2 className="text-base sm:text-lg font-extrabold text-slate-900 tracking-tight truncate">
+                    {title}
+                  </h2>
+                )}
+                {description && (
+                  <div className="text-xs text-slate-600 mt-0.5 line-clamp-1">
+                    {description}
+                  </div>
+                )}
               </div>
             </div>
             <button
               type="button"
               onClick={onClose}
               aria-label="Tutup modal"
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-600 hover:bg-slate-200 transition min-w-[44px] min-h-[44px] flex items-center justify-center shrink-0"
+              className="w-8 h-8 rounded-full text-slate-400 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center font-bold text-sm transition-colors shrink-0 tactile-btn"
             >
-              <X className="w-5 h-5" />
+              <X className="w-4 h-4" />
             </button>
           </div>
         )}
@@ -91,6 +106,7 @@ export function Modal({
         </div>
       </div>
     </div>
-
   );
+
+  return createPortal(modalContent, document.body);
 }

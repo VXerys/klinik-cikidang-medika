@@ -43,24 +43,24 @@ export function TopDiseasesChart({
   const maxCount = data.length > 0 ? Math.max(...data.map((d) => d.count)) : 1;
 
   return (
-    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double flex flex-col justify-between">
+    <div className="bg-white p-5 rounded-2xl border border-slate-200/90 shadow-card-double">
       <div>
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 pb-3 border-b border-slate-100 mb-3.5">
-          <div className="flex items-center gap-2.5">
-            <div className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 border border-blue-200/60 flex items-center justify-center shrink-0">
-              <Heartbeat className="w-4 h-4 text-blue-700" weight="duotone" />
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="w-8 h-8 rounded-xl bg-teal-50 text-teal-700 border border-teal-200/60 flex items-center justify-center shrink-0">
+              <Heartbeat className="w-4 h-4 text-teal-700" weight="duotone" />
             </div>
-            <div>
-              <h2 className="text-sm font-bold text-slate-900 tracking-tight">
+            <div className="min-w-0">
+              <h2 className="text-sm font-bold text-slate-900 tracking-tight truncate">
                 10 Morbiditas Terbanyak (ICD-10)
               </h2>
-              <p className="text-[11px] text-slate-500">
+              <p className="text-[11px] text-slate-600 font-medium truncate">
                 Penyakit paling sering didiagnosa pada rekam medis
               </p>
             </div>
           </div>
-          <span className="text-xs font-bold text-blue-800 bg-blue-50 border border-blue-200/80 px-2.5 py-1 rounded-lg self-start sm:self-auto font-mono">
+          <span className="text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200/80 px-2.5 py-1 rounded-lg self-start sm:self-auto font-mono">
             {totalDiagnoses.toLocaleString('id-ID')} kasus
           </span>
         </div>
@@ -82,7 +82,7 @@ export function TopDiseasesChart({
                       <span className="w-5 h-5 flex items-center justify-center rounded-md bg-slate-100 text-slate-500 font-bold text-[10px] shrink-0 font-mono">
                         {index + 1}
                       </span>
-                      <span className="font-mono text-[11px] font-bold text-blue-700 bg-blue-50 border border-blue-200/80 px-1.5 py-0.2 rounded-md shrink-0">
+                      <span className="font-mono text-[11px] font-bold text-teal-700 bg-teal-50 border border-teal-200/80 px-1.5 py-0.2 rounded-md shrink-0">
                         {item.code}
                       </span>
                       <span
@@ -105,7 +105,7 @@ export function TopDiseasesChart({
                   {/* Micro Proportion Bar */}
                   <div className="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
                     <div
-                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-1.5 rounded-full transition-all duration-300"
+                      className="bg-gradient-to-r from-teal-500 to-teal-600 h-1.5 rounded-full transition-all duration-300"
                       style={{ width: `${barWidth}%` }}
                     />
                   </div>

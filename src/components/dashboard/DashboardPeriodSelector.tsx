@@ -20,12 +20,12 @@ export function DashboardPeriodSelector({
     { id: 'this_month', label: 'Bulan Ini', shortLabel: 'Bln Ini' },
     { id: 'last_month', label: 'Bulan Lalu', shortLabel: 'Bln Lalu' },
     { id: 'this_year', label: 'Tahun 2026', shortLabel: '2026' },
-    { id: 'all', label: 'Semua (2024–2026)', shortLabel: 'Semua' },
+    { id: 'all', label: 'Semua Periode', shortLabel: 'Semua' },
   ];
 
   return (
-    <div className="inline-flex items-center bg-slate-100/90 p-1 rounded-xl border border-slate-200/90 shadow-well overflow-x-auto max-w-full">
-      <div className="flex items-center gap-1">
+    <div className="w-full bg-slate-50/90 p-0.5 rounded-xl border border-slate-200/90 shadow-2xs">
+      <div className="grid grid-cols-4 gap-0.5 w-full">
         {periods.map((p) => {
           const isActive = selectedPeriod === p.id;
           return (
@@ -34,10 +34,10 @@ export function DashboardPeriodSelector({
               type="button"
               disabled={isLoading}
               onClick={() => onChangePeriod(p.id)}
-              className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-xs font-medium transition-all tactile-btn whitespace-nowrap focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:outline-none disabled:opacity-50 ${
+              className={`h-8 px-1.5 sm:px-2.5 rounded-lg text-xs font-semibold transition-all tactile-btn whitespace-nowrap flex items-center justify-center focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none disabled:opacity-50 ${
                 isActive
-                  ? 'bg-white text-blue-700 font-bold shadow-btn-secondary'
-                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60'
+                  ? 'bg-white text-teal-700 font-bold shadow-xs border border-slate-200/70'
+                  : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100/80 border border-transparent'
               }`}
             >
               <span className="hidden sm:inline">{p.label}</span>

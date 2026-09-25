@@ -77,7 +77,7 @@ export function CashFlowTable({
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
           <div>
             <h2 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-              <FileXls weight="duotone" className="w-5 h-5 text-blue-600" />
+              <FileXls weight="duotone" className="w-5 h-5 text-teal-600" />
               Daftar Riwayat Mutasi Buku Kas
             </h2>
             <p className="text-[11px] text-slate-500 mt-0.5">
@@ -138,7 +138,7 @@ export function CashFlowTable({
               placeholder="Cari keterangan mutasi atau nominal..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full pl-9 pr-3 py-2 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
             />
           </div>
 
@@ -150,7 +150,7 @@ export function CashFlowTable({
             <select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition"
+              className="w-full pl-9 pr-3 py-2 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
             >
               <option value="all">Semua Kategori</option>
               {uniqueCategories.map((cat) => (
@@ -179,7 +179,7 @@ export function CashFlowTable({
             {isLoading ? (
               <tr>
                 <td colSpan={onDelete ? 5 : 4} className="py-12 text-center text-slate-400">
-                  <CircleNotch weight="bold" className="w-6 h-6 animate-spin mx-auto mb-2 text-blue-500" />
+                  <CircleNotch weight="bold" className="w-6 h-6 animate-spin mx-auto mb-2 text-teal-500" />
                   <span>Memuat mutasi buku kas dari database...</span>
                 </td>
               </tr>

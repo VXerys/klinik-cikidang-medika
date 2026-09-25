@@ -277,7 +277,7 @@ export function AddCashFlowModal({
                 'w-full py-2.5 pl-14 pr-3 min-h-[44px] text-sm font-mono font-bold bg-white border rounded-xl text-slate-900 placeholder-slate-400 focus:outline-none focus:ring-2 transition',
                 fieldErrors.nominal
                   ? 'border-rose-300 focus:ring-rose-500'
-                  : 'border-slate-300 focus:ring-blue-500 focus:border-transparent'
+                  : 'border-slate-300 focus:ring-teal-500 focus:border-transparent'
               )}
             />
           </div>
@@ -300,7 +300,7 @@ export function AddCashFlowModal({
             value={keterangan}
             onChange={(e) => setKeterangan(e.target.value)}
             placeholder="Contoh: Pencairan Dana Kapitasi BPJS September 2026 / Pembelian Paracetamol & Spuit 3cc..."
-            className="w-full text-xs rounded-xl border border-slate-300 p-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-slate-800 placeholder:text-slate-400 leading-relaxed"
+            className="w-full text-xs rounded-xl border border-slate-300 p-3 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500 text-slate-800 placeholder:text-slate-400 leading-relaxed"
           />
         </div>
 

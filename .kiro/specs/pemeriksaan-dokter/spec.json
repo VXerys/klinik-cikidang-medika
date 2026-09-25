@@ -1,0 +1,20 @@
+{
+  "slug": "pemeriksaan-dokter",
+  "title": "Tab Pemeriksaan Dokter UI/UX Revamp",
+  "description": "Complete structural, ergonomic, and aesthetic overhaul of the Doctor Examination (Rekam Medis) workstation aligning with Clinical Modernism and the interactive showcase.",
+  "status": "completed",
+  "type": "feature",
+  "phase": "verified",
+  "createdAt": "2026-09-25T23:08:00+07:00",
+  "updatedAt": "2026-09-25T23:19:00+07:00",
+  "targetFiles": [
+    "src/app/globals.css",
+    "src/app/rekam-medis/page.tsx",
+    "src/components/rekam-medis/QueueList.tsx",
+    "src/components/rekam-medis/ExaminationForm.tsx",
+    "src/components/rekam-medis/VitalsWidget.tsx",
+    "src/components/rekam-medis/Icd10QuickPicker.tsx",
+    "src/components/rekam-medis/PrescriptionQuickPicker.tsx",
+    "src/components/rekam-medis/PatientHistoryTimeline.tsx"
+  ]
+}

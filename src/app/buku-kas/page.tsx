@@ -173,59 +173,59 @@ export default function BukuKasPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <div className="p-2.5 bg-emerald-100 text-emerald-700 rounded-xl">
-              <Wallet weight="duotone" className="w-5 h-5" />
-            </div>
-            <div>
-              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 tracking-tight">
-                Buku Kas Operasional & Kapitasi BPJS
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-1">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-b from-teal-600 to-teal-700 text-white flex items-center justify-center shadow-btn-primary shrink-0">
+            <Wallet weight="duotone" className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                Buku Kas Operasional &amp; Kapitasi BPJS
               </h1>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Pencatatan dana kapitasi BPJS, pembelian obat, operasional non-klinik, dan setor tunai
-              </p>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Arus Kas
+              </span>
             </div>
+            <p className="text-xs text-slate-600 font-medium mt-0.5">
+              Pencatatan dana kapitasi BPJS, pembelian obat, operasional non-klinik, dan setor tunai
+            </p>
           </div>
         </div>
 
-        <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-          <Button
+        <div className="flex items-center gap-2 w-full sm:w-auto">
+          <button
             type="button"
-            variant="primary"
-            size="md"
             onClick={() => handleOpenModal('Masuk')}
-            className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold min-h-[44px]"
-            leftIcon={<ArrowDownLeft weight="bold" className="w-4 h-4" />}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-emerald-700/80 tactile-btn transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
           >
-            + Kas Masuk (Pemasukan)
-          </Button>
+            <ArrowDownLeft weight="bold" className="w-3.5 h-3.5 shrink-0" />
+            <span>Kas Masuk</span>
+          </button>
 
-          <Button
+          <button
             type="button"
-            variant="primary"
-            size="md"
             onClick={() => handleOpenModal('Keluar')}
-            className="bg-rose-600 hover:bg-rose-700 text-white font-bold min-h-[44px]"
-            leftIcon={<ArrowUpRight weight="bold" className="w-4 h-4" />}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white px-3.5 py-2 min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-rose-700/80 tactile-btn transition focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:outline-none"
           >
-            + Kas Keluar (Pengeluaran)
-          </Button>
+            <ArrowUpRight weight="bold" className="w-3.5 h-3.5 shrink-0" />
+            <span>Kas Keluar</span>
+          </button>
         </div>
       </div>
 
-      <div className="p-3 sm:p-4 bg-white rounded-2xl border border-slate-200 shadow-2xs flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+      <div className="p-3 sm:p-4 bg-white rounded-2xl border border-slate-200/90 shadow-card-double flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-xs font-bold uppercase tracking-wider text-slate-500 flex items-center gap-1.5">
-            <CalendarBlank weight="duotone" className="w-4 h-4 text-blue-600" />
+            <CalendarBlank weight="duotone" className="w-4 h-4 text-teal-600" />
             Periode Laporan:
           </span>
 
           <select
             value={selectedMonth}
             onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs font-medium"
           >
             {MONTH_NAMES_ID.map((name, idx) => (
               <option key={name} value={idx + 1}>
@@ -237,7 +237,7 @@ export default function BukuKasPage() {
           <select
             value={selectedYear}
             onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-3 py-1.5 min-h-[44px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs font-medium"
           >
             {[2024, 2025, 2026, 2027].map((yr) => (
               <option key={yr} value={yr}>
@@ -246,36 +246,33 @@ export default function BukuKasPage() {
             ))}
           </select>
 
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={() => {
               setSelectedMonth(currentMonth);
               setSelectedYear(currentYear);
             }}
             disabled={selectedMonth === currentMonth && selectedYear === currentYear}
-            className="text-xs font-semibold min-h-[44px]"
+            className="px-3.5 py-1.5 min-h-[36px] rounded-xl text-xs font-bold bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-300 shadow-btn-secondary tactile-btn transition"
           >
             Bulan Ini
-          </Button>
+          </button>
         </div>
 
         <div className="flex items-center gap-2 self-end sm:self-auto">
-          <Button
+          <button
             type="button"
-            variant="outline"
-            size="sm"
             onClick={handleManualRefresh}
             disabled={isLoading}
-            className="text-xs min-h-[44px] min-w-[44px]"
+            className="w-9 h-9 min-h-[36px] rounded-xl bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 shadow-btn-secondary tactile-btn flex items-center justify-center shrink-0 transition"
             title="Muat ulang mutasi kas"
+            aria-label="Muat ulang mutasi kas"
           >
             <ArrowClockwise
               weight="bold"
-              className={cn('w-4 h-4', isLoading && 'animate-spin')}
+              className={cn('w-4 h-4 text-slate-600', isLoading && 'animate-spin text-teal-600')}
             />
-          </Button>
+          </button>
         </div>
       </div>
 
