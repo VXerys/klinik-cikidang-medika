@@ -48,7 +48,7 @@ Conversation history and provider memory are never the sole source of truth.
 ## 3. Technology Stack
 
 - Language/runtime: TypeScript 5.6, Node.js
-- Client/application framework: Next.js 14 App Router, React 18, Tailwind CSS 3.4
+- Client/application framework: Next.js 16 App Router (Turbopack), React 19, Tailwind CSS 3.4
 - Backend/API: Next.js API Routes (server components) + Supabase client SDK
 - Database/persistence: Supabase Cloud PostgreSQL + Hybrid Storage (Supabase Storage 1GB primary + Cloudinary 25GB fallback for medical photos)
 - Auth: Supabase Auth with RBAC (roles: `kasir`, `dokter`, `owner`)
