@@ -1,0 +1,10 @@
+name: klinik_cikidang_medika_assets
+description: Asset manifest for Klinik Pratama Cikidang Medika
+version: 1.0.0
+
+flutter:
+  assets:
+    - images/logo-full.png
+    - images/logo-emblem.png
+    - images/logo-square.png
+    - images/cikidang-medika-transparant.png

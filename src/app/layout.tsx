@@ -26,8 +26,15 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Klinik Cikidang Medika — SIM & Keuangan',
+  title: 'Klinik Cikidang Medika - SIM & Keuangan',
   description: 'Sistem Informasi Manajemen Pasien & Laporan Keuangan Klinik Cikidang Medika',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: [{ url: '/icon.png' }],
+  },
 };
 
 export default function RootLayout({

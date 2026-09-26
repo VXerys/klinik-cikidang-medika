@@ -2,6 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   House,
@@ -173,8 +174,15 @@ export default function Sidebar({
         {/* Clinic Branding Container */}
         <div className="p-3.5 border-b border-slate-200/80">
           <div className="p-3 bg-gradient-to-b from-teal-50/70 to-slate-50 border border-teal-100/80 rounded-2xl shadow-well flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-b from-teal-600 to-teal-700 text-white font-extrabold flex items-center justify-center shadow-btn-primary shrink-0 border border-teal-600">
-              <Buildings className="w-5 h-5 text-white" weight="duotone" />
+            <div className="w-10 h-10 rounded-xl bg-white p-1 border border-teal-200/90 shadow-xs shrink-0 flex items-center justify-center">
+              <Image
+                src="/assets/images/logo-square.png"
+                alt="Logo Klinik Cikidang Medika"
+                width={36}
+                height={36}
+                className="w-full h-full object-contain"
+                priority
+              />
             </div>
             <div className="min-w-0">
               <div className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Klinik Pratama</div>
@@ -211,8 +219,14 @@ export default function Sidebar({
             {/* Drawer Header */}
             <div className="p-4 border-b border-slate-200/80 flex items-center justify-between">
               <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-gradient-to-b from-teal-600 to-teal-700 text-white font-extrabold flex items-center justify-center shadow-btn-primary shrink-0 border border-teal-600">
-                  <Buildings className="w-5 h-5 text-white" weight="duotone" />
+                <div className="w-9 h-9 rounded-xl bg-white p-1 border border-teal-200/90 shadow-xs shrink-0 flex items-center justify-center">
+                  <Image
+                    src="/assets/images/logo-square.png"
+                    alt="Logo Klinik Cikidang Medika"
+                    width={32}
+                    height={32}
+                    className="w-full h-full object-contain"
+                  />
                 </div>
                 <div className="min-w-0">
                   <div className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Klinik Pratama</div>

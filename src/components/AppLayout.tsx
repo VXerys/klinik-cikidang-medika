@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
@@ -80,8 +81,15 @@ export default function AppLayout({ children }: AppLayoutProps) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 text-slate-800">
         <div className="flex flex-col items-center gap-3 p-6 rounded-3xl bg-white shadow-xl border border-slate-200/80 max-w-xs w-full text-center">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-b from-teal-600 to-teal-700 text-white flex items-center justify-center shadow-btn-primary">
-            <Buildings className="w-6 h-6 text-white" weight="duotone" />
+          <div className="w-16 h-16 rounded-2xl bg-white border border-teal-200/90 shadow-well p-2 flex items-center justify-center relative">
+            <Image
+              src="/assets/images/logo-square.png"
+              alt="Logo Klinik Cikidang Medika"
+              width={56}
+              height={56}
+              className="w-full h-full object-contain animate-pulse"
+              priority
+            />
           </div>
           <div>
             <div className="text-xs font-bold text-teal-700 uppercase tracking-wider">Klinik Pratama</div>

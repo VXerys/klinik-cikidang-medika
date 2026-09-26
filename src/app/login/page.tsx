@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { useAuth, ROLE_DEFAULT_ROUTES } from '@/lib/auth/AuthContext';
 import {
@@ -134,8 +135,15 @@ export default function LoginPage() {
           {/* Top Brand Block */}
           <div className="relative z-10 space-y-6">
             <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-b from-teal-500 to-teal-600 text-white flex items-center justify-center shadow-lg border border-teal-400/30">
-                <Buildings className="w-6 h-6 text-white" weight="duotone" />
+              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-xs flex items-center justify-center p-2 border border-white/20 shadow-lg shrink-0">
+                <Image
+                  src="/assets/images/logo-square.png"
+                  alt="Logo Klinik Cikidang Medika"
+                  width={48}
+                  height={48}
+                  className="w-full h-full object-contain filter drop-shadow-sm"
+                  priority
+                />
               </div>
               <div>
                 <span className="text-[11px] font-bold tracking-widest uppercase text-teal-300 block">
@@ -189,6 +197,27 @@ export default function LoginPage() {
         {/* SISI KANAN: Form Login & Quick Role Switcher */}
         <div className="lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-white">
           <div className="max-w-md w-full mx-auto space-y-6">
+            {/* Mobile-only Clinic Logo Header */}
+            <div className="flex items-center gap-2.5 lg:hidden pb-3 border-b border-slate-100">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200/80 p-1 flex items-center justify-center shrink-0">
+                <Image
+                  src="/assets/images/logo-square.png"
+                  alt="Logo Klinik Cikidang Medika"
+                  width={36}
+                  height={36}
+                  className="w-full h-full object-contain"
+                />
+              </div>
+              <div>
+                <span className="text-[10px] font-bold tracking-wider uppercase text-teal-700 block">
+                  Klinik Pratama
+                </span>
+                <span className="text-xs font-extrabold text-slate-900">
+                  Cikidang Medika
+                </span>
+              </div>
+            </div>
+
             {/* Header Form */}
             <div>
               <h2 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">

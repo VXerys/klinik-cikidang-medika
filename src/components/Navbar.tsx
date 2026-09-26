@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import Image from 'next/image';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   House,
@@ -104,8 +105,14 @@ export default function Navbar({
           {/* Clinic Brand Mark (only displayed when sidebar is collapsed on desktop) */}
           {isDesktopCollapsed && (
             <div className="hidden lg:flex items-center gap-2 shrink-0 animate-fadeIn pr-1">
-              <div className="w-7 h-7 rounded-lg bg-gradient-to-b from-teal-600 to-teal-700 text-white font-extrabold text-[11px] flex items-center justify-center shadow-xs border border-teal-600">
-                CM
+              <div className="w-7 h-7 rounded-lg bg-white p-0.5 border border-teal-200/90 shadow-xs flex items-center justify-center shrink-0">
+                <Image
+                  src="/assets/images/logo-square.png"
+                  alt="Logo Cikidang Medika"
+                  width={24}
+                  height={24}
+                  className="w-full h-full object-contain"
+                />
               </div>
               <span className="text-xs font-bold text-slate-800 tracking-tight truncate">
                 Cikidang Medika
