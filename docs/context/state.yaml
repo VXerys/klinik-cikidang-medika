@@ -55,16 +55,49 @@ features:
     status: completed
     spec_path: docs/specs/F-007-fitur-klinis-administrasi-pasien
     active_phase: completed
+  - id: F-008
+    name: RM Baru (00-00-000000), RBAC 2 Role, Registry Kesehatan, Laporan Komisi, Piutang
+    track: engineering
+    status: completed
+    spec_path: docs/specs/F-008-rm-rbac-kesehatan-piutang
+    active_phase: implemented
 
 active:
-  feature_id: "F-001"
-  task_id: "PHASE-2-UI-RESPONSIVE-FIXES"
+  feature_id: "F-005"
+  task_id: "F-005-DATA-MIGRATION-DEV-COMPLETED"
   branch: "staging"
 
-blockers: []
-risks: []
+blockers:
+  - "Tarif komisi rujukan bidan belum ditetapkan klinik; nominal diinput manual oleh owner."
+risks:
+  - "Sebagian besar catatan lama tidak mengisi metode pembayaran (hanya 158 dari 7.493 baris), sehingga sisanya dikategorikan Tunai."
+  - "Sebagian besar pasien lama belum memiliki NIK maupun nomor BPJS (2.670 dari 4.238 pasien). Ini keterbatasan data sumber, bukan kehilangan data saat migrasi."
+  - "Kolom header CSV nomor 22 berlabel 'Biaya' namun berisi penjamin, dan nomor 23 berlabel 'Pendapatan' namun berisi tarif. Indeks skrip migrasi sudah cocok dengan isi data, tetapi label spreadsheet sumber perlu dirapikan."
+  - "Produksi awalnya dibuat dengan kolom bertipe TEXT yang longgar sehingga nilai seperti 'UMUM' bisa tersimpan pada kolom jam. Tipe kolom sudah diselaraskan dengan skema kanonik melalui supabase/migrations/20260927_prod_schema_type_alignment.sql."
+  - "Satu nilai no_bpjs pada baris CSV 4859 dikosongkan karena strukturnya bukan nomor BPJS."
+  - "Pemetaan desa legacy (Tamansari, Gunungmalang, Bumiasih, Nangerang) tetap ada di konstanta sebagai pengaman, namun audit CSV membuktikan nama tersebut tidak dipakai pada data nyata."
 
-last_updated: "2026-09-24"
+migration:
+  last_run: "2026-09-26"
+  command_dev: "node scripts/migrate-data.mjs --confirm-dev-reset"
+  command_prod: "node scripts/migrate-data.mjs --env=.env.production --confirm-prod-reset"
+  environments:
+    - name: dev
+      project_ref: jpqmnbtowvfctxciuktj
+    - name: production
+      project_ref: aszjzvdmxudmoomdxttx
+      backup: docs/data/prod-backup-2026-09-26T17-10-47-246Z.json
+      schema_aligned: true
+  result:
+    patients: 4238
+    visits: 7493
+    cash_flows: 1486
+    patients_without_rm: 0
+    orphan_visits: 0
+    non_uniform_village: 0
+    out_of_range_age: 0
+
+last_updated: "2026-09-26"
 last_verified_commit: "9a59997"
 
 
