@@ -134,13 +134,13 @@ export default function LoginPage() {
 
           {/* Top Brand Block */}
           <div className="relative z-10 space-y-6">
-            <div className="inline-flex p-3 sm:p-3.5 rounded-2xl bg-white shadow-xl border border-teal-100/80">
+            <div className="inline-flex max-w-[280px] sm:max-w-[320px]">
               <Image
-                src="/assets/images/logo-full.png"
+                src="/assets/images/logo-white.png"
                 alt="Klinik Pratama Cikidang Medika"
-                width={240}
-                height={54}
-                className="w-auto h-12 sm:h-13 object-contain"
+                width={420}
+                height={88}
+                className="w-full h-auto object-contain"
                 priority
               />
             </div>

@@ -206,14 +206,14 @@ export function CashierPosPanel({
           </div>
 
           {waitingVisits.length === 0 ? (
-            <div className="bg-slate-50/70 border border-dashed border-slate-300 rounded-2xl p-6 text-center flex flex-col items-center justify-center space-y-2">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto">
+            <div className="bg-slate-50/70 border border-dashed border-slate-300 rounded-2xl p-6 sm:p-7 min-h-[182px] text-center flex flex-col items-center justify-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto shrink-0">
                 <CheckCircle className="w-5 h-5" weight="duotone" />
               </div>
-              <p className="text-xs font-bold text-slate-800">
+              <p className="text-xs font-bold text-slate-700 leading-tight">
                 Semua Antrean Kasir Bersih
               </p>
-              <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+              <p className="text-[11px] text-slate-500 max-w-[290px] mx-auto leading-relaxed">
                 Tidak ada pasien yang sedang menunggu pembayaran kasir atau penyerahan obat saat ini.
               </p>
             </div>
@@ -342,10 +342,12 @@ export function CashierPosPanel({
           </div>
 
           {!selectedVisit ? (
-            <div className="bg-slate-50/70 border border-dashed border-slate-300 rounded-2xl p-6 text-center flex flex-col items-center justify-center space-y-2">
-              <Pill className="w-8 h-8 text-slate-300 mx-auto" weight="duotone" />
-              <p className="text-xs font-bold text-slate-700">Rincian Obat Dokter</p>
-              <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+            <div className="bg-slate-50/70 border border-dashed border-slate-300 rounded-2xl p-6 sm:p-7 min-h-[182px] text-center flex flex-col items-center justify-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto shrink-0">
+                <Pill className="w-5 h-5" weight="duotone" />
+              </div>
+              <p className="text-xs font-bold text-slate-700 leading-tight">Rincian Obat Dokter</p>
+              <p className="text-[11px] text-slate-500 max-w-[290px] mx-auto leading-relaxed">
                 Pilih pasien di sebelah kiri untuk melihat resep obat, diagnosa ICD-10, dan signa dosis.
               </p>
             </div>
@@ -457,10 +459,12 @@ export function CashierPosPanel({
           </div>
 
           {!selectedVisit ? (
-            <div className="bg-slate-50/70 border border-dashed border-slate-300 rounded-2xl p-6 text-center flex flex-col items-center justify-center space-y-2">
-              <CreditCard className="w-8 h-8 text-slate-300 mx-auto" weight="duotone" />
-              <p className="text-xs font-bold text-slate-700">Kalkulator Pembayaran</p>
-              <p className="text-[11px] text-slate-500 max-w-xs mx-auto">
+            <div className="bg-slate-50/70 border border-dashed border-slate-300 rounded-2xl p-6 sm:p-7 min-h-[182px] text-center flex flex-col items-center justify-center gap-2.5">
+              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto shrink-0">
+                <CreditCard className="w-5 h-5" weight="duotone" />
+              </div>
+              <p className="text-xs font-bold text-slate-700 leading-tight">Kalkulator Pembayaran</p>
+              <p className="text-[11px] text-slate-500 max-w-[290px] mx-auto leading-relaxed">
                 Pilih pasien di sebelah kiri untuk menghitung biaya, kembalian tunai, dan cetak kuitansi.
               </p>
             </div>

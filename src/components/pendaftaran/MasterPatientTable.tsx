@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import {
   MagnifyingGlass,
   CreditCard,
@@ -33,6 +33,14 @@ export interface MasterPatientTableProps {
   onRegisterVisit: (patient: Patient) => void;
 }
 
+interface SearchSuggestion {
+  id: string;
+  title: string;
+  subtitle: string;
+  meta: string;
+  queryValue: string;
+}
+
 export function MasterPatientTable({
   visits,
   masterPatients,
@@ -46,6 +54,12 @@ export function MasterPatientTable({
   const [activeTab, setActiveTab] = useState<TableFilterTab>('hari_ini');
   const [searchQuery, setSearchQuery] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [highlightedSuggestionIndex, setHighlightedSuggestionIndex] = useState(-1);
+
+  const searchContainerRef = useRef<HTMLDivElement>(null);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+
   const itemsPerPage = 10;
 
   const isSettled = (v: Visit) =>
@@ -80,40 +94,132 @@ export function MasterPatientTable({
     [visits]
   );
 
-  // Filtered dataset
-  const filteredData = useMemo(() => {
-    const q = searchQuery.toLowerCase().trim();
+  const normalizedSearchQuery = searchQuery.toLowerCase().trim();
+  const isSearching = normalizedSearchQuery.length > 0;
 
-    if (activeTab === 'master_pasien') {
-      return masterPatients.filter((p) => {
-        if (!q) return true;
-        const nameMatch = p.nama?.toLowerCase().includes(q);
-        const rmMatch = p.no_rm?.toLowerCase().includes(q);
-        const desaMatch = p.desa?.toLowerCase().includes(q);
-        return nameMatch || rmMatch || desaMatch;
-      });
-    }
+  const filteredMasterPatients = useMemo(() => {
+    if (!isSearching) return masterPatients;
 
+    return masterPatients.filter((p) => {
+      const nameMatch = p.nama?.toLowerCase().includes(normalizedSearchQuery);
+      const rmMatch = p.no_rm?.toLowerCase().includes(normalizedSearchQuery);
+      const desaMatch = p.desa?.toLowerCase().includes(normalizedSearchQuery);
+      return nameMatch || rmMatch || desaMatch;
+    });
+  }, [isSearching, masterPatients, normalizedSearchQuery]);
+
+  const filteredVisitsByTab = useMemo(() => {
     return visits.filter((v) => {
-      // Tab filter
       if (activeTab === 'menunggu_dokter' && !isWaitingDoctor(v)) return false;
       if (activeTab === 'menunggu_kasir' && !isWaitingPayment(v)) return false;
       if (activeTab === 'selesai' && !isSettled(v)) return false;
-
-      // Search query
-      if (!q) return true;
-      const patientName = v.pasien?.nama?.toLowerCase() || '';
-      const rm = v.pasien?.no_rm?.toLowerCase() || '';
-      const desa = v.pasien?.desa?.toLowerCase() || '';
-      const dokter = v.dokter?.nama?.toLowerCase() || '';
-      return (
-        patientName.includes(q) ||
-        rm.includes(q) ||
-        desa.includes(q) ||
-        dokter.includes(q)
-      );
+      if (activeTab === 'master_pasien') return false;
+      return true;
     });
-  }, [activeTab, visits, masterPatients, searchQuery]);
+  }, [activeTab, visits]);
+
+  const shouldShowMasterPatients = isSearching || activeTab === 'master_pasien';
+  const filteredData = shouldShowMasterPatients ? filteredMasterPatients : filteredVisitsByTab;
+
+  const searchSuggestions = useMemo<SearchSuggestion[]>(() => {
+    if (!isSearching) return [];
+
+    return masterPatients
+      .filter((p) => {
+        const name = p.nama?.toLowerCase() || '';
+        const rm = p.no_rm?.toLowerCase() || '';
+        const desa = p.desa?.toLowerCase() || '';
+        return (
+          name.includes(normalizedSearchQuery) ||
+          rm.includes(normalizedSearchQuery) ||
+          desa.includes(normalizedSearchQuery)
+        );
+      })
+      .slice(0, 8)
+      .map((p) => ({
+        id: `patient-${p.id}`,
+        title: [p.gelar, p.nama].filter(Boolean).join(' '),
+        subtitle: p.no_rm || '-',
+        meta: p.desa || 'Desa belum diisi',
+        queryValue: p.no_rm || p.nama || '',
+      }));
+  }, [isSearching, masterPatients, normalizedSearchQuery]);
+
+  useEffect(() => {
+    const hasQuery = searchQuery.trim().length > 0;
+    if (hasQuery && searchSuggestions.length > 0) {
+      setIsSearchOpen(true);
+    } else {
+      setIsSearchOpen(false);
+    }
+  }, [searchQuery, searchSuggestions]);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (!searchContainerRef.current) return;
+      if (!searchContainerRef.current.contains(event.target as Node)) {
+        setIsSearchOpen(false);
+        setHighlightedSuggestionIndex(-1);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    setHighlightedSuggestionIndex((current) => {
+      if (!isSearchOpen || searchSuggestions.length === 0) return -1;
+      if (current >= searchSuggestions.length) return searchSuggestions.length - 1;
+      return current;
+    });
+  }, [isSearchOpen, searchSuggestions]);
+
+  const applySearchQuery = (value: string) => {
+    setSearchQuery(value);
+    setCurrentPage(1);
+    setIsSearchOpen(false);
+    setHighlightedSuggestionIndex(-1);
+    searchInputRef.current?.focus();
+  };
+
+  const handleSearchKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!isSearchOpen || searchSuggestions.length === 0) {
+      if (e.key === 'Escape') {
+        setIsSearchOpen(false);
+        setHighlightedSuggestionIndex(-1);
+      }
+      return;
+    }
+
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      setHighlightedSuggestionIndex((prev) =>
+        prev < searchSuggestions.length - 1 ? prev + 1 : 0
+      );
+      return;
+    }
+
+    if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      setHighlightedSuggestionIndex((prev) =>
+        prev > 0 ? prev - 1 : searchSuggestions.length - 1
+      );
+      return;
+    }
+
+    if (e.key === 'Enter' && highlightedSuggestionIndex >= 0) {
+      e.preventDefault();
+      applySearchQuery(searchSuggestions[highlightedSuggestionIndex].queryValue);
+      return;
+    }
+
+    if (e.key === 'Escape') {
+      e.preventDefault();
+      setIsSearchOpen(false);
+      setHighlightedSuggestionIndex(-1);
+    }
+  };
 
   const totalPages = Math.ceil(filteredData.length / itemsPerPage) || 1;
   const paginatedData = useMemo(() => {
@@ -144,20 +250,57 @@ export function MasterPatientTable({
           </div>
         </div>
 
-        <div className="relative w-full sm:w-64">
+        <div ref={searchContainerRef} className="relative w-full sm:w-64">
           <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-400">
             <MagnifyingGlass className="w-3.5 h-3.5" weight="bold" />
           </div>
           <input
+            ref={searchInputRef}
             type="text"
             value={searchQuery}
             onChange={(e) => {
               setSearchQuery(e.target.value);
               setCurrentPage(1);
             }}
+            onFocus={() => {
+              if (searchQuery.trim().length > 0 && searchSuggestions.length > 0) {
+                setIsSearchOpen(true);
+              }
+            }}
+            onKeyDown={handleSearchKeyDown}
             placeholder="Cari pasien, No. RM, desa..."
             className="w-full pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 focus:bg-white transition-colors min-h-[36px]"
           />
+
+          {isSearchOpen && searchSuggestions.length > 0 && (
+            <div className="absolute top-[calc(100%+6px)] left-0 right-0 bg-white border border-slate-200/90 rounded-2xl shadow-popover z-50 overflow-hidden">
+              <ul className="max-h-72 overflow-y-auto py-1">
+                {searchSuggestions.map((item, idx) => (
+                  <li key={item.id}>
+                    <button
+                      type="button"
+                      onMouseDown={(e) => e.preventDefault()}
+                      onClick={() => applySearchQuery(item.queryValue)}
+                      className={cn(
+                        'w-full px-3 py-2 text-left transition-colors flex items-start justify-between gap-2',
+                        idx === highlightedSuggestionIndex
+                          ? 'bg-teal-50/80 border-l-2 border-l-teal-600'
+                          : 'hover:bg-slate-50'
+                      )}
+                    >
+                      <div className="min-w-0">
+                        <p className="text-[11px] font-bold text-slate-900 truncate">{item.title}</p>
+                        <p className="text-[10px] text-slate-500 truncate">{item.meta}</p>
+                      </div>
+                      <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded-md bg-teal-50 text-teal-800 border border-teal-200 shrink-0">
+                        {item.subtitle}
+                      </span>
+                    </button>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
@@ -278,11 +421,13 @@ export function MasterPatientTable({
                     Tidak ada data ditemukan
                   </p>
                   <p className="text-[11px] text-slate-400 mt-0.5">
-                    Coba ubah kata kunci pencarian atau pilih tab status lain.
+                    {isSearching
+                      ? 'Data pasien terdaftar tidak cocok dengan kata kunci pencarian.'
+                      : 'Coba ubah kata kunci pencarian atau pilih tab status lain.'}
                   </p>
                 </td>
               </tr>
-            ) : activeTab === 'master_pasien' ? (
+            ) : shouldShowMasterPatients ? (
               // Master Patients View
               (paginatedData as Patient[]).map((patient) => {
                 const fullName = [patient.gelar, patient.nama].filter(Boolean).join(' ');
