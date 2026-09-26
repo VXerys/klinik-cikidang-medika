@@ -50,9 +50,9 @@ Pada lingkungan lokal komputer pengembang atau komputer uji klinik:
 Buka berkas `.env.local` di folder root repositori, lalu arahkan URL dan Anon Key ke project staging:
 ```env
 # Koneksi Staging Supabase
-NEXT_PUBLIC_SUPABASE_URL=https://xyzstaging.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-SUPABASE_SERVICE_ROLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
+NEXT_PUBLIC_SUPABASE_URL=https://<project-ref>.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=<SUPABASE_ANON_KEY_DARI_DASHBOARD>
+SUPABASE_SERVICE_ROLE_KEY=<SUPABASE_SERVICE_ROLE_KEY_DARI_DASHBOARD>
 ```
 
 ### Mode Produksi Live

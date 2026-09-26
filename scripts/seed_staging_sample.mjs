@@ -7,9 +7,15 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
 
-const SUPABASE_URL = 'https://jpqmnbtowvfctxciuktj.supabase.co';
-const SERVICE_ROLE_KEY =
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpwcW1uYnRvd3ZmY3R4Y2l1a3RqIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc5MDEzMzY0MywiZXhwIjoyMTA1NzA5NjQzfQ.sYBt71pgJkJUNdV49Z7czumcoK69qvY-aecKZUYTR6I';
+const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
+  console.error(
+    'Error: NEXT_PUBLIC_SUPABASE_URL dan SUPABASE_SERVICE_ROLE_KEY wajib diset sebelum menjalankan seed staging.'
+  );
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
   auth: { persistSession: false },
@@ -48,7 +54,7 @@ function parseDateToIso(str) {
 }
 
 async function run() {
-  console.log('🚀 Memulai migrasi data sampel ke Database Staging (jpqmnbtowvfctxciuktj)...');
+  console.log('🚀 Memulai migrasi data sampel ke Database Staging...');
 
   // 1. Ambil data dokter yang ada
   const { data: doctors, error: docErr } = await supabase.from('doctors').select('id, nama');
