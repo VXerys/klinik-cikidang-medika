@@ -219,7 +219,7 @@ export default function RekamMedisPage() {
       )}
 
       {/* 2-Column Clinical Layout */}
-      <div className={cn('grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch lg:h-[calc(100vh-140px)]', isExamExpanded && 'lg:grid-cols-1')}>
+      <div className={cn('grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch', isExamExpanded && 'lg:grid-cols-1')}>
         {/* Left Column: Patient Queue Panel */}
         <div className={cn('lg:col-span-5 xl:col-span-4 h-full', isExamExpanded && 'hidden')}>
           <QueueList
@@ -234,7 +234,7 @@ export default function RekamMedisPage() {
         {/* Right Column: Unified Clinical Workstation */}
         <div
           id="exam-workstation"
-          className={cn('lg:col-span-7 xl:col-span-8 scroll-mt-6 h-full', isExamExpanded && 'lg:col-span-1 xl:col-span-1')}
+          className={cn('lg:col-span-7 xl:col-span-8 scroll-mt-6 h-full lg:h-[calc(100vh-140px)]', isExamExpanded && 'lg:col-span-1 xl:col-span-1')}
         >
           {selectedVisit ? (
             <ExaminationForm
