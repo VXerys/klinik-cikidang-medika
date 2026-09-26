@@ -18,6 +18,7 @@ import { CashReconciliationCard } from '@/components/buku-kas/CashReconciliation
 import { CashFlowTable } from '@/components/buku-kas/CashFlowTable';
 import { AddCashFlowModal } from '@/components/buku-kas/AddCashFlowModal';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 import { cn } from '@/lib/utils';
 
 export default function BukuKasPage() {
@@ -222,29 +223,23 @@ export default function BukuKasPage() {
             Periode Laporan:
           </span>
 
-          <select
-            value={selectedMonth}
-            onChange={(e) => setSelectedMonth(Number(e.target.value))}
-            className="px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs font-medium"
-          >
-            {MONTH_NAMES_ID.map((name, idx) => (
-              <option key={name} value={idx + 1}>
-                {name}
-              </option>
-            ))}
-          </select>
+          <div className="w-36">
+            <Select
+              size="sm"
+              value={selectedMonth}
+              onChange={(e) => setSelectedMonth(Number(e.target.value))}
+              options={MONTH_NAMES_ID.map((name, idx) => ({ value: idx + 1, label: name }))}
+            />
+          </div>
 
-          <select
-            value={selectedYear}
-            onChange={(e) => setSelectedYear(Number(e.target.value))}
-            className="px-3 py-1.5 min-h-[36px] text-xs font-semibold rounded-xl border border-slate-300 bg-slate-50 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs font-medium"
-          >
-            {[2024, 2025, 2026, 2027].map((yr) => (
-              <option key={yr} value={yr}>
-                {yr}
-              </option>
-            ))}
-          </select>
+          <div className="w-24">
+            <Select
+              size="sm"
+              value={selectedYear}
+              onChange={(e) => setSelectedYear(Number(e.target.value))}
+              options={[2024, 2025, 2026, 2027].map((yr) => ({ value: yr, label: String(yr) }))}
+            />
+          </div>
 
           <button
             type="button"

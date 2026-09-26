@@ -1,10 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { usePathname } from 'next/navigation';
+import Image from 'next/image';
+import { usePathname, useRouter } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Navbar from '@/components/Navbar';
 import { CommandMenu } from '@/components/CommandMenu';
+import { useAuth, ROLE_LABELS } from '@/lib/auth/AuthContext';
+import { Loader2 } from 'lucide-react';
+import { Buildings } from '@phosphor-icons/react';
+import { toast } from 'sonner';
 
 export interface AppLayoutProps {
   children: React.ReactNode;
@@ -14,6 +19,11 @@ export default function AppLayout({ children }: AppLayoutProps) {
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   const [isDesktopCollapsed, setIsDesktopCollapsed] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
+
+  const { user, profile, role, isLoading, canAccessRoute, getDefaultRoute } = useAuth();
+
+  const isLoginPage = pathname === '/login';
 
   // Automatically close mobile drawer whenever route navigation occurs
   useEffect(() => {
@@ -41,6 +51,66 @@ export default function AppLayout({ children }: AppLayoutProps) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [handleToggleSidebar]);
+
+  // Route Guard Effect: Handles unauthenticated users and role-restricted routes
+  useEffect(() => {
+    if (isLoading || isLoginPage) return;
+
+    if (!user) {
+      router.replace('/login');
+      return;
+    }
+
+    if (!canAccessRoute(pathname)) {
+      const targetRoute = getDefaultRoute(role);
+      const roleLabel = role ? ROLE_LABELS[role]?.badge : 'Pengguna';
+      toast.warning('Akses Terbatas', {
+        description: `Modul tidak dapat diakses oleh peran ${roleLabel}. Mengalihkan ke menu utama Anda.`,
+      });
+      router.replace(targetRoute);
+    }
+  }, [isLoading, isLoginPage, user, pathname, canAccessRoute, getDefaultRoute, role, router]);
+
+  // If on login page, render login page directly without shell
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
+
+  // Loading Screen while session is validating
+  if (isLoading) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-slate-50 text-slate-800">
+        <div className="flex flex-col items-center gap-3 p-6 rounded-3xl bg-white shadow-xl border border-slate-200/80 max-w-sm w-full text-center">
+          <div className="w-full py-2 flex items-center justify-center">
+            <Image
+              src="/assets/images/logo-full.png"
+              alt="Klinik Pratama Cikidang Medika"
+              width={240}
+              height={54}
+              className="w-auto h-14 object-contain animate-pulse"
+              priority
+            />
+          </div>
+          <div className="flex items-center gap-2 text-xs text-slate-500 font-medium pt-1">
+            <Loader2 className="w-4 h-4 animate-spin text-teal-600 shrink-0" />
+            <span>Memverifikasi otentikasi...</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // If unauthenticated or accessing unauthorized page, keep blank while redirecting
+  if (!user || !canAccessRoute(pathname)) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-slate-50 text-slate-400 text-xs">
+        <div className="flex items-center gap-2">
+          <Loader2 className="w-4 h-4 animate-spin text-teal-600" />
+          <span>Mengalihkan...</span>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen overflow-hidden bg-slate-50 min-w-0 w-full overflow-x-hidden">

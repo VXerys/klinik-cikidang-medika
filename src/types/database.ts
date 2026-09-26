@@ -105,3 +105,13 @@ export type PostCare = {
   visit?: Visit;
   created_at: string;
 };
+
+export type UserRole = 'kasir' | 'dokter' | 'owner';
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  role: UserRole;
+  name: string;
+  clinic?: string;
+};

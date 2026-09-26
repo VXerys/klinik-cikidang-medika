@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import AppLayout from '@/components/AppLayout';
 import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -25,8 +26,15 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
-  title: 'Klinik Cikidang Medika — SIM & Keuangan',
+  title: 'Klinik Cikidang Medika - SIM & Keuangan',
   description: 'Sistem Informasi Manajemen Pasien & Laporan Keuangan Klinik Cikidang Medika',
+  icons: {
+    icon: [
+      { url: '/favicon.ico', sizes: 'any' },
+      { url: '/icon.png', type: 'image/png' },
+    ],
+    apple: [{ url: '/icon.png' }],
+  },
 };
 
 export default function RootLayout({
@@ -37,8 +45,10 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased text-slate-900 bg-slate-100 selection:bg-teal-100 selection:text-teal-900">
-        <AppLayout>{children}</AppLayout>
-        <Toaster richColors position="top-right" closeButton />
+        <AuthProvider>
+          <AppLayout>{children}</AppLayout>
+          <Toaster richColors position="top-right" closeButton />
+        </AuthProvider>
       </body>
     </html>
   );
