@@ -27,6 +27,7 @@ import {
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
 import { PatientQuickProfileModal } from '@/components/pendaftaran/PatientQuickProfileModal';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 interface MenuItem {
   id: string;
@@ -200,28 +201,31 @@ export function CommandMenu() {
     []
   );
 
+  const { canAccessRoute } = useAuth();
   const trimmedQuery = query.trim().toLowerCase();
 
-  // Strict keyword matching for actions and navigation (prevents loose fuzzy matches)
+  // Strict keyword matching for actions and navigation filtered by role permissions
   const filteredActions = useMemo(() => {
-    if (!trimmedQuery) return quickActions;
-    return quickActions.filter(
+    const allowed = quickActions.filter((a) => canAccessRoute(a.href.split('?')[0]));
+    if (!trimmedQuery) return allowed;
+    return allowed.filter(
       (a) =>
         a.title.toLowerCase().includes(trimmedQuery) ||
         (a.subtitle && a.subtitle.toLowerCase().includes(trimmedQuery)) ||
         a.keywords.some((k) => k.includes(trimmedQuery))
     );
-  }, [trimmedQuery, quickActions]);
+  }, [trimmedQuery, quickActions, canAccessRoute]);
 
   const filteredNavigation = useMemo(() => {
-    if (!trimmedQuery) return navigationModules;
-    return navigationModules.filter(
+    const allowed = navigationModules.filter((n) => canAccessRoute(n.href.split('?')[0]));
+    if (!trimmedQuery) return allowed;
+    return allowed.filter(
       (n) =>
         n.title.toLowerCase().includes(trimmedQuery) ||
         (n.subtitle && n.subtitle.toLowerCase().includes(trimmedQuery)) ||
         n.keywords.some((k) => k.includes(trimmedQuery))
     );
-  }, [trimmedQuery, navigationModules]);
+  }, [trimmedQuery, navigationModules, canAccessRoute]);
 
   const handleSelectPatient = (patient: Patient) => {
     setOpen(false);

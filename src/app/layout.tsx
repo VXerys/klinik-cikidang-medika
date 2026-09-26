@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
 import './globals.css';
 import AppLayout from '@/components/AppLayout';
 import { Toaster } from '@/components/ui/sonner';
+import { AuthProvider } from '@/lib/auth/AuthContext';
 
 const plusJakartaSans = Plus_Jakarta_Sans({
   subsets: ['latin'],
@@ -37,8 +38,10 @@ export default function RootLayout({
   return (
     <html lang="id" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
       <body className="font-sans antialiased text-slate-900 bg-slate-100 selection:bg-teal-100 selection:text-teal-900">
-        <AppLayout>{children}</AppLayout>
-        <Toaster richColors position="top-right" closeButton />
+        <AuthProvider>
+          <AppLayout>{children}</AppLayout>
+          <Toaster richColors position="top-right" closeButton />
+        </AuthProvider>
       </body>
     </html>
   );

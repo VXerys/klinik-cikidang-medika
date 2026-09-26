@@ -2,7 +2,7 @@
 
 import React from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import {
   House,
   UserPlus,
@@ -13,7 +13,10 @@ import {
   Buildings,
   CaretRight,
   X,
+  SignOut,
 } from '@phosphor-icons/react';
+import { useAuth, ROLE_LABELS } from '@/lib/auth/AuthContext';
+import { toast } from 'sonner';
 
 interface MenuItem {
   href: string;
@@ -64,10 +67,28 @@ export default function Sidebar({
   onToggleDesktop,
 }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, profile, role, signOut, canAccessRoute } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success('Berhasil keluar dari sistem klinik.');
+    router.replace('/login');
+  };
+
+  // Filter menu groups based on role permissions
+  const filteredGroups = menuGroups
+    .map((group) => ({
+      ...group,
+      items: group.items.filter((item) => canAccessRoute(item.href)),
+    }))
+    .filter((group) => group.items.length > 0);
+
+  const activeRoleInfo = role ? ROLE_LABELS[role] : null;
 
   const navigationContent = (
     <nav className="p-3 flex-1 space-y-4 overflow-y-auto">
-      {menuGroups.map((group) => (
+      {filteredGroups.map((group) => (
         <div key={group.category}>
           <span className="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-3 mb-1.5 block">
             {group.category}
@@ -109,19 +130,35 @@ export default function Sidebar({
   );
 
   const footerContent = (
-    <div className="p-3 border-t border-slate-200/80">
+    <div className="p-3 border-t border-slate-200/80 space-y-2">
       <div className="flex items-center gap-3 p-2.5 bg-gradient-to-b from-white to-slate-50 border border-slate-200/90 rounded-2xl shadow-well">
-        <div className="w-9 h-9 rounded-xl bg-gradient-to-b from-teal-600 to-teal-800 text-white font-mono font-extrabold text-xs flex items-center justify-center shadow-btn-primary border border-teal-600 shrink-0">
-          CM
+        <div className="w-9 h-9 rounded-xl bg-gradient-to-b from-teal-600 to-teal-800 text-white font-mono font-extrabold text-xs flex items-center justify-center shadow-btn-primary border border-teal-600 shrink-0 uppercase">
+          {role ? role.slice(0, 2) : 'CM'}
         </div>
         <div className="min-w-0 flex-1">
-          <div className="font-extrabold text-xs text-slate-900 truncate">Klinik Cikidang</div>
-          <div className="text-[10px] text-emerald-700 font-bold truncate flex items-center gap-1.5 mt-0.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shrink-0"></span>
-            <span className="truncate">dr. Ovan & dr. Neneng</span>
+          <div className="font-extrabold text-xs text-slate-900 truncate">
+            {profile?.name || 'Staf Klinik'}
+          </div>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            {activeRoleInfo && (
+              <span
+                className={`text-[9px] font-bold px-1.5 py-0.2 rounded-md border truncate ${activeRoleInfo.color}`}
+              >
+                {activeRoleInfo.badge}
+              </span>
+            )}
           </div>
         </div>
       </div>
+
+      <button
+        type="button"
+        onClick={handleSignOut}
+        className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-xl bg-white hover:bg-rose-50 hover:text-rose-700 text-slate-600 border border-slate-200/90 text-xs font-bold transition-all tactile-btn active:scale-[0.96] min-h-[38px] cursor-pointer"
+      >
+        <SignOut className="w-4 h-4" weight="bold" />
+        <span>Keluar dari Akun</span>
+      </button>
     </div>
   );
 
@@ -187,7 +224,7 @@ export default function Sidebar({
                 type="button"
                 onClick={onCloseMobile}
                 aria-label="Tutup menu navigasi"
-                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition min-w-[44px] min-h-[44px] flex items-center justify-center"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition min-w-[44px] min-h-[44px] flex items-center justify-center cursor-pointer"
               >
                 <X className="w-5 h-5" weight="bold" />
               </button>
