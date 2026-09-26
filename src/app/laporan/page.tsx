@@ -1,72 +1,402 @@
 'use client';
 
-import React from 'react';
-import { FileSpreadsheet, Download, Filter, Calendar } from 'lucide-react';
-import * as XLSX from 'xlsx';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { toast } from 'sonner';
+import {
+  DownloadSimple,
+  Stack,
+  WarningCircle,
+  ArrowClockwise,
+} from '@phosphor-icons/react';
+import { createClient } from '@/lib/supabase/client';
+import { normalizeRupiah } from '@/lib/utils';
+import {
+  exportVisitsToExcel,
+  exportCashFlowsToExcel,
+  exportMorbidityToExcel,
+  exportFullClinicWorkbook,
+  type VisitExportRow,
+  type CashFlowExportRow,
+  type MorbidityExportRow,
+} from '@/lib/excel';
+import {
+  ReportTabs,
+  type ReportTabType,
+} from '@/components/laporan/ReportTabs';
+import { ReportFilterBar } from '@/components/laporan/ReportFilterBar';
+import { ReportPreviewTable } from '@/components/laporan/ReportPreviewTable';
+import { ReportKpis } from '@/components/laporan/ReportKpis';
 
 export default function LaporanPage() {
-  const handleExportExcel = () => {
-    // Generate dummy sheet data from clinic records
-    const wb = XLSX.utils.book_new();
-    const wsData = [
-      ['LAPORAN REKAPITULASI KUNJUNGAN & KEUANGAN KLINIK CIKIDANG MEDIKA'],
-      ['Tanggal Unduh:', new Date().toLocaleDateString('id-ID')],
-      [],
-      ['No RM', 'Nama Pasien', 'Jenis Kelamin', 'Desa', 'Tanggal Periksa', 'Dokter', 'Diagnosa ICD-10', 'Jenis Pasien', 'Biaya'],
-      ['021303596', 'An. Agaisha Pinka', 'Perempuan', 'Luar Daerah', '18-09-2026', 'dr. Ovan', 'J00 - Common cold', 'UMUM', 150000],
-      ['010101231', 'Tn. Umar', 'Laki-laki', 'Cikidang', '18-09-2026', 'dr. Ovan', 'J00 - Common cold', 'UMUM', 200000],
-      ['010400529', 'An. Faizan', 'Laki-laki', 'Cijambe', '18-09-2026', 'dr. Ovan', 'A09 - Gastroenteritis', 'UMUM', 120000],
-      ['010400093', 'Tn. Aziz Supriatman', 'Laki-laki', 'Cijambe', '18-09-2026', 'dr. Ovan', 'K35 - Appendicitis', 'BPJS', 0],
-      ['020102094', 'Ny. Lilis Lisnawati', 'Perempuan', 'Cikidang', '18-09-2026', 'dr. Ovan', 'R20 - Kebas', 'BPJS', 0],
-    ];
-    const ws = XLSX.utils.aoa_to_sheet(wsData);
-    XLSX.utils.book_append_sheet(wb, ws, 'Rekap Kunjungan');
-    XLSX.writeFile(wb, 'Laporan_Klinik_Cikidang_Medika.xlsx');
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth();
+
+  const defaultStartDate = new Date(currentYear, currentMonth, 1)
+    .toISOString()
+    .split('T')[0];
+  const defaultEndDate = new Date(currentYear, currentMonth + 1, 0)
+    .toISOString()
+    .split('T')[0];
+
+  const [activeTab, setActiveTab] = useState<ReportTabType>('kunjungan');
+  const [startDate, setStartDate] = useState(defaultStartDate);
+  const [endDate, setEndDate] = useState(defaultEndDate);
+  const [jenisPasien, setJenisPasien] = useState('Semua');
+  const [dokterId, setDokterId] = useState('Semua');
+  const [doctorsList, setDoctorsList] = useState<{ id: string; nama: string }[]>([]);
+
+  const [visitsData, setVisitsData] = useState<VisitExportRow[]>([]);
+  const [morbidityData, setMorbidityData] = useState<MorbidityExportRow[]>([]);
+  const [cashFlowData, setCashFlowData] = useState<CashFlowExportRow[]>([]);
+
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function loadDoctors() {
+      try {
+        const supabase = createClient();
+        const { data } = await supabase.from('doctors').select('id, nama').eq('aktif', true);
+        if (data) setDoctorsList(data);
+      } catch (e) {
+        console.error('Error loading doctors list:', e);
+      }
+    }
+    loadDoctors();
+  }, []);
+
+  const fetchReportData = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const supabase = createClient();
+      const pageSize = 1000;
+
+      let allVisits: any[] = [];
+      let visitPage = 0;
+
+      while (true) {
+        let query = supabase
+          .from('visits')
+          .select(
+            'id, tanggal_periksa, jenis_pasien, biaya_periksa, pendapatan_lain, jenis_pembayaran, kode_icd10, diagnosa_deskripsi, dokter_id, doctors(nama), patients(nama, no_rm, jenis_kelamin, desa)'
+          )
+          .order('tanggal_periksa', { ascending: false })
+          .range(visitPage * pageSize, (visitPage + 1) * pageSize - 1);
+
+        if (startDate) query = query.gte('tanggal_periksa', startDate);
+        if (endDate) query = query.lte('tanggal_periksa', endDate);
+        if (jenisPasien !== 'Semua') query = query.eq('jenis_pasien', jenisPasien);
+        if (dokterId !== 'Semua') query = query.eq('dokter_id', dokterId);
+
+        const { data, error } = await query;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+
+        allVisits.push(...data);
+        if (data.length < pageSize) break;
+        visitPage++;
+      }
+
+      let allFlows: any[] = [];
+      let flowPage = 0;
+
+      while (true) {
+        let flowQuery = supabase
+          .from('cash_flows')
+          .select('id, tanggal, jenis, kategori, nominal, keterangan')
+          .order('tanggal', { ascending: false })
+          .range(flowPage * pageSize, (flowPage + 1) * pageSize - 1);
+
+        if (startDate) flowQuery = flowQuery.gte('tanggal', startDate);
+        if (endDate) flowQuery = flowQuery.lte('tanggal', endDate);
+
+        const { data, error } = await flowQuery;
+        if (error) throw error;
+        if (!data || data.length === 0) break;
+
+        allFlows.push(...data);
+        if (data.length < pageSize) break;
+        flowPage++;
+      }
+
+      const formattedVisits: VisitExportRow[] = allVisits.map((v) => {
+        const biaya = normalizeRupiah(Number(v.biaya_periksa) || 0);
+        const lain = normalizeRupiah(Number(v.pendapatan_lain) || 0);
+
+        return {
+          no_rm: v.patients?.no_rm || '-',
+          nama_pasien: v.patients?.nama || 'Pasien',
+          jenis_kelamin: v.patients?.jenis_kelamin || '-',
+          desa: v.patients?.desa || 'Luar Daerah',
+          tanggal_periksa: v.tanggal_periksa,
+          nama_dokter: v.doctors?.nama || 'dr. Ovan',
+          kode_icd10: v.kode_icd10 || '-',
+          diagnosa_deskripsi: v.diagnosa_deskripsi || '-',
+          jenis_pasien: v.jenis_pasien,
+          biaya_periksa: biaya,
+          pendapatan_lain: lain,
+          total_biaya: biaya + lain,
+          jenis_pembayaran: v.jenis_pembayaran || 'Tunai',
+        };
+      });
+
+      const formattedFlows: CashFlowExportRow[] = allFlows.map((f) => ({
+        tanggal: f.tanggal,
+        jenis: f.jenis,
+        kategori: f.kategori,
+        nominal: normalizeRupiah(Number(f.nominal) || 0),
+        keterangan: f.keterangan || '-',
+      }));
+
+      const morbMap: Record<string, { code: string; name: string; count: number }> = {};
+      let validDiagCount = 0;
+
+      allVisits.forEach((v) => {
+        if (v.kode_icd10) {
+          validDiagCount++;
+          const code = v.kode_icd10.trim().toUpperCase();
+          const name = v.diagnosa_deskripsi || code;
+          if (!morbMap[code]) {
+            morbMap[code] = { code, name, count: 0 };
+          }
+          morbMap[code].count++;
+        }
+      });
+
+      const formattedMorbidity: MorbidityExportRow[] = Object.values(morbMap)
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 10)
+        .map((m, idx) => ({
+          rank: idx + 1,
+          kode_icd10: m.code,
+          diagnosa_deskripsi: m.name,
+          jumlah_kasus: m.count,
+          persentase: validDiagCount > 0 ? (m.count / validDiagCount) * 100 : 0,
+        }));
+
+      setVisitsData(formattedVisits);
+      setCashFlowData(formattedFlows);
+      setMorbidityData(formattedMorbidity);
+    } catch (err) {
+      console.error('Error loading report data:', err);
+      const msg =
+        err instanceof Error ? err.message : 'Gagal memuat data laporan dari server.';
+      setErrorMessage(msg);
+      toast.error(msg);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [startDate, endDate, jenisPasien, dokterId]);
+
+  useEffect(() => {
+    fetchReportData();
+  }, [fetchReportData]);
+
+  const handlePresetChange = (
+    preset: 'today' | 'this_month' | 'last_month' | 'this_year' | 'all'
+  ) => {
+    const now = new Date();
+    const yr = now.getFullYear();
+    const mo = now.getMonth();
+
+    if (preset === 'today') {
+      const today = now.toISOString().split('T')[0];
+      setStartDate(today);
+      setEndDate(today);
+    } else if (preset === 'this_month') {
+      setStartDate(new Date(yr, mo, 1).toISOString().split('T')[0]);
+      setEndDate(new Date(yr, mo + 1, 0).toISOString().split('T')[0]);
+    } else if (preset === 'last_month') {
+      setStartDate(new Date(yr, mo - 1, 1).toISOString().split('T')[0]);
+      setEndDate(new Date(yr, mo, 0).toISOString().split('T')[0]);
+    } else if (preset === 'this_year') {
+      setStartDate(`${yr}-01-01`);
+      setEndDate(`${yr}-12-31`);
+    } else if (preset === 'all') {
+      setStartDate('');
+      setEndDate('');
+    }
   };
 
+  const handleReset = () => {
+    handlePresetChange('this_month');
+    setJenisPasien('Semua');
+    setDokterId('Semua');
+    toast.info('Filter laporan telah direset ke bulan ini.');
+  };
+
+  const handleExportActiveTab = () => {
+    try {
+      const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
+
+      if (activeTab === 'kunjungan') {
+        exportVisitsToExcel(visitsData, dateRange);
+        toast.success(`Laporan kunjungan (${visitsData.length} baris) berhasil diunduh.`);
+      } else if (activeTab === 'morbiditas') {
+        exportMorbidityToExcel(morbidityData, dateRange);
+        toast.success(`Laporan morbiditas ICD-10 (${morbidityData.length} baris) berhasil diunduh.`);
+      } else if (activeTab === 'buku_kas') {
+        exportCashFlowsToExcel(cashFlowData, dateRange);
+        toast.success(`Laporan arus kas (${cashFlowData.length} baris) berhasil diunduh.`);
+      }
+    } catch {
+      toast.error('Gagal mengunduh file Excel.');
+    }
+  };
+
+  const handleExportFullWorkbook = () => {
+    try {
+      const dateRange = { start: startDate || 'Awal', end: endDate || 'Akhir' };
+      exportFullClinicWorkbook({
+        visits: visitsData,
+        flows: cashFlowData,
+        morbidity: morbidityData,
+        dateRange,
+      });
+      toast.success('Buku kerja konsolidasi lengkap (3 sheet) berhasil diunduh.');
+    } catch {
+      toast.error('Gagal membuat buku kerja konsolidasi Excel.');
+    }
+  };
+
+  // Compute dynamic KPI summary metrics
+  const kpiSummaryData = useMemo(() => {
+    const totalVisits = visitsData.length;
+    const umumCount = visitsData.filter((v) => v.jenis_pasien !== 'BPJS').length;
+    const bpjsCount = visitsData.filter((v) => v.jenis_pasien === 'BPJS').length;
+    const totalBilling = visitsData.reduce((sum, v) => sum + (v.total_biaya || 0), 0);
+
+    const totalKasMasuk = cashFlowData
+      .filter((c) => c.jenis === 'Masuk')
+      .reduce((sum, c) => sum + (c.nominal || 0), 0);
+    const totalKasKeluar = cashFlowData
+      .filter((c) => c.jenis === 'Keluar')
+      .reduce((sum, c) => sum + (c.nominal || 0), 0);
+    const netIncome = totalKasMasuk - totalKasKeluar;
+
+    return {
+      totalVisits,
+      umumCount,
+      bpjsCount,
+      totalBilling,
+      totalKasMasuk,
+      totalKasKeluar,
+      netIncome,
+    };
+  }, [visitsData, cashFlowData]);
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="space-y-6 min-w-0 w-full pb-10">
+      {/* 1. Master Report Header & Integrated Action Ribbon */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 pb-1">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Laporan & Ekspor Excel</h1>
-          <p className="text-xs text-slate-500 mt-1">Unduh laporan rekapitulasi data kunjungan dan pembukuan keuangan klinik</p>
+          <div className="flex items-center gap-2">
+            <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+              Pusat Laporan &amp; Ekspor Excel
+            </h1>
+            <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+              SheetJS Engine
+            </span>
+          </div>
+          <p className="text-xs text-slate-600 font-medium mt-0.5">
+            Konsolidasi data operasional rawat jalan, surveilans morbiditas ICD-10, dan mutasi arus kas klinik format .xlsx
+          </p>
         </div>
-        <button
-          onClick={handleExportExcel}
-          className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-semibold shadow-sm transition"
-        >
-          <Download className="w-4 h-4" />
-          Unduh File Excel (.xlsx)
-        </button>
+
+        {/* Action Ribbon: Reload + Single Tab Export + Full 3-Sheet Workbook Export */}
+        <div className="flex items-center gap-2 w-full lg:w-auto">
+          <button
+            type="button"
+            onClick={fetchReportData}
+            disabled={isLoading}
+            title="Muat Ulang Data Laporan"
+            className="p-2 sm:p-2.5 rounded-xl text-slate-500 hover:text-slate-900 bg-white hover:bg-slate-100 border border-slate-200/90 shadow-btn-secondary tactile-btn transition disabled:opacity-50 flex items-center justify-center min-h-[40px] min-w-[40px] sm:min-h-[38px] sm:min-w-[38px]"
+          >
+            <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-teal-600' : ''}`} weight="bold" />
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportActiveTab}
+            disabled={isLoading || (activeTab === 'kunjungan' && visitsData.length === 0)}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700/80 tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none"
+          >
+            <DownloadSimple weight="bold" className="w-3.5 h-3.5" />
+            <span>Unduh Tab Ini (.xlsx)</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleExportFullWorkbook}
+            disabled={isLoading || (visitsData.length === 0 && cashFlowData.length === 0)}
+            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-emerald-700/80 tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
+          >
+            <Stack weight="bold" className="w-3.5 h-3.5" />
+            <span>Rekap Lengkap (3 Sheet)</span>
+          </button>
+        </div>
       </div>
 
-      {/* Filter Tanggal */}
-      <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-wrap items-center gap-4 text-xs">
-        <div className="flex items-center gap-2">
-          <Calendar className="w-4 h-4 text-slate-400" />
-          <span className="font-semibold text-slate-700">Periode Laporan:</span>
+      {/* Error Alert Strip if any */}
+      {errorMessage && (
+        <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <WarningCircle weight="duotone" className="w-4 h-4 shrink-0 text-rose-600" />
+            <span className="font-medium">{errorMessage}</span>
+          </div>
+          <button
+            type="button"
+            onClick={fetchReportData}
+            className="font-semibold underline hover:no-underline shrink-0"
+          >
+            Coba Lagi
+          </button>
         </div>
-        <input type="date" defaultValue="2026-09-01" className="p-2 border border-slate-300 rounded-lg outline-none" />
-        <span>s/d</span>
-        <input type="date" defaultValue="2026-09-30" className="p-2 border border-slate-300 rounded-lg outline-none" />
-        <button className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg font-semibold">
-          <Filter className="w-3.5 h-3.5" />
-          Terapkan Filter
-        </button>
-      </div>
+      )}
 
-      {/* Kartu Informasi Ekspor */}
-      <div className="bg-white p-6 rounded-xl border border-slate-200 shadow-sm space-y-4">
-        <div className="flex items-center gap-3">
-          <div className="p-3 bg-emerald-50 text-emerald-600 rounded-xl">
-            <FileSpreadsheet className="w-6 h-6" />
-          </div>
-          <div>
-            <h2 className="text-base font-bold text-slate-900">Format Laporan Siap Pakai</h2>
-            <p className="text-xs text-slate-500">File Excel yang diunduh langsung diformat rapi dengan kolom identitas pasien, diagnosa medis, dan nominal pembayaran kasir.</p>
-          </div>
-        </div>
-      </div>
+      {/* 2. Executive Report Summary KPI Row */}
+      <ReportKpis data={kpiSummaryData} isLoading={isLoading} />
+
+      {/* 3. Filter Parameter Laporan Card */}
+      <ReportFilterBar
+        startDate={startDate}
+        endDate={endDate}
+        onStartDateChange={setStartDate}
+        onEndDateChange={setEndDate}
+        jenisPasien={jenisPasien}
+        onJenisPasienChange={setJenisPasien}
+        dokterId={dokterId}
+        onDokterIdChange={setDokterId}
+        doctorsList={doctorsList}
+        onApplyFilter={fetchReportData}
+        onResetFilter={handleReset}
+        onPresetChange={handlePresetChange}
+        isLoading={isLoading}
+      />
+
+      {/* 4. Recessed Track Segmented Sub-Tab Switcher */}
+      <ReportTabs
+        activeTab={activeTab}
+        onChangeTab={setActiveTab}
+        counts={{
+          kunjungan: visitsData.length,
+          morbiditas: morbidityData.length,
+          buku_kas: cashFlowData.length,
+        }}
+      />
+
+      {/* 5. Consolidated Preview Table */}
+      <ReportPreviewTable
+        activeTab={activeTab}
+        visitsData={visitsData}
+        morbidityData={morbidityData}
+        cashFlowData={cashFlowData}
+        isLoading={isLoading}
+      />
     </div>
   );
 }

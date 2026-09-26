@@ -1,0 +1,1639 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Sistem Desain & Katalog Komponen Taktil - SIM Klinik Cikidang Medika</title>
+  
+  <!-- Font Plus Jakarta Sans & JetBrains Mono untuk Tabular Numbers -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+  
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+            mono: ['"JetBrains Mono"', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#eff6ff',
+              100: '#dbeafe',
+              200: '#bfdbfe',
+              500: '#3b82f6',
+              600: '#2563eb', /* Medical Sapphire Primary */
+              700: '#1d4ed8',
+              800: '#1e40af',
+              900: '#1e3a8a',
+            },
+            bpjs: {
+              bg: '#ecfdf5',
+              text: '#065f46',
+              border: '#a7f3d0',
+            },
+            umum: {
+              bg: '#eff6ff',
+              text: '#1e40af',
+              border: '#bfdbfe',
+            },
+          },
+          boxShadow: {
+            'btn-primary': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 2px 4px -1px rgba(37, 99, 235, 0.35), 0 4px 14px -2px rgba(37, 99, 235, 0.25)',
+            'btn-secondary': 'inset 0 1px 0 0 #ffffff, 0 1px 3px 0 rgba(15, 23, 42, 0.08), 0 1px 2px -1px rgba(15, 23, 42, 0.06)',
+            'card-double': '0 0 0 1px rgba(15, 23, 42, 0.06), 0 2px 4px rgba(15, 23, 42, 0.02), 0 8px 24px -4px rgba(15, 23, 42, 0.04), inset 0 1px 0 0 rgba(255, 255, 255, 1)',
+            'card-hover': '0 0 0 1px rgba(37, 99, 235, 0.3), 0 4px 8px -2px rgba(15, 23, 42, 0.05), 0 16px 36px -6px rgba(37, 99, 235, 0.08), inset 0 1px 0 0 rgba(255, 255, 255, 1)',
+            'well': 'inset 0 1px 2px 0 rgba(15, 23, 42, 0.06), 0 1px 0 0 rgba(255, 255, 255, 0.8)',
+            'sidebar-active': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.28), 0 3px 10px -2px rgba(37, 99, 235, 0.4), 0 1px 2px rgba(0,0,0,0.06)',
+            'popover': '0 0 0 1px rgba(15, 23, 42, 0.08), 0 16px 36px -4px rgba(15, 23, 42, 0.16), 0 6px 12px -2px rgba(15, 23, 42, 0.06)',
+            'dialog': '0 0 0 1px rgba(15, 23, 42, 0.1), 0 28px 56px -12px rgba(15, 23, 42, 0.25), 0 12px 24px -4px rgba(15, 23, 42, 0.08)',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #f8fafc; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    
+    /* Tactile Press Physics (Emil Kowalski standard) */
+    .tactile-btn {
+      transition: transform 0.12s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+    }
+    .tactile-btn:active {
+      transform: scale(0.965);
+    }
+    
+    .tactile-card {
+      transition: transform 0.18s cubic-bezier(0.2, 0, 0, 1), box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .tactile-card:hover {
+      transform: translateY(-2px);
+    }
+
+    /* Popover entrance animation with anchored top transform-origin */
+    @keyframes popoverIn {
+      from { opacity: 0; transform: scaleY(0.92) translateY(-6px); }
+      to { opacity: 1; transform: scaleY(1) translateY(0); }
+    }
+    .animate-popover {
+      transform-origin: top;
+      animation: popoverIn 0.16s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    /* Shimmer effect for skeleton loading */
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .animate-shimmer {
+      animation: shimmer 1.8s infinite;
+    }
+
+    /* Pulse Glow for Quick Preset Fill */
+    @keyframes pulseGlow {
+      0% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0.4); }
+      70% { box-shadow: 0 0 0 6px rgba(37, 99, 235, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(37, 99, 235, 0); }
+    }
+    .pulse-glow {
+      animation: pulseGlow 0.6s ease-out;
+    }
+
+    /* Micro-Shake animation for tactile form error */
+    @keyframes microShake {
+      0%, 100% { transform: translateX(0); }
+      20%, 60% { transform: translateX(-5px); }
+      40%, 80% { transform: translateX(5px); }
+    }
+    .animate-shake {
+      animation: microShake 0.35s ease-in-out;
+    }
+
+    /* Medical Sapphire Ambient Canvas Background */
+    .ambient-canvas {
+      background-color: #F8FAFC;
+      background-image: 
+        radial-gradient(at 0% 0%, rgba(37, 99, 235, 0.035) 0px, transparent 50%),
+        radial-gradient(at 100% 100%, rgba(14, 165, 233, 0.035) 0px, transparent 50%);
+    }
+  </style>
+</head>
+<body class="ambient-canvas text-slate-900 font-sans antialiased min-h-screen">
+
+  <!-- ============================================================== -->
+  <!-- 1. FULL TOP NAVBAR (MEDICAL SAPPHIRE THEME & MOBILE TRIGGER)   -->
+  <!-- ============================================================== -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-slate-200/90 px-4 sm:px-6 py-3 flex items-center justify-between gap-4 shadow-[0_1px_3px_rgba(15,23,42,0.03)]">
+    <!-- Left: Clinic Identity & Mobile Hamburger -->
+    <div class="flex items-center gap-3">
+      <!-- Mobile Drawer Trigger (Minimum 44x44px Touch Target) -->
+      <button onclick="toggleMobileDrawer()" class="lg:hidden w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 border border-slate-300 flex items-center justify-center text-slate-700 tactile-btn shrink-0" aria-label="Buka Menu Navigasi">
+        <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      </button>
+
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-b from-blue-500 to-blue-700 flex items-center justify-center text-white font-bold shadow-[inset_0_1px_0_rgba(255,255,255,0.4),0_2px_6px_rgba(37,99,235,0.35)] border border-blue-600 shrink-0">
+          <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-xs font-extrabold text-slate-900 tracking-tight">Klinik Pratama Cikidang Medika</span>
+            <span class="inline-flex items-center gap-1.5 px-2 py-0.5 bg-blue-50 border border-blue-200 text-blue-800 text-[10px] font-bold rounded-full">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse"></span>
+              Live Operasional
+            </span>
+          </div>
+          <div class="text-[11px] text-slate-600 flex items-center gap-1.5 font-medium mt-0.5">
+            <span id="navModuleBreadcrumb">Klinis</span>
+            <span>&bull;</span>
+            <span id="navRoleBreadcrumb" class="text-blue-900 font-bold">Pemeriksaan Dokter (Poli 1)</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Center: Universal Search Bar (Ctrl+K) -->
+    <div class="hidden md:flex items-center flex-1 max-w-md mx-4">
+      <div class="relative w-full">
+        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+          <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+        </div>
+        <input type="text" placeholder="Pencarian cepat pasien, No. RM, atau diagnosa..." class="w-full pl-9 pr-16 py-2 bg-slate-100/90 hover:bg-slate-100 border border-slate-300 rounded-xl text-xs font-medium focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-colors">
+        <div class="absolute inset-y-0 right-0 pr-2 flex items-center pointer-events-none">
+          <kbd class="text-[10px] font-mono text-slate-600 bg-white border border-slate-300 rounded px-1.5 py-0.5 shadow-2xs font-semibold">Ctrl + K</kbd>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Dynamic Role Switcher & Action CTA -->
+    <div class="flex items-center gap-3">
+      <!-- Role Switcher Tabs (Interaktif) -->
+      <div class="flex items-center bg-slate-100 p-1 rounded-xl border border-slate-300/80 shadow-well">
+        <button id="btnRoleDokter" onclick="switchRole('dokter')" class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-btn-secondary transition-all tactile-btn">
+          🩺 Dokter
+        </button>
+        <button id="btnRoleKasir" onclick="switchRole('kasir')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all tactile-btn">
+          💳 Kasir
+        </button>
+        <button id="btnRoleOwner" onclick="switchRole('owner')" class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-all tactile-btn">
+          👑 Pimpinan
+        </button>
+      </div>
+
+      <!-- Quick Action Button in Medical Blue -->
+      <button onclick="openDemoModal()" class="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-2 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-blue-700/80 tactile-btn">
+        <span id="navActionBtnText">+ Pasien Baru</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- 2. MOBILE SLIDE-OVER DRAWER (RESPONSIVE TABLET/SMARTPHONE)     -->
+  <!-- ============================================================== -->
+  <div id="mobileDrawerBackdrop" class="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs hidden transition-opacity duration-200">
+    <div id="mobileDrawerPanel" class="fixed inset-y-0 left-0 max-w-xs w-full bg-white shadow-dialog p-5 flex flex-col justify-between overflow-y-auto transform -translate-x-full transition-transform duration-200 ease-out">
+      <div class="space-y-6">
+        <!-- Drawer Header -->
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div class="flex items-center gap-2.5">
+            <div class="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+              CK
+            </div>
+            <div>
+              <div class="text-xs font-extrabold text-slate-900">Klinik Cikidang</div>
+              <div class="text-[10px] text-blue-700 font-bold">Navigasi Sentuh Faskes</div>
+            </div>
+          </div>
+          <button onclick="toggleMobileDrawer()" class="w-9 h-9 rounded-lg hover:bg-slate-100 flex items-center justify-center text-slate-500 font-bold text-lg">
+            &times;
+          </button>
+        </div>
+
+        <!-- Mobile Navigation Menu -->
+        <div class="space-y-4">
+          <div>
+            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1.5">Operasional</span>
+            <div class="space-y-1">
+              <button onclick="switchRole('owner'); toggleMobileDrawer();" class="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 tactile-btn text-left">
+                <span>📊</span> <span>Dashboard & KPI</span>
+              </button>
+              <button onclick="switchRole('kasir'); toggleMobileDrawer();" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 tactile-btn text-left">
+                <div class="flex items-center gap-3">
+                  <span>💳</span> <span>Pendaftaran & Kasir</span>
+                </div>
+                <span class="px-2 py-0.5 bg-purple-100 text-purple-900 rounded-full font-mono text-[10px] font-bold">4</span>
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider block mb-1.5">Klinis & Medis</span>
+            <div class="space-y-1">
+              <button onclick="switchRole('dokter'); toggleMobileDrawer();" class="w-full flex items-center justify-between px-3 py-2.5 rounded-xl bg-blue-50 text-blue-900 border border-blue-200 text-xs font-extrabold tactile-btn text-left">
+                <div class="flex items-center gap-3">
+                  <span>🩺</span> <span>Pemeriksaan Dokter</span>
+                </div>
+                <span class="px-2 py-0.5 bg-blue-600 text-white rounded-full font-mono text-[10px] font-bold">6</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Drawer Footer -->
+      <div class="pt-4 border-t border-slate-100">
+        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center gap-3">
+          <div class="w-8 h-8 rounded-lg bg-blue-600 text-white font-mono font-bold text-xs flex items-center justify-center">
+            DR
+          </div>
+          <div>
+            <div class="text-xs font-bold text-slate-900">dr. Ovan (Poli 1)</div>
+            <div class="text-[10px] text-emerald-700 font-bold flex items-center gap-1">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span> Online
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- 3. MAIN APP SHELL: SIDEBAR + CONTENT CANVAS                    -->
+  <!-- ============================================================== -->
+  <div class="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 flex gap-6">
+
+    <!-- Left Sidebar Shell (High-End Medical Sapphire Architecture) -->
+    <aside class="w-64 shrink-0 hidden lg:flex flex-col justify-between bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-3xl p-4 shadow-card-double min-h-[calc(100vh-100px)] sticky top-20">
+      <div class="space-y-6">
+        <!-- Clinic Branding Container -->
+        <div class="p-3.5 bg-gradient-to-b from-blue-50/70 to-slate-50 border border-blue-100/80 rounded-2xl shadow-well flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-b from-blue-600 to-blue-700 text-white font-extrabold flex items-center justify-center shadow-btn-primary shrink-0 border border-blue-600">
+            <svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+            </svg>
+          </div>
+          <div class="min-w-0">
+            <div class="text-[10px] font-bold text-blue-700 uppercase tracking-wider">Klinik Pratama</div>
+            <div class="text-xs font-extrabold text-slate-900 truncate">Cikidang Medika</div>
+            <div class="text-[10px] text-slate-600 flex items-center gap-1 mt-0.5 font-medium">
+              <span class="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+              Server Aktif
+            </div>
+          </div>
+        </div>
+
+        <!-- Menu Group 1: Operasional -->
+        <div>
+          <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-3 mb-2 block">Operasional</span>
+          <div class="space-y-1">
+            <button id="sb-dashboard" onclick="switchRole('owner')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold transition-colors tactile-btn text-left">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+                <span>Dashboard & KPI</span>
+              </div>
+            </button>
+
+            <button id="sb-pendaftaran" onclick="switchRole('kasir')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold transition-colors tactile-btn text-left">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+                <span>Pendaftaran & Kasir</span>
+              </div>
+              <span id="sb-badge-kasir" class="px-2 py-0.5 bg-purple-100 text-purple-900 rounded-full font-mono text-[10px] font-bold">4</span>
+            </button>
+
+            <button id="sb-antrean" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold transition-colors tactile-btn text-left">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Alur Antrean</span>
+              </div>
+              <span class="px-2 py-0.5 bg-amber-100 text-amber-900 rounded-full font-mono text-[10px] font-bold">10</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Menu Group 2: Klinis & Medis -->
+        <div>
+          <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-3 mb-2 block">Klinis & Medis</span>
+          <div class="space-y-1">
+            <!-- Active Sapphire Pill -->
+            <button id="sb-periksa" onclick="switchRole('dokter')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-extrabold text-xs shadow-sidebar-active border border-blue-600/90 transition-colors tactile-btn text-left">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-white transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                <span>Pemeriksaan Dokter</span>
+              </div>
+              <span id="sb-badge-dokter" class="px-2 py-0.5 bg-white/20 text-white rounded-full font-mono text-[10px] font-extrabold border border-white/25">6</span>
+            </button>
+
+            <button id="sb-program" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold transition-colors tactile-btn text-left">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/></svg>
+                <span>Program Khusus</span>
+              </div>
+            </button>
+          </div>
+        </div>
+
+        <!-- Menu Group 3: Finansial -->
+        <div>
+          <span class="text-[10px] font-extrabold text-slate-500 uppercase tracking-wider px-3 mb-2 block">Finansial & Kas</span>
+          <div class="space-y-1">
+            <button id="sb-bukukas" onclick="switchRole('owner')" class="w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold transition-colors tactile-btn text-left">
+              <div class="flex items-center gap-2.5">
+                <svg class="w-4 h-4 text-slate-500 transition-colors" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/></svg>
+                <span>Buku Kas & Kapitasi</span>
+              </div>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Footer: User Profile Card -->
+      <div class="pt-4 border-t border-slate-100">
+        <div class="flex items-center gap-3 p-2.5 bg-gradient-to-b from-white to-slate-50 border border-slate-200/90 rounded-2xl shadow-well">
+          <div id="sbUserAvatar" class="w-9 h-9 rounded-xl bg-gradient-to-b from-blue-600 to-blue-800 text-white font-mono font-extrabold text-xs flex items-center justify-center shadow-btn-primary border border-blue-600">
+            OV
+          </div>
+          <div class="min-w-0 flex-1">
+            <div id="sbUserName" class="font-extrabold text-xs text-slate-900 truncate">dr. Ovan</div>
+            <div id="sbUserRole" class="text-[10px] text-blue-700 font-bold truncate">Dokter Pemeriksa</div>
+          </div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main Dynamic Content Canvas -->
+    <div class="flex-1 min-w-0 space-y-8">
+
+      <!-- Dynamic Context Banner per Role (Elevated Executive Double-Bezel Card) -->
+      <div id="roleContextBanner" class="bg-gradient-to-r from-white via-blue-50/50 to-white border border-slate-200/90 rounded-3xl p-5 shadow-card-double flex flex-col md:flex-row md:items-center justify-between gap-4 relative overflow-hidden">
+        <!-- Ambient Glow Accent Corner -->
+        <div class="absolute -right-8 -bottom-8 w-40 h-40 bg-blue-500/5 rounded-full blur-2xl pointer-events-none"></div>
+
+        <!-- Left: Emblem + Detailed Clinical Metadata -->
+        <div class="flex items-start sm:items-center gap-4 relative z-10">
+          <div id="roleBannerEmblemContainer" class="w-12 h-12 rounded-2xl bg-gradient-to-b from-blue-600 to-blue-800 text-white flex items-center justify-center shrink-0 shadow-btn-primary border border-blue-500/80 p-2.5">
+            <span id="roleBannerIcon" class="text-xl">🩺</span>
+          </div>
+          <div>
+            <div class="flex items-center gap-2 mb-1 flex-wrap">
+              <span id="roleBannerBadge" class="px-2.5 py-0.5 rounded-full bg-blue-100 text-blue-900 text-[10px] font-extrabold uppercase tracking-wider font-mono border border-blue-200">
+                Ruang Pelayanan Medis
+              </span>
+              <span class="text-slate-300 font-bold">&bull;</span>
+              <span id="roleBannerSubBadge" class="text-xs font-bold text-slate-600 font-mono">Poli 1 (dr. Ovan)</span>
+            </div>
+            <h2 id="roleBannerTitle" class="text-base font-extrabold text-slate-900 tracking-tight">Pemeriksaan Klinis & Rekam Medis Pasien</h2>
+            <p id="roleBannerDesc" class="text-xs text-slate-600 mt-1 max-w-2xl font-medium leading-relaxed">
+              Pencatatan tanda vital terpadu, multi-diagnosa ICD-10 resmi Kemenkes, dan penerusan resep farmasi sekali klik.
+            </p>
+          </div>
+        </div>
+
+        <!-- Right: Tactile Status & Metric Pill -->
+        <div class="shrink-0 flex sm:flex-col items-center sm:items-end justify-between sm:justify-center p-3 sm:p-3.5 bg-slate-50/90 border border-slate-200/90 rounded-2xl shadow-well relative z-10 gap-1 min-w-[180px]">
+          <div class="text-[10px] font-mono text-slate-500 uppercase tracking-wider font-bold flex items-center gap-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span id="roleBannerStatusLabel">Antrean Poli 1</span>
+          </div>
+          <div id="roleBannerStatus" class="text-sm font-extrabold text-blue-700 font-mono tracking-tight">
+            6 Pasien Mengantre
+          </div>
+          <div id="roleBannerMeta" class="text-[10px] text-slate-500 font-medium hidden sm:block">
+            Bulan Berjalan: Sep 2026
+          </div>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- VIEW A: DOKTER VIEW CONTAINER (DEFAULT)                       -->
+      <!-- ============================================================== -->
+      <div id="viewDokterContainer" class="space-y-8">
+
+        <!-- Dokter: Antrean Pasien Menunggu Poli -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-2">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Daftar Pasien Menunggu di Poli 1</h3>
+              <p class="text-xs text-slate-600">Pasien yang telah selesai registrasi dan menunggu panggilan dokter</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <button onclick="toggleEmptyQueueDemo()" id="btnEmptyQueueToggle" class="px-2.5 py-1 bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 rounded-lg text-xs font-semibold transition-colors tactile-btn">
+                Simulasi Antrean Kosong
+              </button>
+              <span id="queueActiveBadge" class="px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold rounded-full font-mono">
+                6 Antrean Aktif
+              </span>
+            </div>
+          </div>
+
+          <!-- Empty State Container (Hidden by default) -->
+          <div id="emptyQueueContainer" class="hidden p-8 text-center bg-slate-50/60 border border-dashed border-slate-300 rounded-2xl space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-600 mx-auto shadow-well">
+              <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.8">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+            </div>
+            <div class="max-w-sm mx-auto">
+              <h4 class="text-xs font-extrabold text-slate-900">Tidak Ada Antrean Pasien di Poli 1</h4>
+              <p class="text-[11px] text-slate-500 mt-1 leading-relaxed">
+                Seluruh pasien telah selesai diperiksa. Pasien baru yang didaftarkan oleh kasir akan otomatis muncul secara *real-time* di sini.
+              </p>
+            </div>
+          </div>
+
+          <div id="populatedQueueContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Patient Queue Card 1 -->
+            <div class="bg-slate-50/70 border border-slate-200/90 rounded-2xl p-4 shadow-well hover:border-blue-400 transition-colors flex items-center justify-between gap-3 tactile-card">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 border border-amber-300 text-amber-900 font-mono font-extrabold text-sm flex items-center justify-center shrink-0">
+                  #05
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-bold text-sm text-slate-900">Hj. Maimunah</h4>
+                    <span class="px-2 py-0.2 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">BPJS</span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-0.5 font-medium">
+                    <span class="font-mono text-blue-700">RM-02381</span> &bull; Keluhan: Batuk & Demam
+                  </p>
+                </div>
+              </div>
+              <button onclick="showToast('Memanggil Pasien Hj. Maimunah ke Ruang Dokter')" class="px-3.5 py-2 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-blue-700/80 shrink-0 tactile-btn">
+                Panggil & Periksa
+              </button>
+            </div>
+
+            <!-- Patient Queue Card 2 -->
+            <div class="bg-slate-50/70 border border-slate-200/90 rounded-2xl p-4 shadow-well hover:border-blue-400 transition-colors flex items-center justify-between gap-3 tactile-card">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-slate-200/80 border border-slate-300 text-slate-700 font-mono font-extrabold text-sm flex items-center justify-center shrink-0">
+                  #06
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-bold text-sm text-slate-900">Asep Sopian</h4>
+                    <span class="px-2 py-0.2 text-[10px] font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-mono">Umum</span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-0.5 font-medium">
+                    <span class="font-mono text-blue-700">RM-04112</span> &bull; Keluhan: Pusing & Lambung
+                  </p>
+                </div>
+              </div>
+              <button onclick="showToast('Memanggil Pasien Asep Sopian')" class="px-3.5 py-2 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold shadow-btn-secondary shrink-0 tactile-btn">
+                Panggil Berikutnya
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Dokter: Formulir Rekam Medis dengan Fitur Cepat -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-6">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Formulir Rekam Medis: Hj. Maimunah (RM-02381)</h3>
+              <p class="text-xs text-slate-600">Pencatatan tanda vital terpadu, multi-diagnosa ICD-10, dan instruksi resep</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2.5 py-1 rounded-full border border-blue-200/80">
+              Sedang Diperiksa
+            </span>
+          </div>
+
+          <!-- Vital Signs Grid with 1-Click Normal Preset -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">1. Tanda-Tanda Vital Pasien</span>
+              <button id="btnPresetNormal" onclick="fillNormalVitals()" type="button" class="inline-flex items-center gap-1.5 px-2.5 py-1 bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 rounded-lg text-xs font-bold transition-colors tactile-btn">
+                <span>⚡</span>
+                <span>Isi Normal Dewasa (1-Klik)</span>
+              </button>
+            </div>
+
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div id="well-td" class="bg-slate-50 border border-slate-300 rounded-xl p-3 shadow-well focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                <div class="flex items-center justify-between text-xs text-slate-600 mb-1 font-semibold">
+                  <span>Tekanan Darah</span>
+                  <span class="font-mono text-[10px]">mmHg</span>
+                </div>
+                <input id="inputTD" type="text" value="120/80" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+              </div>
+
+              <div id="well-nadi" class="bg-slate-50 border border-slate-300 rounded-xl p-3 shadow-well focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                <div class="flex items-center justify-between text-xs text-slate-600 mb-1 font-semibold">
+                  <span>Denyut Nadi</span>
+                  <span class="font-mono text-[10px]">bpm</span>
+                </div>
+                <input id="inputNadi" type="text" value="78" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+              </div>
+
+              <div id="well-suhu" class="bg-slate-50 border border-slate-300 rounded-xl p-3 shadow-well focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                <div class="flex items-center justify-between text-xs text-slate-600 mb-1 font-semibold">
+                  <span>Suhu Tubuh</span>
+                  <span class="font-mono text-[10px]">&deg;C</span>
+                </div>
+                <input id="inputSuhu" type="text" value="37.2" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+              </div>
+
+              <div id="well-nafas" class="bg-slate-50 border border-slate-300 rounded-xl p-3 shadow-well focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-500/20 transition-all">
+                <div class="flex items-center justify-between text-xs text-slate-600 mb-1 font-semibold">
+                  <span>Laju Nafas</span>
+                  <span class="font-mono text-[10px]">x/mnt</span>
+                </div>
+                <input id="inputNafas" type="text" value="20" class="w-full bg-transparent font-mono text-lg font-bold text-slate-900 focus:outline-none">
+              </div>
+            </div>
+          </div>
+
+          <!-- Paket Template Resep Obat 1-Klik -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">2. Paket Resep Cepat (1-Klik)</span>
+              <span class="text-[11px] text-slate-500">Pilih preset untuk mengisi resep secara otomatis</span>
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <button onclick="fillPresetResep('ispa')" type="button" class="px-3 py-2.5 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-400 rounded-xl text-left transition-colors tactile-btn group">
+                <div class="text-xs font-bold text-slate-900 group-hover:text-blue-900">ISPA Dewasa</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 font-mono">Amoxicillin + CTM + Paracetamol</div>
+              </button>
+              <button onclick="fillPresetResep('maag')" type="button" class="px-3 py-2.5 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-400 rounded-xl text-left transition-colors tactile-btn group">
+                <div class="text-xs font-bold text-slate-900 group-hover:text-blue-900">Maag / Gastritis</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 font-mono">Antasida + Omeprazole + Ranitidin</div>
+              </button>
+              <button onclick="fillPresetResep('alergi')" type="button" class="px-3 py-2.5 bg-white hover:bg-blue-50 border border-slate-300 hover:border-blue-400 rounded-xl text-left transition-colors tactile-btn group">
+                <div class="text-xs font-bold text-slate-900 group-hover:text-blue-900">Alergi / Dermatitis</div>
+                <div class="text-[11px] text-slate-500 mt-0.5 font-mono">Cetirizine + Betametason Krim</div>
+              </button>
+            </div>
+
+            <!-- Prescription Table (populated by preset or manual) -->
+            <div id="resepTableContainer" class="bg-slate-50/80 border border-slate-200/90 rounded-2xl overflow-hidden">
+              <div class="flex items-center justify-between px-4 py-2 border-b border-slate-200/90">
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider">Daftar Resep Obat:</span>
+                <span id="resepCountBadge" class="text-[10px] font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">0 item</span>
+              </div>
+              <div id="resepTableBody" class="divide-y divide-slate-100 min-h-[48px]">
+                <div id="resepEmptyRow" class="px-4 py-3 text-xs text-slate-400 text-center font-medium">Belum ada resep. Pilih preset atau tambah manual.</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Multi Diagnosa ICD-10 dengan Pencarian Instan -->
+          <div class="space-y-3">
+            <div class="flex items-center justify-between">
+              <div>
+                <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block">3. Diagnosa Penyakit ICD-10 (Bisa > 1)</span>
+                <p class="text-[11px] text-slate-500">Ketik nama/kode penyakit atau klik daftar rekomendasi di bawah</p>
+              </div>
+              <span id="diagnosaCountBadge" class="text-xs font-mono font-bold text-blue-700 bg-blue-50 px-2 py-0.5 rounded-full border border-blue-200">
+                2 Terpilih
+              </span>
+            </div>
+
+            <!-- Instant Search Input for ICD-10 -->
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-slate-500">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" /></svg>
+              </div>
+              <input id="icdSearchInput" type="text" placeholder="Cari nama penyakit atau kode ICD-10 (misal: Gastritis, Asma, Diabetes, K30)..." oninput="filterIcdSuggestions(this.value)" onkeydown="handleIcdKeydown(event)" class="w-full pl-10 pr-24 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white transition-colors">
+              <div class="absolute inset-y-0 right-0 pr-2.5 flex items-center pointer-events-none">
+                <span class="text-[10px] text-slate-500 font-mono bg-white border border-slate-200 px-1.5 py-0.5 rounded">Enter ↵</span>
+              </div>
+
+              <!-- ICD-10 Suggestion Floating Box -->
+              <div id="icdSuggestions" class="hidden absolute left-0 right-0 mt-1.5 bg-white border border-slate-200 rounded-2xl shadow-popover p-2 z-50 animate-popover max-h-52 overflow-y-auto">
+                <!-- Dynamically injected suggestions -->
+              </div>
+            </div>
+
+            <!-- Active Selected Diagnostic Chips -->
+            <div class="p-3 bg-slate-50/80 border border-slate-200/90 rounded-2xl">
+              <div class="text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-2">Diagnosa Terpilih:</div>
+              <div id="activeDiagnosaChips" class="flex flex-wrap gap-2">
+                <div class="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-b from-blue-600 to-blue-700 text-white shadow-btn-primary border border-blue-700 flex items-center gap-2">
+                  <span>ISPA (J06.9)</span>
+                  <button onclick="removeDiagnosaChip(this)" class="hover:text-red-200 font-extrabold text-sm ml-0.5">&times;</button>
+                </div>
+                <div class="px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-b from-blue-600 to-blue-700 text-white shadow-btn-primary border border-blue-700 flex items-center gap-2">
+                  <span>Febris / Demam (R50.9)</span>
+                  <button onclick="removeDiagnosaChip(this)" class="hover:text-red-200 font-extrabold text-sm ml-0.5">&times;</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Quick Suggestions Chips (1-Click Add) -->
+            <div>
+              <span class="text-[10px] font-bold text-slate-500 uppercase tracking-wider block mb-1.5">Pilihan Cepat Kasus Umum Cikidang:</span>
+              <div class="flex flex-wrap gap-2">
+                <button onclick="addDiagnosaChip('Dispepsia / Sakit Maag (K30)')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-300 shadow-btn-secondary hover:border-slate-400 tactile-btn">
+                  + Dispepsia (K30)
+                </button>
+                <button onclick="addDiagnosaChip('Hipertensi Esensial (I10)')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-300 shadow-btn-secondary hover:border-slate-400 tactile-btn">
+                  + Hipertensi (I10)
+                </button>
+                <button onclick="addDiagnosaChip('Faringitis Akut (J02.9)')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-300 shadow-btn-secondary hover:border-slate-400 tactile-btn">
+                  + Faringitis (J02.9)
+                </button>
+                <button onclick="addDiagnosaChip('Dermatitis Alergi (L23.9)')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-300 shadow-btn-secondary hover:border-slate-400 tactile-btn">
+                  + Dermatitis (L23.9)
+                </button>
+                <button onclick="addDiagnosaChip('Diabetes Mellitus Tipe 2 (E11)')" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-slate-700 border border-slate-300 shadow-btn-secondary hover:border-slate-400 tactile-btn">
+                  + Diabetes (E11)
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom Action Buttons -->
+          <div class="pt-4 border-t border-slate-100 flex items-center justify-between">
+            <span class="text-xs text-slate-600 font-medium">Resep dan diagnosa otomatis terhubung ke sistem kasir/farmasi</span>
+            <div class="flex items-center gap-3">
+              <button class="px-4 py-2.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold shadow-btn-secondary tactile-btn">
+                Tunda Periksa
+              </button>
+              <button onclick="showToast('Rekam Medis Disimpan! Pasien Dipindahkan ke Antrean Kasir')" class="px-5 py-2.5 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-xs font-extrabold shadow-btn-primary border border-blue-700 flex items-center gap-2 tactile-btn">
+                <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" /></svg>
+                <span>Selesai Periksa & Kirim ke Kasir</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- VIEW B: KASIR VIEW CONTAINER (AKTIF SAAT KLIK KASIR)           -->
+      <!-- ============================================================== -->
+      <div id="viewKasirContainer" class="hidden space-y-8">
+
+        <!-- Kasir: Pasien Menunggu Pembayaran & Obat -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-4">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Antrean Pembayaran & Penyerahan Obat</h3>
+              <p class="text-xs text-slate-600">Pasien yang telah selesai diperiksa dokter dan membutuhkan pelunasan tagihan</p>
+            </div>
+            <span class="px-2.5 py-1 bg-purple-50 text-purple-900 border border-purple-200 text-xs font-bold rounded-full font-mono">
+              4 Pasien Siap Bayar
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Kasir Item 1 (Selected for Checkout) -->
+            <div class="bg-blue-50/50 border-2 border-blue-500 rounded-2xl p-4 shadow-card-hover flex items-center justify-between gap-3">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-purple-100 border border-purple-300 text-purple-900 font-mono font-extrabold text-sm flex items-center justify-center shrink-0">
+                  #02
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-bold text-sm text-slate-900">Budi Santoso</h4>
+                    <span class="px-2 py-0.2 text-[10px] font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-mono">Umum</span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-0.5 font-medium">
+                    Resep: Amoxicillin + Paracetamol &bull; <strong class="text-slate-900 font-mono">Rp 65.000</strong>
+                  </p>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 bg-blue-600 text-white text-[11px] font-bold rounded-lg shadow-2xs">
+                Dipilih
+              </span>
+            </div>
+
+            <!-- Kasir Item 2 -->
+            <div class="bg-slate-50/70 border border-slate-200/90 rounded-2xl p-4 shadow-well hover:border-blue-400 transition-colors flex items-center justify-between gap-3 tactile-card">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-emerald-100 border border-emerald-300 text-emerald-900 font-mono font-extrabold text-sm flex items-center justify-center shrink-0">
+                  #03
+                </div>
+                <div>
+                  <div class="flex items-center gap-2">
+                    <h4 class="font-bold text-sm text-slate-900">Siti Nurhaliza</h4>
+                    <span class="px-2 py-0.2 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">BPJS</span>
+                  </div>
+                  <p class="text-xs text-slate-600 mt-0.5 font-medium">
+                    Resep Obat Selesai &bull; <span class="text-emerald-700 font-bold">Tercover BPJS (Rp 0)</span>
+                  </p>
+                </div>
+              </div>
+              <button onclick="showToast('Konfirmasi Penyerahan Obat Siti Nurhaliza')" class="px-4 py-2 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-blue-700 shrink-0 tactile-btn">
+                Serahkan Obat
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Kasir: Kalkulator Tender & Pembayaran Cepat (Ergonomi Kasir) -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-6">
+          <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Kasir: Transaksi Pembayaran Pasien #02 - Budi Santoso</h3>
+              <p class="text-xs text-slate-600">Perhitungan rincian biaya, tombol uang pas, dan kembalian otomatis</p>
+            </div>
+            <span class="text-xs font-bold font-mono px-3 py-1 bg-purple-50 text-purple-900 border border-purple-200 rounded-full">
+              Pasien Umum (Bayar Tunai)
+            </span>
+          </div>
+
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <!-- Left: Rincian Tagihan -->
+            <div class="lg:col-span-5 space-y-3 bg-slate-50/80 p-4 rounded-2xl border border-slate-200">
+              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-wider block">Rincian Komponen Biaya:</span>
+              <div class="space-y-2 text-xs">
+                <div class="flex justify-between text-slate-700 font-medium">
+                  <span>Jasa Konsultasi & Periksa Dokter</span>
+                  <span class="font-mono font-bold">Rp 35.000</span>
+                </div>
+                <div class="flex justify-between text-slate-700 font-medium">
+                  <span>Amoxicillin 500mg (10 Tab)</span>
+                  <span class="font-mono font-bold">Rp 15.000</span>
+                </div>
+                <div class="flex justify-between text-slate-700 font-medium">
+                  <span>Paracetamol 500mg (10 Tab)</span>
+                  <span class="font-mono font-bold">Rp 15.000</span>
+                </div>
+                <div class="pt-3 border-t border-slate-200 flex justify-between items-center text-sm font-extrabold text-slate-900">
+                  <span>Total Tagihan Pasien</span>
+                  <span id="kasirTotalTagihan" class="text-base text-blue-700 font-mono font-extrabold">Rp 65.000</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Right: Quick Tender & Kalkulator Kembalian -->
+            <div class="lg:col-span-7 space-y-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Pilih Pecahan Uang Diterima (1-Klik)</label>
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                  <button onclick="setUangDiterima(65000)" type="button" class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold font-mono text-slate-800 shadow-btn-secondary tactile-btn">
+                    Uang Pas (Rp 65.000)
+                  </button>
+                  <button onclick="setUangDiterima(70000)" type="button" class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold font-mono text-slate-800 shadow-btn-secondary tactile-btn">
+                    Rp 70.000
+                  </button>
+                  <button onclick="setUangDiterima(100000)" type="button" class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold font-mono text-slate-800 shadow-btn-secondary tactile-btn">
+                    Rp 100.000
+                  </button>
+                  <button onclick="setUangDiterima(200000)" type="button" class="px-3 py-2 bg-white hover:bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold font-mono text-slate-800 shadow-btn-secondary tactile-btn">
+                    Rp 200.000
+                  </button>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Uang Tunai Diterima (Format IDR)</label>
+                  <div class="relative flex items-center">
+                    <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
+                      <span class="text-xs font-mono font-extrabold text-blue-700">Rp</span>
+                    </div>
+                    <input id="inputUangDiterima" type="text" value="100.000" oninput="formatAndCalculateChange(this)" placeholder="0" class="w-full pl-10 pr-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-bold font-mono text-slate-900 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-colors">
+                  </div>
+                </div>
+
+                <div class="p-3 bg-emerald-50 border border-emerald-200 rounded-xl shadow-well flex flex-col justify-center">
+                  <div class="text-[10px] font-bold text-emerald-800 uppercase tracking-wider mb-0.5">Kembalian Pasien</div>
+                  <div id="displayKembalian" class="text-xl font-extrabold font-mono text-emerald-900">
+                    Rp 35.000
+                  </div>
+                </div>
+              </div>
+
+              <div class="pt-2 flex justify-end gap-3">
+                <button onclick="showToast('Transaksi Disimpan! Kuitansi Siap Dicetak')" class="px-5 py-2.5 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-blue-700 flex items-center gap-2 tactile-btn">
+                  <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" /></svg>
+                  <span>Konfirmasi Pembayaran & Cetak Kuitansi</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+
+        <!-- Kasir: Tabel Master Pasien High-Density -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Daftar Master Pasien Terdaftar</h3>
+              <p class="text-xs text-slate-600">Cari, filter, dan kelola data pasien terdaftar di klinik</p>
+            </div>
+            <div class="relative">
+              <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-slate-500">
+                <svg class="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+              </div>
+              <input type="text" placeholder="Cari pasien, No. RM..." class="pl-8 pr-3 py-1.5 bg-slate-100 border border-slate-300 rounded-lg text-xs font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 focus:bg-white transition-colors w-48">
+            </div>
+          </div>
+          <div class="flex items-center gap-1 bg-slate-100/80 p-1 rounded-xl border border-slate-200/80 w-fit">
+            <button class="px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-btn-secondary tactile-btn">Semua (4.238)</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors tactile-btn">BPJS</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors tactile-btn">Umum</button>
+            <button class="px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors tactile-btn">Program Khusus</button>
+          </div>
+          <div class="overflow-x-auto -mx-2 px-2">
+            <table class="w-full text-xs border-collapse min-w-[640px]">
+              <thead>
+                <tr class="bg-slate-50/90 border-b border-slate-200">
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">No. RM</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Nama / Usia</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Desa / Kec.</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Jaminan</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Status</th>
+                  <th class="text-left px-3 py-2 font-bold text-slate-600 uppercase tracking-wider text-[10px] whitespace-nowrap">Aksi</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-100">
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-04238</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Hj. Maimunah</div><div class="text-[10px] text-slate-500 font-mono">62 thn, P</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Cikidang / Cikidang</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">BPJS</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-amber-50 text-amber-800 border border-amber-200">Menunggu Dokter</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Hj. Maimunah')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-04112</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Asep Sopian</div><div class="text-[10px] text-slate-500 font-mono">44 thn, L</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Mandrajaya / Ciemas</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-mono">Umum</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-purple-50 text-purple-800 border border-purple-200">Siap Bayar</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Asep Sopian')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-02381</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Budi Santoso</div><div class="text-[10px] text-slate-500 font-mono">35 thn, L</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Tamanjaya / Ciemas</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-blue-50 text-blue-800 border border-blue-200 font-mono">Umum</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-slate-100 text-slate-600 border border-slate-200">Selesai</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Budi Santoso')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+                <tr class="hover:bg-blue-50/50 transition-colors">
+                  <td class="px-3 py-2.5 font-mono font-bold text-blue-700">RM-00918</td>
+                  <td class="px-3 py-2.5"><div class="font-bold text-slate-900">Siti Nurhaliza</div><div class="text-[10px] text-slate-500 font-mono">28 thn, P</div></td>
+                  <td class="px-3 py-2.5 text-slate-700 font-medium whitespace-nowrap">Cibenda / Parigi</td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 font-mono">BPJS</span></td>
+                  <td class="px-3 py-2.5"><span class="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200">Selesai</span></td>
+                  <td class="px-3 py-2.5"><button onclick="showToast('Membuka Detail: Siti Nurhaliza')" class="px-2.5 py-1 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-lg text-[10px] font-bold transition-colors tactile-btn">Detail</button></td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="flex items-center justify-between pt-1 text-[10px] text-slate-500 font-medium">
+            <span>Menampilkan 4 dari 4.238 pasien terdaftar</span>
+            <div class="flex items-center gap-1">
+              <button class="px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-100 tactile-btn">&#8249;</button>
+              <button class="px-2 py-1 bg-blue-600 border border-blue-700 rounded-lg font-bold text-white">1</button>
+              <button class="px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-100 tactile-btn">2</button>
+              <button class="px-2 py-1 bg-white border border-slate-300 rounded-lg font-bold text-slate-600 hover:bg-slate-100 tactile-btn">&#8250;</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- VIEW C: PIMPINAN / OWNER VIEW CONTAINER (AKTIF SAAT KLIK)      -->
+      <!-- ============================================================== -->
+      <div id="viewOwnerContainer" class="hidden space-y-8">
+
+        <!-- Owner: KPI Finansial Eksekutif dengan Sparklines -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <!-- Card 1 -->
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
+            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Kas Masuk Hari Ini</span>
+            <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">Rp 1.450.000</div>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad1" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#2563eb" stop-opacity="0.18"/><stop offset="100%" stop-color="#2563eb" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 27 Q 30 17, 60 22 T 120 7 L 120 32 L 0 32 Z" fill="url(#grad1)"/>
+                <path d="M0 27 Q 30 17, 60 22 T 120 7" stroke="#2563eb" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="7" r="3" fill="#2563eb"/>
+                <circle cx="120" cy="7" r="5" fill="#2563eb" opacity="0.2"/>
+              </svg>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-slate-600 font-medium">14 Pasien Umum Selesai</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+8.4%</div>
+            </div>
+          </div>
+
+          <!-- Card 2 -->
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
+            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Kapitasi BPJS Bulanan</span>
+            <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">Rp 28.320.000</div>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad2" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#059669" stop-opacity="0.18"/><stop offset="100%" stop-color="#059669" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 22 Q 40 7, 80 17 T 120 10 L 120 32 L 0 32 Z" fill="url(#grad2)"/>
+                <path d="M0 22 Q 40 7, 80 17 T 120 10" stroke="#059669" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="10" r="3" fill="#059669"/>
+                <circle cx="120" cy="10" r="5" fill="#059669" opacity="0.2"/>
+              </svg>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-emerald-700 font-bold">Cair Setiap Tanggal 15</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+14.2%</div>
+            </div>
+          </div>
+
+          <!-- Card 3 -->
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
+            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Total Kunjungan Pasien</span>
+            <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">7.493 <span class="text-xs font-medium text-slate-500 font-sans">total</span></div>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad3" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#0284c7" stop-opacity="0.18"/><stop offset="100%" stop-color="#0284c7" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 30 Q 30 22, 60 14 T 120 8 L 120 32 L 0 32 Z" fill="url(#grad3)"/>
+                <path d="M0 30 Q 30 22, 60 14 T 120 8" stroke="#0284c7" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="8" r="3" fill="#0284c7"/>
+                <circle cx="120" cy="8" r="5" fill="#0284c7" opacity="0.2"/>
+              </svg>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-slate-600 font-medium">Rekor Tertinggi 2026</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+22.1%</div>
+            </div>
+          </div>
+
+          <!-- Card 4 -->
+          <div class="bg-white border border-slate-200/90 rounded-2xl p-5 shadow-card-double tactile-card">
+            <span class="text-[11px] font-bold text-slate-600 uppercase tracking-wider block mb-1">Saldo Buku Kas Fisik</span>
+            <div class="text-2xl font-extrabold font-mono text-slate-900 tracking-tight mb-2">Rp 12.840.000</div>
+            <div class="h-10 w-full mb-1">
+              <svg class="w-full h-full" viewBox="0 0 120 32" fill="none" preserveAspectRatio="none">
+                <defs><linearGradient id="grad4" x1="0" y1="0" x2="0" y2="1"><stop offset="0%" stop-color="#6366f1" stop-opacity="0.18"/><stop offset="100%" stop-color="#6366f1" stop-opacity="0"/></linearGradient></defs>
+                <path d="M0 17 Q 40 27, 80 12 T 120 20 L 120 32 L 0 32 Z" fill="url(#grad4)"/>
+                <path d="M0 17 Q 40 27, 80 12 T 120 20" stroke="#6366f1" stroke-width="1.8" fill="none" stroke-linecap="round"/>
+                <circle cx="120" cy="20" r="3" fill="#6366f1"/>
+                <circle cx="120" cy="20" r="5" fill="#6366f1" opacity="0.2"/>
+              </svg>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="text-xs text-slate-600 font-medium">Sudah Direkonsiliasi</div>
+              <div class="text-[10px] font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-mono">+5.7%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Owner: Ekspor Laporan & Buku Kas Ringkas -->
+        <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-4">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-slate-100 gap-3">
+            <div>
+              <h3 class="text-sm font-extrabold text-slate-900">Rekap Pembukuan Kas Klinik (Bulan Ini)</h3>
+              <p class="text-xs text-slate-600">Ringkasan seluruh aliran kas masuk, kapitasi, dan operasional</p>
+            </div>
+            <button onclick="showToast('Mengunduh Laporan Keuangan format Excel (.xlsx)')" class="px-4 py-2 bg-gradient-to-b from-white to-slate-50 hover:to-slate-100 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold shadow-btn-secondary flex items-center gap-2 tactile-btn">
+              <svg class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+              <span>Ekspor ke Excel (SheetJS)</span>
+            </button>
+          </div>
+
+          <div class="text-xs text-slate-600 font-medium">
+            Seluruh data pembukuan siap dicetak untuk pelaporan pajak dan arsip manajemen dr. Ovan & dr. Neneng.
+          </div>
+        </div>
+
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- SECTION: SKELETON SHIMMER LOADING PREVIEW                      -->
+      <!-- ============================================================== -->
+      <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-4">
+        <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+          <div>
+            <div class="flex items-center gap-2">
+              <h3 class="text-sm font-extrabold text-slate-900">State Loading Taktil: Skeleton Shimmer (Anti-CLS)</h3>
+              <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-900 rounded-full font-mono">CLS = 0</span>
+            </div>
+            <p class="text-xs text-slate-600">Animasi sapuan cahaya lembut saat mengambil data pasien dari Supabase PostgreSQL</p>
+          </div>
+          <button onclick="toggleSkeletonDemo()" id="btnToggleSkeleton" class="px-3.5 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 rounded-xl text-xs font-bold transition-colors tactile-btn">
+            Simulasi Loading (2 Detik)
+          </button>
+        </div>
+
+        <div id="skeletonContainer" class="hidden space-y-3">
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div class="relative overflow-hidden bg-slate-100 border border-slate-200 rounded-2xl p-4 h-20">
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shimmer"></div>
+              <div class="w-1/3 h-4 bg-slate-200 rounded-md mb-2"></div>
+              <div class="w-2/3 h-3 bg-slate-200 rounded-md"></div>
+            </div>
+            <div class="relative overflow-hidden bg-slate-100 border border-slate-200 rounded-2xl p-4 h-20">
+              <div class="absolute inset-0 bg-gradient-to-r from-transparent via-white/50 to-transparent animate-shimmer"></div>
+              <div class="w-1/3 h-4 bg-slate-200 rounded-md mb-2"></div>
+              <div class="w-2/3 h-3 bg-slate-200 rounded-md"></div>
+            </div>
+          </div>
+        </div>
+        <p id="skeletonNotice" class="text-[11px] text-slate-500 font-medium">Klik tombol "Simulasi Loading" di kanan atas untuk menguji transisi halus tanpa flicker.</p>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- SECTION: CUSTOM DROPDOWN SELECT (FLOATING POPOVER)             -->
+      <!-- ============================================================== -->
+      <div class="bg-white border border-slate-200/90 rounded-3xl p-6 shadow-card-double space-y-6">
+        <div>
+          <div class="flex items-center gap-2 mb-1">
+            <h3 class="text-sm font-extrabold text-slate-900">Dropdown Kustom: Medical Floating Popover</h3>
+            <span class="px-2 py-0.5 text-[10px] font-bold bg-blue-100 text-blue-900 rounded-full font-mono">Bebas Bug Kotak OS</span>
+          </div>
+          <p class="text-xs text-slate-600">Menu mengambang ber-radius 16px proporsional dengan jangkar atas (*top transform-origin*).</p>
+        </div>
+
+        <div class="max-w-md">
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-2">Pilih Jaminan Pasien</label>
+          <div class="relative">
+            <button id="customSelectBtn" onclick="toggleCustomSelect()" type="button" class="w-full flex items-center justify-between px-4 py-3 bg-white border border-slate-300 rounded-xl shadow-btn-secondary hover:border-slate-400 focus:outline-none focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-colors tactile-btn text-left">
+              <div class="flex items-center gap-3">
+                <span id="selectedBadge" class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-800 text-xs font-bold font-mono">
+                  BP
+                </span>
+                <div>
+                  <div id="selectedTitle" class="text-sm font-bold text-slate-900">BPJS Kesehatan</div>
+                  <div id="selectedSubtitle" class="text-[11px] text-slate-600 font-medium">Tercover Kapitasi & Rujukan Faskes 1</div>
+                </div>
+              </div>
+              <svg id="selectChevron" class="w-4 h-4 text-slate-500 transition-transform duration-200" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+
+            <!-- Floating Popover Menu -->
+            <div id="customSelectDropdown" class="hidden absolute left-0 right-0 mt-2 bg-white/95 backdrop-blur-md border border-slate-200 rounded-2xl shadow-popover p-1.5 z-50 animate-popover">
+              <div class="px-3 py-1.5 text-[10px] font-bold text-slate-500 uppercase tracking-wider border-b border-slate-100 mb-1">
+                Pilih Jenis Penjaminan
+              </div>
+
+              <!-- Option 1: BPJS (Hijau BPJS Alami) -->
+              <div onclick="selectOption('BPJS Kesehatan', 'Tercover Kapitasi & Rujukan Faskes 1', 'BP', 'emerald')" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-emerald-50/80 cursor-pointer transition-colors group">
+                <div class="flex items-center gap-3">
+                  <span class="w-7 h-7 rounded-lg bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-800 text-xs font-bold font-mono">BP</span>
+                  <div>
+                    <div class="text-xs font-bold text-slate-900 group-hover:text-emerald-950">BPJS Kesehatan</div>
+                    <div class="text-[11px] text-slate-600">Pasien Terdaftar Faskes 1 Cikidang</div>
+                  </div>
+                </div>
+                <svg id="check-bpjs" class="w-4 h-4 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+
+              <!-- Option 2: Pasien Umum (Medical Blue) -->
+              <div onclick="selectOption('Pasien Umum (Bayar Mandiri)', 'Pembayaran Tunai / Mandiri di Kasir', 'UM', 'blue')" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-blue-50/80 cursor-pointer transition-colors group">
+                <div class="flex items-center gap-3">
+                  <span class="w-7 h-7 rounded-lg bg-blue-50 border border-blue-200 flex items-center justify-center text-blue-800 text-xs font-bold font-mono">UM</span>
+                  <div>
+                    <div class="text-xs font-bold text-slate-900 group-hover:text-blue-950">Pasien Umum (Bayar Mandiri)</div>
+                    <div class="text-[11px] text-slate-600">Biaya Periksa & Obat Ditagihkan di Kasir</div>
+                  </div>
+                </div>
+                <svg id="check-umum" class="w-4 h-4 text-blue-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+
+              <!-- Option 3: TBC -->
+              <div onclick="selectOption('Program Khusus TBC (DOTS)', 'Pengobatan & Pemantauan 6 Bulan', 'TB', 'purple')" class="flex items-center justify-between p-2.5 rounded-xl hover:bg-purple-50/80 cursor-pointer transition-colors group">
+                <div class="flex items-center gap-3">
+                  <span class="w-7 h-7 rounded-lg bg-purple-50 border border-purple-200 flex items-center justify-center text-purple-800 text-xs font-bold font-mono">TB</span>
+                  <div>
+                    <div class="text-xs font-bold text-slate-900 group-hover:text-purple-950">Program Khusus TBC (DOTS)</div>
+                    <div class="text-[11px] text-slate-600">Kohort OAT & Bebas Biaya Obat Program</div>
+                  </div>
+                </div>
+                <svg id="check-tbc" class="w-4 h-4 text-blue-600 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Interactive Demo Modal Component (Concentric Radius & Double-Bezel) -->
+  <div id="demoModalBackdrop" class="fixed inset-0 z-50 bg-slate-900/50 backdrop-blur-xs flex items-center justify-center p-4 hidden">
+    <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-dialog border border-slate-200/90 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100 mb-4">
+        <div>
+          <h3 class="font-extrabold text-base text-slate-900">Pendaftaran Pasien Baru</h3>
+          <p class="text-xs text-slate-600">Lengkapi data identitas pasien untuk pembuatan No. Rekam Medis</p>
+        </div>
+        <button onclick="closeDemoModal()" class="w-8 h-8 rounded-full text-slate-500 hover:text-slate-800 hover:bg-slate-100 flex items-center justify-center font-bold text-sm">
+          &times;
+        </button>
+      </div>
+
+      <div class="space-y-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Nama Lengkap Pasien *</label>
+          <input type="text" placeholder="Contoh: Budi Santoso" class="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-300 rounded-xl text-sm font-medium focus:ring-4 focus:ring-blue-500/10 focus:border-blue-600 transition-colors">
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jenis Kelamin</label>
+            <div class="p-2.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800">
+              Laki-laki
+            </div>
+          </div>
+          <div>
+            <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">Jaminan Berobat</label>
+            <div class="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs font-bold text-emerald-800 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              BPJS Kesehatan
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="pt-5 mt-6 border-t border-slate-100 flex items-center justify-end gap-3">
+        <button onclick="closeDemoModal()" class="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 tactile-btn">
+          Batal & Tutup
+        </button>
+        <button onclick="showToast('Pasien Berhasil Didaftarkan!'); closeDemoModal();" class="px-5 py-2.5 bg-gradient-to-b from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-blue-700 tactile-btn">
+          Simpan & Daftarkan
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Container -->
+  <div id="toastContainer" class="fixed bottom-6 right-6 z-50 flex flex-col gap-2"></div>
+
+  <!-- Dynamic Role Switching, ICD-10 Search, & Interactive Scripts -->
+  <script>
+    // Master ICD-10 Database Sample for Cikidang
+    const ICD10_DATABASE = [
+      { code: 'J06.9', name: 'Infeksi Saluran Pernapasan Akut (ISPA)' },
+      { code: 'R50.9', name: 'Febris / Demam Tanpa Sebab Spesifik' },
+      { code: 'K30', name: 'Dispepsia / Gangguan Lambung & Maag' },
+      { code: 'I10', name: 'Hipertensi Primer / Tekanan Darah Tinggi' },
+      { code: 'J02.9', name: 'Faringitis Akut / Radang Tenggorokan' },
+      { code: 'L23.9', name: 'Dermatitis Kontak Alergi' },
+      { code: 'E11', name: 'Diabetes Mellitus Tipe 2' },
+      { code: 'J45.9', name: 'Asma Bronkial' },
+      { code: 'A09', name: 'Diare & Gastroenteritis Akut' },
+      { code: 'M79.1', name: 'Mialgia / Nyeri Otot & Pegal' },
+      { code: 'K29.7', name: 'Gastritis / Radang Lambung' },
+      { code: 'B20', name: 'Penyakit Tuberkulosis Paru (TBC)' },
+    ];
+
+    // DYNAMIC ROLE SWITCHER LOGIC
+    function switchRole(role) {
+      // 1. Update Buttons Active State
+      ['Dokter', 'Kasir', 'Owner'].forEach(r => {
+        const btn = document.getElementById('btnRole' + r);
+        if (r.toLowerCase() === role) {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs font-bold bg-white text-slate-900 shadow-btn-secondary transition-colors tactile-btn';
+        } else {
+          btn.className = 'px-3 py-1.5 rounded-lg text-xs font-semibold text-slate-600 hover:text-slate-900 transition-colors tactile-btn';
+        }
+      });
+
+      // 2. Hide all view containers
+      document.getElementById('viewDokterContainer').classList.add('hidden');
+      document.getElementById('viewKasirContainer').classList.add('hidden');
+      document.getElementById('viewOwnerContainer').classList.add('hidden');
+
+      // 3. Reset Sidebar active pills and enforce text-slate-500 on all SVG icons
+      const navItemIds = ['sb-dashboard', 'sb-pendaftaran', 'sb-antrean', 'sb-periksa', 'sb-program', 'sb-bukukas'];
+      navItemIds.forEach(id => {
+        const btn = document.getElementById(id);
+        if (!btn) return;
+        btn.className = 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-slate-700 hover:bg-slate-100 hover:text-slate-900 text-xs font-semibold transition-colors tactile-btn text-left';
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.classList.remove('text-white');
+          svg.classList.add('text-slate-500');
+        }
+      });
+
+      function activateSidebarBtn(btnId) {
+        const btn = document.getElementById(btnId);
+        if (!btn) return;
+        btn.className = 'w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-gradient-to-r from-blue-600 to-blue-700 text-white font-extrabold text-xs shadow-sidebar-active border border-blue-600/90 transition-colors tactile-btn text-left';
+        const svg = btn.querySelector('svg');
+        if (svg) {
+          svg.classList.remove('text-slate-500');
+          svg.classList.add('text-white');
+        }
+      }
+
+      // 4. Adapt to chosen role with Medical Sapphire Theme
+      if (role === 'dokter') {
+        document.getElementById('viewDokterContainer').classList.remove('hidden');
+        activateSidebarBtn('sb-periksa');
+        
+        document.getElementById('navModuleBreadcrumb').innerText = 'Klinis';
+        document.getElementById('navRoleBreadcrumb').innerText = 'Pemeriksaan Dokter (Poli 1)';
+        document.getElementById('navActionBtnText').innerText = '+ Pasien Baru';
+
+        document.getElementById('sbUserAvatar').innerText = 'OV';
+        document.getElementById('sbUserName').innerText = 'dr. Ovan';
+        document.getElementById('sbUserRole').innerText = 'Dokter Pemeriksa (Poli 1)';
+
+        document.getElementById('roleBannerBadge').innerText = 'Ruang Pelayanan Medis';
+        document.getElementById('roleBannerSubBadge').innerText = 'Poli 1 (dr. Ovan)';
+        document.getElementById('roleBannerIcon').innerText = '🩺';
+        document.getElementById('roleBannerTitle').innerText = 'Pemeriksaan Klinis & Rekam Medis Pasien';
+        document.getElementById('roleBannerDesc').innerText = 'Pencatatan tanda vital terpadu, multi-diagnosa ICD-10 resmi Kemenkes, dan penerusan resep farmasi sekali klik.';
+        document.getElementById('roleBannerStatusLabel').innerText = 'Antrean Poli 1';
+        document.getElementById('roleBannerStatus').innerText = '6 Pasien Mengantre';
+        document.getElementById('roleBannerMeta').innerText = 'Bulan Berjalan: Sep 2026';
+        showToast('Beralih ke tampilan Dokter Pemeriksa');
+      } 
+      else if (role === 'kasir') {
+        document.getElementById('viewKasirContainer').classList.remove('hidden');
+        activateSidebarBtn('sb-pendaftaran');
+
+        document.getElementById('navModuleBreadcrumb').innerText = 'Operasional';
+        document.getElementById('navRoleBreadcrumb').innerText = 'Pendaftaran & Kasir Pasien';
+        document.getElementById('navActionBtnText').innerText = '+ Daftar Pasien';
+
+        document.getElementById('sbUserAvatar').innerText = 'SR';
+        document.getElementById('sbUserName').innerText = 'Siti Rahayu';
+        document.getElementById('sbUserRole').innerText = 'Kasir & Front Office';
+
+        document.getElementById('roleBannerBadge').innerText = 'Front Office & Kasir';
+        document.getElementById('roleBannerSubBadge').innerText = 'Loket Kasir Utama';
+        document.getElementById('roleBannerIcon').innerText = '💳';
+        document.getElementById('roleBannerTitle').innerText = 'Administrasi Pasien & Pelunasan Kasir';
+        document.getElementById('roleBannerDesc').innerText = 'Registrasi pasien baru/lama, perhitungan kalkulator tender kasir, cetak kuitansi berformat IDR, dan verifikasi jaminan BPJS Kesehatan.';
+        document.getElementById('roleBannerStatusLabel').innerText = 'Siap Bayar';
+        document.getElementById('roleBannerStatus').innerText = '4 Pasien Siap Bayar';
+        document.getElementById('roleBannerMeta').innerText = 'Total Tertagih: Rp 65.000';
+        showToast('Beralih ke tampilan Kasir & Pendaftaran');
+      } 
+      else if (role === 'owner') {
+        document.getElementById('viewOwnerContainer').classList.remove('hidden');
+        activateSidebarBtn('sb-dashboard');
+
+        document.getElementById('navModuleBreadcrumb').innerText = 'Eksekutif';
+        document.getElementById('navRoleBreadcrumb').innerText = 'Dashboard & Laporan Finansial';
+        document.getElementById('navActionBtnText').innerText = 'Ekspor Excel';
+
+        document.getElementById('sbUserAvatar').innerText = 'NN';
+        document.getElementById('sbUserName').innerText = 'dr. Neneng';
+        document.getElementById('sbUserRole').innerText = 'Pimpinan & Pemilik';
+
+        document.getElementById('roleBannerBadge').innerText = 'Dashboard Eksekutif';
+        document.getElementById('roleBannerSubBadge').innerText = 'Manajemen (dr. Ovan & dr. Neneng)';
+        document.getElementById('roleBannerIcon').innerText = '👑';
+        document.getElementById('roleBannerTitle').innerText = 'Ringkasan Pendapatan & Kinerja Faskes';
+        document.getElementById('roleBannerDesc').innerText = 'Pemantauan arus kas harian terverifikasi, rekonsiliasi dana kapitasi BPJS (Rp 28.320.000), dan ekspor rekap pembukuan Excel SheetJS.';
+        document.getElementById('roleBannerStatusLabel').innerText = 'Status Pembukuan';
+        document.getElementById('roleBannerStatus').innerText = '🟢 Buku Kas Sinkron';
+        document.getElementById('roleBannerMeta').innerText = 'Total Kunjungan: 7.493 Pasien';
+        showToast('Beralih ke tampilan Pimpinan / Owner');
+      }
+    }
+
+    // 1-Click Normal Vitals Preset Logic
+    function fillNormalVitals() {
+      document.getElementById('inputTD').value = '120/80';
+      document.getElementById('inputNadi').value = '78';
+      document.getElementById('inputSuhu').value = '36.5';
+      document.getElementById('inputNafas').value = '20';
+
+      ['well-td', 'well-nadi', 'well-suhu', 'well-nafas'].forEach(id => {
+        const el = document.getElementById(id);
+        el.classList.add('pulse-glow', 'border-blue-500');
+        setTimeout(() => el.classList.remove('pulse-glow', 'border-blue-500'), 600);
+      });
+
+      showToast('Tanda Vital Normal (Dewasa) terisi otomatis');
+    }
+
+    // ICD-10 Search & Dynamic Tag Picker
+    function filterIcdSuggestions(query) {
+      const box = document.getElementById('icdSuggestions');
+      if (!query || query.trim().length === 0) {
+        box.classList.add('hidden');
+        return;
+      }
+
+      const q = query.toLowerCase().trim();
+      const filtered = ICD10_DATABASE.filter(item => 
+        item.name.toLowerCase().includes(q) || item.code.toLowerCase().includes(q)
+      );
+
+      if (filtered.length === 0) {
+        box.innerHTML = '<div class="p-2.5 text-xs text-slate-500 text-center">Diagnosa tidak ditemukan di database acuan</div>';
+        box.classList.remove('hidden');
+        return;
+      }
+
+      box.innerHTML = filtered.map(item => `
+        <div onclick="addDiagnosaChip('${item.name} (${item.code})'); closeIcdSuggestions();" class="p-2 rounded-xl hover:bg-blue-50 cursor-pointer flex items-center justify-between text-xs transition-colors group">
+          <span class="font-bold text-slate-900 group-hover:text-blue-900">${item.name}</span>
+          <span class="font-mono text-[11px] font-bold text-blue-700 bg-blue-100 px-2 py-0.5 rounded-md">${item.code}</span>
+        </div>
+      `).join('');
+
+      box.classList.remove('hidden');
+    }
+
+    function handleIcdKeydown(event) {
+      if (event.key === 'Enter') {
+        const input = document.getElementById('icdSearchInput');
+        if (input.value.trim().length > 0) {
+          addDiagnosaChip(input.value.trim());
+          input.value = '';
+          closeIcdSuggestions();
+        }
+      }
+    }
+
+    function closeIcdSuggestions() {
+      document.getElementById('icdSuggestions').classList.add('hidden');
+      document.getElementById('icdSearchInput').value = '';
+    }
+
+    function addDiagnosaChip(label) {
+      const container = document.getElementById('activeDiagnosaChips');
+      
+      // Avoid duplicate check
+      const currentChips = Array.from(container.querySelectorAll('span:first-child')).map(s => s.innerText);
+      if (currentChips.includes(label)) {
+        showToast('Diagnosa sudah dipilih sebelumnya');
+        return;
+      }
+
+      const chip = document.createElement('div');
+      chip.className = 'px-3 py-1.5 rounded-xl text-xs font-bold bg-gradient-to-b from-blue-600 to-blue-700 text-white shadow-btn-primary border border-blue-700 flex items-center gap-2 animate-in fade-in zoom-in-95 duration-100';
+      chip.innerHTML = `
+        <span>${label}</span>
+        <button onclick="removeDiagnosaChip(this)" class="hover:text-red-200 font-extrabold text-sm ml-0.5">&times;</button>
+      `;
+      container.appendChild(chip);
+      updateDiagnosaCount();
+      showToast('Diagnosa ditambahkan: ' + label);
+    }
+
+    function removeDiagnosaChip(button) {
+      const chip = button.closest('div');
+      chip.remove();
+      updateDiagnosaCount();
+    }
+
+    function updateDiagnosaCount() {
+      const count = document.getElementById('activeDiagnosaChips').children.length;
+      document.getElementById('diagnosaCountBadge').innerText = `${count} Terpilih`;
+    }
+
+    // Empty Queue Toggle Demo
+    function toggleEmptyQueueDemo() {
+      const emptyContainer = document.getElementById('emptyQueueContainer');
+      const populatedContainer = document.getElementById('populatedQueueContainer');
+      const badge = document.getElementById('queueActiveBadge');
+      const btn = document.getElementById('btnEmptyQueueToggle');
+      const isEmpty = !emptyContainer.classList.contains('hidden');
+
+      if (isEmpty) {
+        emptyContainer.classList.add('hidden');
+        populatedContainer.classList.remove('hidden');
+        badge.innerText = '6 Antrean Aktif';
+        badge.className = 'px-2.5 py-1 bg-amber-50 text-amber-900 border border-amber-200 text-xs font-bold rounded-full font-mono';
+        btn.innerText = 'Simulasi Antrean Kosong';
+      } else {
+        emptyContainer.classList.remove('hidden');
+        populatedContainer.classList.add('hidden');
+        badge.innerText = '0 Antrean';
+        badge.className = 'px-2.5 py-1 bg-slate-100 text-slate-500 border border-slate-200 text-xs font-bold rounded-full font-mono';
+        btn.innerText = 'Tampilkan Antrean (6)';
+      }
+    }
+
+    // Medication Preset 1-Click Fill
+    const RESEP_PRESETS = {
+      ispa: [
+        { nama: 'Amoxicillin 500mg', aturan: '3 x 1 tab', qty: '10 tab' },
+        { nama: 'CTM 4mg (Klorfeniramin)', aturan: '3 x 1 tab', qty: '10 tab' },
+        { nama: 'Paracetamol 500mg', aturan: '3 x 1 tab (bila demam)', qty: '10 tab' },
+      ],
+      maag: [
+        { nama: 'Antasida Doen', aturan: '3 x 1 tab (30 mnt sbl makan)', qty: '10 tab' },
+        { nama: 'Omeprazole 20mg', aturan: '1 x 1 kapsul (pagi)', qty: '7 kapsul' },
+        { nama: 'Ranitidin 150mg', aturan: '2 x 1 tab', qty: '10 tab' },
+      ],
+      alergi: [
+        { nama: 'Cetirizine 10mg', aturan: '1 x 1 tab (malam)', qty: '7 tab' },
+        { nama: 'Betametason Krim 0.1%', aturan: 'Oleskan tipis 2x/hari', qty: '1 tube' },
+      ],
+    };
+
+    function fillPresetResep(key) {
+      const body = document.getElementById('resepTableBody');
+      const badge = document.getElementById('resepCountBadge');
+      const emptyRow = document.getElementById('resepEmptyRow');
+      const items = RESEP_PRESETS[key];
+      if (!items) return;
+
+      // Clear existing
+      body.innerHTML = '';
+
+      items.forEach((item, i) => {
+        const row = document.createElement('div');
+        row.className = 'flex items-center justify-between px-4 py-2 gap-3 text-xs';
+        row.innerHTML = `
+          <div class="flex items-center gap-3 min-w-0">
+            <span class="w-5 h-5 rounded-md bg-blue-50 border border-blue-200 text-blue-700 font-bold font-mono text-[10px] flex items-center justify-center shrink-0">${i + 1}</span>
+            <div class="min-w-0">
+              <div class="font-bold text-slate-900 truncate">${item.nama}</div>
+              <div class="text-[10px] text-slate-500 font-mono">${item.aturan}</div>
+            </div>
+          </div>
+          <div class="flex items-center gap-2 shrink-0">
+            <span class="font-mono text-[10px] font-bold text-slate-700 bg-slate-100 px-2 py-0.5 rounded-md border border-slate-200">${item.qty}</span>
+            <button onclick="this.closest('div.flex').remove(); updateResepCount();" class="text-slate-400 hover:text-rose-500 transition-colors font-extrabold text-sm leading-none">&times;</button>
+          </div>
+        `;
+        body.appendChild(row);
+      });
+
+      updateResepCount();
+      showToast('Paket resep ' + key.toUpperCase() + ' terisi otomatis (' + items.length + ' item)');
+    }
+
+    function updateResepCount() {
+      const body = document.getElementById('resepTableBody');
+      const badge = document.getElementById('resepCountBadge');
+      const count = body.querySelectorAll('div.flex').length;
+      badge.innerText = count + ' item';
+      if (count === 0) {
+        const emptyRow = document.createElement('div');
+        emptyRow.id = 'resepEmptyRow';
+        emptyRow.className = 'px-4 py-3 text-xs text-slate-400 text-center font-medium';
+        emptyRow.innerText = 'Belum ada resep. Pilih preset atau tambah manual.';
+        body.appendChild(emptyRow);
+      }
+    }
+
+    // Kasir Quick Cash Tender Logic with IDR formatting
+    function setUangDiterima(amount) {
+      const input = document.getElementById('inputUangDiterima');
+      input.value = Number(amount).toLocaleString('id-ID');
+      updateChangeDisplay(amount);
+    }
+
+    function formatAndCalculateChange(input) {
+      const clean = input.value.replace(/\D/g, '');
+      if (!clean) {
+        input.value = '';
+        updateChangeDisplay(0);
+        return;
+      }
+      const num = parseInt(clean, 10);
+      input.value = num.toLocaleString('id-ID');
+      updateChangeDisplay(num);
+    }
+
+    function updateChangeDisplay(received) {
+      const tagihan = 65000;
+      const change = received - tagihan;
+      const display = document.getElementById('displayKembalian');
+      const inputEl = document.getElementById('inputUangDiterima');
+      if (change < 0) {
+        display.innerText = 'Kurang Rp ' + Math.abs(change).toLocaleString('id-ID');
+        display.className = 'text-xl font-extrabold font-mono text-rose-600';
+        inputEl.classList.add('animate-shake');
+        setTimeout(() => inputEl.classList.remove('animate-shake'), 400);
+      } else {
+        display.innerText = 'Rp ' + change.toLocaleString('id-ID');
+        display.className = 'text-xl font-extrabold font-mono text-emerald-900';
+      }
+    }
+
+    // Skeleton Simulation Logic
+    function toggleSkeletonDemo() {
+      const container = document.getElementById('skeletonContainer');
+      const notice = document.getElementById('skeletonNotice');
+      container.classList.remove('hidden');
+      notice.innerText = 'Mengambil data dari Supabase PostgreSQL...';
+
+      setTimeout(() => {
+        container.classList.add('hidden');
+        notice.innerText = 'Data berhasil dimuat tanpa loncatan layout (CLS = 0).';
+        showToast('Data Supabase dimuat dalam 200ms');
+      }, 2000);
+    }
+
+    // Mobile Drawer Logic
+    function toggleMobileDrawer() {
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      const panel = document.getElementById('mobileDrawerPanel');
+      const isHidden = backdrop.classList.contains('hidden');
+
+      if (isHidden) {
+        backdrop.classList.remove('hidden');
+        setTimeout(() => panel.classList.remove('-translate-x-full'), 10);
+      } else {
+        panel.classList.add('-translate-x-full');
+        setTimeout(() => backdrop.classList.add('hidden'), 200);
+      }
+    }
+
+    // Custom Select Toggle
+    function toggleCustomSelect() {
+      const dropdown = document.getElementById('customSelectDropdown');
+      const chevron = document.getElementById('selectChevron');
+      const isHidden = dropdown.classList.contains('hidden');
+
+      if (isHidden) {
+        dropdown.classList.remove('hidden');
+        chevron.classList.add('rotate-180');
+      } else {
+        dropdown.classList.add('hidden');
+        chevron.classList.remove('rotate-180');
+      }
+    }
+
+    // Handle Option Selection
+    function selectOption(title, subtitle, badgeText, color) {
+      document.getElementById('selectedTitle').innerText = title;
+      document.getElementById('selectedSubtitle').innerText = subtitle;
+      
+      const badge = document.getElementById('selectedBadge');
+      badge.innerText = badgeText;
+      badge.className = `w-7 h-7 rounded-lg bg-${color}-50 border border-${color}-200 flex items-center justify-center text-${color}-800 text-xs font-bold font-mono`;
+
+      ['bpjs', 'umum', 'tbc'].forEach(k => {
+        const el = document.getElementById('check-' + k);
+        if (el) el.classList.add('hidden');
+      });
+
+      if (badgeText === 'BP') document.getElementById('check-bpjs').classList.remove('hidden');
+      if (badgeText === 'UM') document.getElementById('check-umum').classList.remove('hidden');
+      if (badgeText === 'TB') document.getElementById('check-tbc').classList.remove('hidden');
+
+      toggleCustomSelect();
+      showToast('Kategori diubah ke: ' + title);
+    }
+
+    // Close Dropdowns on Click Outside
+    document.addEventListener('click', function(event) {
+      const selectBtn = document.getElementById('customSelectBtn');
+      const dropdown = document.getElementById('customSelectDropdown');
+      if (selectBtn && dropdown && !selectBtn.contains(event.target) && !dropdown.contains(event.target)) {
+        if (!dropdown.classList.contains('hidden')) {
+          dropdown.classList.add('hidden');
+          document.getElementById('selectChevron').classList.remove('rotate-180');
+        }
+      }
+
+      const icdInput = document.getElementById('icdSearchInput');
+      const icdBox = document.getElementById('icdSuggestions');
+      if (icdInput && icdBox && !icdInput.contains(event.target) && !icdBox.contains(event.target)) {
+        icdBox.classList.add('hidden');
+      }
+    });
+
+    // Toast Notification System
+    function showToast(message) {
+      const container = document.getElementById('toastContainer');
+      const toast = document.createElement('div');
+      toast.className = 'px-4 py-3 bg-slate-900 text-white text-xs font-bold rounded-2xl shadow-dialog border border-slate-700 flex items-center gap-2.5 transform transition-transform duration-200 ease-out translate-y-2 opacity-0';
+      toast.innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full bg-blue-400 shrink-0"></span>
+        <span>${message}</span>
+      `;
+      container.appendChild(toast);
+      setTimeout(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      }, 10);
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 200);
+      }, 2500);
+    }
+
+    function openDemoModal() {
+      document.getElementById('demoModalBackdrop').classList.remove('hidden');
+    }
+
+    function closeDemoModal() {
+      document.getElementById('demoModalBackdrop').classList.add('hidden');
+    }
+
+    // Set Initial Role
+    window.addEventListener('DOMContentLoaded', () => {
+      switchRole('dokter');
+    });
+  </script>
+
+</body>
+</html>

@@ -1,113 +1,284 @@
 'use client';
 
-import React, { useState } from 'react';
-import { Stethoscope, FileText, CheckCircle } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import {
+  Stethoscope,
+  CalendarBlank,
+  ArrowClockwise,
+  WarningCircle,
+  PlusCircle,
+  CheckCircle,
+} from '@phosphor-icons/react';
+import Link from 'next/link';
+import { createClient } from '@/lib/supabase/client';
+import type { Visit } from '@/types/database';
+import { QueueList } from '@/components/rekam-medis/QueueList';
+import { ExaminationForm } from '@/components/rekam-medis/ExaminationForm';
 
 export default function RekamMedisPage() {
-  const [selectedPatient, setSelectedPatient] = useState('021303596');
+  const getTodayString = () => new Date().toISOString().split('T')[0];
+
+  const [selectedDate, setSelectedDate] = useState<string>(getTodayString());
+  const [visits, setVisits] = useState<Visit[]>([]);
+  const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const fetchVisits = useCallback(async () => {
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      const supabase = createClient();
+      const { data, error } = await supabase
+        .from('visits')
+        .select(`
+          *,
+          pasien:patients(*),
+          dokter:doctors(*)
+        `)
+        .eq('tanggal_periksa', selectedDate)
+        .order('nomor_antrian', { ascending: true });
+
+      if (error) throw error;
+
+      const visitList = (data as unknown as Visit[]) || [];
+      setVisits(visitList);
+
+      if (selectedVisit) {
+        const found = visitList.find((v) => v.id === selectedVisit.id);
+        if (found) {
+          setSelectedVisit(found);
+        } else {
+          // If previously selected visit is no longer in list, find next waiting
+          const firstWaiting = visitList.find(
+            (v) => v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
+          );
+          setSelectedVisit(firstWaiting || null);
+        }
+      } else if (visitList.length > 0) {
+        const firstWaiting = visitList.find(
+          (v) => v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
+        );
+        setSelectedVisit(firstWaiting || null);
+      } else {
+        setSelectedVisit(null);
+      }
+    } catch (err) {
+      console.error('Error fetching queue visits:', err);
+      setErrorMessage(
+        err instanceof Error ? err.message : 'Gagal memuat antrean pasien dari database.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  }, [selectedDate, selectedVisit?.id]);
+
+  useEffect(() => {
+    fetchVisits();
+  }, [selectedDate]);
+
+  // Handle URL query parameter pasien_id (from Navbar Search & Quick Profile)
+  useEffect(() => {
+    if (typeof window === 'undefined' || visits.length === 0) return;
+    const params = new URLSearchParams(window.location.search);
+    const pasienId = params.get('pasien_id');
+    if (pasienId) {
+      const match = visits.find((v) => v.pasien_id === pasienId);
+      if (match) {
+        setSelectedVisit(match);
+      }
+    }
+  }, [visits]);
+
+  const handleSelectVisit = (visit: Visit) => {
+    setSelectedVisit(visit);
+    if (typeof window !== 'undefined' && window.innerWidth < 1024) {
+      setTimeout(() => {
+        document.getElementById('exam-workstation')?.scrollIntoView({ behavior: 'smooth' });
+      }, 100);
+    }
+  };
+
+  const handleSaveSuccess = (updatedVisit: Visit, isHandover?: boolean) => {
+    setVisits((prev) => {
+      const nextList = prev.map((v) => (v.id === updatedVisit.id ? updatedVisit : v));
+
+      if (isHandover) {
+        // Find next waiting patient in the queue
+        const remainingWaiting = nextList.filter(
+          (v) => v.id !== updatedVisit.id && v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
+        );
+        if (remainingWaiting.length > 0) {
+          setSelectedVisit(remainingWaiting[0]);
+        } else {
+          // Queue is clear! Set selectedVisit to null to show clean standby state
+          setSelectedVisit(null);
+        }
+      } else {
+        setSelectedVisit(updatedVisit);
+      }
+
+      return nextList;
+    });
+  };
+
+  const hasWaitingPatients = visits.some(
+    (v) => v.status_pembayaran === 'Menunggu Dokter' && !v.kode_icd10
+  );
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Pemeriksaan Dokter & Rekam Medis</h1>
-        <p className="text-xs text-slate-500 mt-1">Antrean periksa, pencatatan keluhan (anamnesa), diagnosa ICD-10, dan resep obat</p>
-      </div>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Antrean Pasien */}
-        <div className="bg-white rounded-xl border border-slate-200 shadow-sm p-4 space-y-3">
-          <h2 className="text-sm font-bold text-slate-800 flex items-center justify-between">
-            <span>Antrean Hari Ini</span>
-            <span className="text-xs bg-blue-100 text-blue-800 px-2 py-0.5 rounded-full font-semibold">dr. Ovan</span>
-          </h2>
-          <div className="space-y-2">
-            {[
-              { rm: '021303596', nama: 'An. Agaisha Pinka (7 th)', status: 'Sedang Diperiksa' },
-              { rm: '010101231', nama: 'Tn. Umar (56 th)', status: 'Menunggu' },
-              { rm: '010400529', nama: 'An. Faizan (4 th)', status: 'Menunggu' },
-              { rm: '010400093', nama: 'Tn. Aziz Supriatman (51 th)', status: 'Selesai' },
-            ].map((p) => (
-              <div 
-                key={p.rm}
-                onClick={() => setSelectedPatient(p.rm)}
-                className={`p-3 rounded-lg border text-xs cursor-pointer transition ${
-                  selectedPatient === p.rm
-                    ? 'border-blue-500 bg-blue-50/50'
-                    : 'border-slate-200 hover:border-slate-300'
-                }`}
-              >
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-mono font-bold text-blue-700">{p.rm}</span>
-                  <span className={`text-[10px] px-2 py-0.5 rounded font-medium ${
-                    p.status === 'Sedang Diperiksa' ? 'bg-amber-100 text-amber-800' : 
-                    p.status === 'Selesai' ? 'bg-emerald-100 text-emerald-800' : 'bg-slate-100 text-slate-600'
-                  }`}>{p.status}</span>
-                </div>
-                <div className="font-semibold text-slate-800">{p.nama}</div>
-              </div>
-            ))}
+    <div className="space-y-6 min-w-0 w-full">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-b from-teal-600 to-teal-700 text-white flex items-center justify-center shadow-btn-primary shrink-0">
+            <Stethoscope className="w-5 h-5" weight="duotone" />
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <h1 className="text-xl sm:text-2xl font-extrabold text-slate-900 tracking-tight">
+                Pemeriksaan Dokter (Poli 1)
+              </h1>
+              <span className="inline-flex items-center gap-1.5 text-[11px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Poli Aktif
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 font-medium mt-0.5">
+              Workstation klinis terpadu: tanda vital, paket resep 1-klik, diagnosa ICD-10, dan riwayat rekam medis
+            </p>
           </div>
         </div>
 
-        {/* Formulir Pemeriksaan */}
-        <div className="lg:col-span-2 bg-white rounded-xl border border-slate-200 shadow-sm p-6 space-y-4">
-          <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-            <div>
-              <h3 className="text-sm font-bold text-slate-900">Form Catatan Medis Pasien</h3>
-              <p className="text-xs text-slate-500">No RM: {selectedPatient} — An. Agaisha Pinka</p>
-            </div>
-            <span className="text-xs bg-emerald-50 text-emerald-700 font-semibold px-2.5 py-1 rounded-md border border-emerald-200">
-              Kunjungan ke-3
-            </span>
+        {/* Date Filter & Quick Refresh Controls */}
+        <div className="flex items-center flex-wrap gap-2 w-full sm:w-auto">
+          <div className="flex items-center gap-2 bg-white border border-slate-300 rounded-xl px-3 py-1.5 shadow-btn-secondary min-h-[36px] flex-1 sm:flex-initial">
+            <CalendarBlank className="w-4 h-4 text-slate-500 shrink-0" weight="bold" />
+            <input
+              type="date"
+              value={selectedDate}
+              onChange={(e) => setSelectedDate(e.target.value)}
+              aria-label="Pilih tanggal periksa antrean"
+              className="text-xs font-semibold text-slate-800 outline-none bg-transparent cursor-pointer w-full font-mono"
+            />
           </div>
 
-          <div className="space-y-4 text-xs">
-            <div>
-              <label className="block text-slate-700 font-medium mb-1">Keluhan Pasien (Hasil Anamnesa)</label>
-              <textarea 
-                rows={3} 
-                className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-blue-500" 
-                defaultValue="Demam 3 hari, sakit kepala, sakit perut, batuk flu"
-              />
-            </div>
+          <button
+            type="button"
+            onClick={() => setSelectedDate(getTodayString())}
+            disabled={selectedDate === getTodayString()}
+            className="px-3.5 py-1.5 bg-white hover:bg-slate-100 disabled:opacity-50 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition shadow-btn-secondary tactile-btn min-h-[36px]"
+          >
+            Hari Ini
+          </button>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-slate-700 font-medium mb-1">Diagnosa Utama (Kode ICD-10)</label>
-                <select className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-blue-500">
-                  <option value="J00">J00 — Acute nasopharyngitis (Common cold)</option>
-                  <option value="K30">K30 — Dyspepsia</option>
-                  <option value="Z34">Z34 — Supervision of normal pregnancy</option>
-                  <option value="L23">L23 — Allergic contact dermatitis</option>
-                  <option value="A09">A09 — Diarrhoea and gastroenteritis</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-slate-700 font-medium mb-1">Tindakan Tambahan</label>
-                <input 
-                  type="text" 
-                  placeholder="contoh: Nebulizer / Cek HB / EKG" 
-                  className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-blue-500" 
-                />
-              </div>
-            </div>
+          <button
+            type="button"
+            onClick={fetchVisits}
+            disabled={isLoading}
+            className="w-9 h-9 min-h-[36px] bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl transition shadow-btn-secondary tactile-btn flex items-center justify-center shrink-0"
+            title="Muat ulang antrean"
+            aria-label="Muat ulang antrean pasien"
+          >
+            <ArrowClockwise className={`w-4 h-4 ${isLoading ? 'animate-spin text-teal-600' : 'text-slate-600'}`} weight="bold" />
+          </button>
+        </div>
+      </div>
 
-            <div>
-              <label className="block text-slate-700 font-medium mb-1">Terapi & Resep Obat</label>
-              <textarea 
-                rows={3} 
-                className="w-full p-2.5 border border-slate-300 rounded-lg outline-none focus:border-blue-500 font-mono text-[11px]" 
-                defaultValue="puyer, paracetamol syr, cetirizine syr, anabion syr, amoxicillin syr"
-              />
-            </div>
-
-            <div className="pt-2 flex justify-end gap-2">
-              <button className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-semibold flex items-center gap-1.5 shadow-sm transition">
-                <CheckCircle className="w-4 h-4" />
-                Simpan & Teruskan ke Kasir
-              </button>
-            </div>
+      {/* Error Alert */}
+      {errorMessage && (
+        <div className="p-4 bg-rose-50 border border-rose-200 rounded-2xl text-rose-700 text-xs flex items-center justify-between gap-3 shadow-2xs">
+          <div className="flex items-center gap-2">
+            <WarningCircle className="w-4 h-4 shrink-0 text-rose-600" weight="fill" />
+            <span className="font-medium">{errorMessage}</span>
           </div>
+          <button
+            type="button"
+            onClick={fetchVisits}
+            className="px-3 py-1 bg-white border border-rose-300 text-rose-700 rounded-lg text-xs font-bold shadow-2xs hover:bg-rose-50"
+          >
+            Coba Lagi
+          </button>
+        </div>
+      )}
+
+      {/* 2-Column Clinical Layout */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+        {/* Left Column: Patient Queue Panel */}
+        <div className="lg:col-span-5 xl:col-span-4">
+          <QueueList
+            visits={visits}
+            selectedVisitId={selectedVisit?.id || null}
+            onSelectVisit={handleSelectVisit}
+            isLoading={isLoading}
+            onRefresh={fetchVisits}
+          />
+        </div>
+
+        {/* Right Column: Unified Clinical Workstation */}
+        <div id="exam-workstation" className="lg:col-span-7 xl:col-span-8 scroll-mt-6">
+          {selectedVisit ? (
+            <ExaminationForm
+              key={selectedVisit.id}
+              visit={selectedVisit}
+              onSaveSuccess={handleSaveSuccess}
+            />
+          ) : (
+            <div className="bg-white rounded-2xl border border-slate-200/90 p-8 sm:p-14 text-center shadow-card-double space-y-4">
+              {visits.length > 0 && !hasWaitingPatients ? (
+                // Standby: All patients completed
+                <>
+                  <div className="w-14 h-14 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto border border-emerald-200 shadow-well">
+                    <CheckCircle className="w-7 h-7" weight="duotone" />
+                  </div>
+
+                  <div className="max-w-md mx-auto space-y-1.5">
+                    <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                      Seluruh Pasien Hari Ini Selesai Diperiksa
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                      Tidak ada antrean pasien yang sedang menunggu ruang dokter saat ini. Seluruh data rekam medis pasien telah berhasil diteruskan ke loket kasir &amp; apotek.
+                    </p>
+                  </div>
+
+                  <p className="text-[11px] text-slate-400 font-medium">
+                    Klik tab &quot;Selesai&quot; pada panel antrean di sebelah kiri jika dokter ingin meninjau kembali rekam medis pasien yang telah selesai.
+                  </p>
+                </>
+              ) : (
+                // Standby: No patient selected yet
+                <>
+                  <div className="w-14 h-14 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center mx-auto border border-teal-200 shadow-well">
+                    <Stethoscope className="w-7 h-7" weight="duotone" />
+                  </div>
+
+                  <div className="max-w-md mx-auto space-y-1.5">
+                    <h3 className="text-base font-bold text-slate-900 tracking-tight">
+                      Pilih Pasien di Antrean untuk Memulai Pemeriksaan
+                    </h3>
+                    <p className="text-xs text-slate-500 leading-relaxed font-normal">
+                      Klik salah satu kartu pasien di antrean sebelah kiri atau tekan tombol &quot;Panggil &amp; Periksa&quot; untuk membuka workstation dokter, tanda vital, resep cepat, dan diagnosa ICD-10.
+                    </p>
+                  </div>
+
+                  {visits.length === 0 && !isLoading && (
+                    <div className="pt-2">
+                      <Link href="/pendaftaran">
+                        <button
+                          type="button"
+                          className="px-3.5 py-1.5 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700/80 inline-flex items-center gap-1.5 tactile-btn min-h-[36px]"
+                        >
+                          <PlusCircle className="w-4 h-4" weight="bold" />
+                          <span>Daftarkan Pasien di Loket</span>
+                        </button>
+                      </Link>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

@@ -28,6 +28,7 @@ Use these sources in priority according to the question being answered:
 | Execution/task state | `docs/context/state.yaml` |
 | Operations/runbooks | `docs/runbooks/` |
 | Client communication history | `docs/context/CHAT_TRANSCRIPT.md` |
+| Client agreement & UI prototype | `docs/product/Proposal_Klinik_Cikidang_Medika.pdf` |
 | Clinic operational data (CSV) | `docs/data/DASHBOARD - *.csv` (excludes Emerys Glow files) |
 
 ### Conflict Rule
@@ -47,7 +48,7 @@ Conversation history and provider memory are never the sole source of truth.
 ## 3. Technology Stack
 
 - Language/runtime: TypeScript 5.6, Node.js
-- Client/application framework: Next.js 14 App Router, React 18, Tailwind CSS 3.4
+- Client/application framework: Next.js 16 App Router (Turbopack), React 19, Tailwind CSS 3.4
 - Backend/API: Next.js API Routes (server components) + Supabase client SDK
 - Database/persistence: Supabase Cloud PostgreSQL + Hybrid Storage (Supabase Storage 1GB primary + Cloudinary 25GB fallback for medical photos)
 - Auth: Supabase Auth with RBAC (roles: `kasir`, `dokter`, `owner`)
@@ -97,6 +98,8 @@ supabase/migrations/ (independent, no src/ imports)
 2. Server-side Supabase client (`src/lib/supabase/server.ts`) for server components and API routes. Browser client (`src/lib/supabase/client.ts`) for client components.
 3. Medical photo uploads must be compressed client-side to WebP < 300KB via `compressImageToWebP` before upload to the hybrid storage adapter (`src/lib/storage.ts`).
 4. Reusable UI mandate: All UI pages and feature components MUST consume atomic primitives from `src/components/ui/` (Button, Badge, Modal, Input, Select, Card) and constants from `src/constants/clinic.ts`. Direct ad-hoc styling of raw modal backdrops or inline duplicated form elements is prohibited.
+5. Canonical Typography (Plus Jakarta Sans): The application standardizes on **Plus Jakarta Sans** via Next.js Font Optimization (`next/font/google`). All headings, labels, and body text use Plus Jakarta Sans. Monospace / tabular numbers are mandatory for currency values, ICD-10 codes, No RM, and queue tokens.
+6. Mobile & Tablet Responsiveness Mandate (UI/UX Pro Max): The application must be 100% responsive across mobile smartphones (viewport 360px–640px), tablets (768px–1024px), and desktop monitors (1024px+). Navigation on mobile/tablet must use the responsive slide-over drawer triggered by the hamburger button in `Navbar.tsx`. All interactive touch targets (buttons, inputs, menu links) must have a minimum area of 44×44px with at least 8px (`gap-2`) spacing. Zero horizontal page scroll: all data tables and master-detail grids must stack gracefully or contain horizontal scrolling inside dedicated overflow wrappers.
 
 Detailed architecture: `docs/architecture/overview.md`.
 
@@ -136,6 +139,8 @@ Detailed architecture: `docs/architecture/overview.md`.
 - Preserve backward compatibility unless the approved specification explicitly changes it.
 - Treat generated files according to their generator workflow.
 - All monetary values stored as `NUMERIC(15,2)` in PostgreSQL and displayed with `Rp` prefix and Indonesian thousand separators.
+- Strict Mobile & Tablet Responsiveness Mandate: Every UI component, modal, table, card, and page MUST be 100% responsive across mobile smartphones (360px–640px), tablets (768px–1024px), and desktop monitors (1024px+). Interactive touch targets must be at least 44×44px with minimum 8px (`gap-2`) spacing. Zero horizontal page overflow is permitted on any viewport.
+- Anti-Slop Skills Enforcement Mandate: For every user prompt and coding task, the agent MUST strictly apply and adhere to `/antislop`, `/antislop-ui`, `/antislop-code`, and `/antislop-human`. No fabricated numbers or stats (R-17, R-38), no generic AI slop comments (antislop-code), no em dashes in UI copy (R-02), no generic AI gradients or template layouts (R-01, R-05), WCAG AA contrast (R-25), full keyboard navigation with visible focus indicators (R-32), and delivery gate compliance before completion.
 
 ### Error Handling
 
@@ -333,6 +338,8 @@ Project-specific prohibitions:
 
 - Do not build features for Emerys Glow skincare data. That scope is explicitly excluded per client instruction.
 - Do not integrate with BPJS P-Care API. The system records BPJS data internally only, per client confirmation.
+- Strict MVP Scope Control: Dilarang menambahkan, mengimplementasikan, atau merekomendasikan fitur baru yang di luar lingkup resmi MVP (F-001 s/d F-006). Jika agen memiliki saran atau rekomendasi di luar MVP, agen hanya boleh menyampaikannya sebagai opsi Post-MVP dan DILARANG KERAS mengimplementasikannya kecuali setelah pengguna secara eksplisit menyatakan SETUJU.
+
 
 ## 15. Definition of Done
 
@@ -352,11 +359,12 @@ A task is complete when applicable:
 Project-specific additional gates:
 
 - Monetary calculations verified with real clinic data samples from CSV.
+- Mobile and tablet responsiveness verification is strictly mandatory for every UI code task (checked across 360px, 768px, and 1024px+ viewports with no text truncation or horizontal page scroll).
 
 ## 16. Important References
 
 - Product: `docs/product/prd.md`
-- Proposal: `docs/product/PROPOSAL_SISTEM_KLINIK_CIKIDANG.md`
+- Proposal: `docs/product/Proposal_Klinik_Cikidang_Medika.pdf`
 - Architecture: `docs/architecture/overview.md`
 - Module architecture guide: `docs/architecture/MODULE_ARCHITECTURE_GUIDE.md`
 - Feature index: `docs/specs/_index.md`
@@ -371,3 +379,13 @@ Project-specific additional gates:
 ## 17. Maintenance Note
 
 Update this contract only when a permanent, frequently relevant repository rule changes. Feature-local behavior, transient task status, debugging notes, and raw chat do not belong here.
+
+<!-- antislop:start -->
+## Mandatory Anti-Slop Standards
+For UI, visual, copywriting, accessibility, mobile layout, and code comment work, the agent MUST read and apply:
+- Core Anti-Slop Filter: `antislop` (Rules R-01 through R-38, Delivery Gate)
+- UI / Visual Craft: `antislop-ui`
+- Code Comment Hygiene: `antislop-code`
+- Accessibility & Human: `antislop-human`
+Mode: DURING implementation (zero AI slop from the start).
+<!-- antislop:end -->

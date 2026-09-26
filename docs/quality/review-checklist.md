@@ -24,8 +24,12 @@ last_updated: "2026-09-19"
 - [ ] No `console.log` statements are left in production code.
 
 ## User Experience & Reusability
-
-- [ ] The user interface is mobile responsive (as required by PRD NFRs).
+ 
+- [ ] The user interface is mobile and tablet responsive across 360px, 768px, and 1024px+ viewports.
+- [ ] No unwanted horizontal scroll exists on mobile devices (`overflow-x` contained).
+- [ ] Touch targets are at least 44×44px with minimum 8px (`gap-2`) spacing between adjacent interactive controls.
+- [ ] Mobile navigation drawer opens cleanly via hamburger button and closes upon route click or backdrop tap.
+- [ ] Typography adheres to **Plus Jakarta Sans** with tabular numbers for currency and codes.
 - [ ] UI components MUST use atomic primitives from `src/components/ui/` (Button, Badge, Modal, Input, Select, Card).
 - [ ] Constant clinic attributes (villages, honorifics, default tariffs) MUST be imported from `src/constants/clinic.ts` and never hardcoded.
 - [ ] Error, loading, and empty states are implemented for the feature.

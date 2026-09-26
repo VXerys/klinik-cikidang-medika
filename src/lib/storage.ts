@@ -78,13 +78,15 @@ export async function compressImageToWebP(file: File, maxSizeBytes: number = 300
  * Upload foto medis ke Supabase Storage (Default) atau Cloudinary (Fallback jika kuota penuh)
  */
 export async function uploadMedicalPhoto(
-  file: File,
+  file: File | Blob,
   pasienId: string,
   tindakanId: string,
   preferredProvider: StorageProvider = 'supabase'
 ): Promise<UploadPhotoResult> {
-  // 1. Kompres gambar sebelum upload
-  const compressedBlob = await compressImageToWebP(file);
+  const compressedBlob =
+    file.type === 'image/webp' && file.size <= 300 * 1024
+      ? file
+      : await compressImageToWebP(file as File);
   const timestamp = Date.now();
   const filename = `${pasienId}/${tindakanId}_${timestamp}.webp`;
 
@@ -114,9 +116,17 @@ export async function uploadMedicalPhoto(
         path: data.path,
       };
     } catch (err: unknown) {
-      console.warn('Upload Supabase gagal, fallback ke Cloudinary...', err);
-      // Fallback ke Cloudinary jika Supabase Storage gagal atau kuota penuh
-      return uploadToCloudinary(compressedBlob, filename);
+      console.warn('Upload Supabase gagal, memeriksa konfigurasi fallback Cloudinary...', err);
+      const cloudinaryPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+      if (cloudinaryPreset) {
+        try {
+          return await uploadToCloudinary(compressedBlob, filename);
+        } catch (cloudinaryErr) {
+          console.error('Fallback Cloudinary juga gagal:', cloudinaryErr);
+        }
+      }
+      const errMessage = err instanceof Error ? err.message : 'Terjadi kendala saat menyimpan foto medis';
+      throw new Error(`Gagal mengunggah foto ke Supabase Storage: ${errMessage}`);
     }
   }
 
@@ -128,10 +138,16 @@ export async function uploadMedicalPhoto(
  * Helper upload ke Cloudinary via unsigned/signed upload
  */
 async function uploadToCloudinary(blob: Blob, filename: string): Promise<UploadPhotoResult> {
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'pzlvn2bl';
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  const uploadPreset = process.env.NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET;
+
+  if (!cloudName || !uploadPreset) {
+    throw new Error('Konfigurasi Cloudinary belum lengkap (NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET belum diset)');
+  }
+
   const formData = new FormData();
   formData.append('file', blob, filename);
-  formData.append('upload_preset', 'klinik_medika'); // preset di Cloudinary
+  formData.append('upload_preset', uploadPreset);
 
   const res = await fetch(`https://api.cloudinary.com/v1_1/${cloudName}/image/upload`, {
     method: 'POST',
@@ -150,3 +166,31 @@ async function uploadToCloudinary(blob: Blob, filename: string): Promise<UploadP
     path: data.public_id,
   };
 }
+
+/**
+ * Ambil signed URL untuk foto medis privat (Supabase Storage atau Cloudinary)
+ */
+export async function getSignedMedicalPhotoUrl(
+  path: string,
+  provider: StorageProvider = 'supabase'
+): Promise<string> {
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+
+  if (provider === 'supabase') {
+    const supabase = createClient();
+    const { data, error } = await supabase.storage
+      .from('medical-photos')
+      .createSignedUrl(path, 3600);
+    if (error || !data?.signedUrl) {
+      throw error || new Error('Gagal membuat signed URL foto medis');
+    }
+    return data.signedUrl;
+  }
+
+  // Cloudinary URL
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'pzlvn2bl';
+  return `https://res.cloudinary.com/${cloudName}/image/upload/${path}`;
+}
+

@@ -10,6 +10,9 @@ export type Patient = {
   alamat?: string;
   no_ktp?: string;
   no_bpjs?: string;
+  riwayat_alergi?: string;
+  no_telepon?: string;
+  pekerjaan?: string;
   created_at: string;
 };
 
@@ -42,7 +45,7 @@ export type Visit = {
   pendapatan_lain: number;
   keterangan_pendapatan?: string;
   jenis_pembayaran?: 'Tunai' | 'TF';
-  status_pembayaran: 'Lunas' | 'Pending';
+  status_pembayaran: 'Menunggu Dokter' | 'Menunggu Kasir' | 'Menunggu Pembayaran' | 'Lunas' | 'Ditanggung BPJS' | 'Pending';
   pasien?: Patient;
   dokter?: Doctor;
   created_at: string;
@@ -101,4 +104,14 @@ export type PostCare = {
   pasien?: Patient;
   visit?: Visit;
   created_at: string;
+};
+
+export type UserRole = 'kasir' | 'dokter' | 'owner';
+
+export type UserProfile = {
+  id: string;
+  email: string;
+  role: UserRole;
+  name: string;
+  clinic?: string;
 };

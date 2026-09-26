@@ -1,0 +1,19 @@
+{
+  "slug": "laporan-tab-revamp",
+  "title": "Pusat Laporan & Ekspor Excel Tab UI/UX Structural & Visual Revamp",
+  "module": "Laporan & Ekspor Excel",
+  "route": "/laporan",
+  "targetFiles": [
+    "src/app/laporan/page.tsx",
+    "src/components/laporan/ReportFilterBar.tsx",
+    "src/components/laporan/ReportTabs.tsx",
+    "src/components/laporan/ReportPreviewTable.tsx",
+    "src/components/laporan/ReportKpis.tsx",
+    "src/lib/excel.ts"
+  ],
+  "status": "completed",
+  "priority": "P1",
+  "author": "Antigravity Pair Engineer",
+  "createdAt": "2026-09-25",
+  "updatedAt": "2026-09-25"
+}

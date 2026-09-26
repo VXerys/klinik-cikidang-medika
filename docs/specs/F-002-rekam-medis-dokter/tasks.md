@@ -1,28 +1,18 @@
 ---
 id: F-002-TASKS
 feature: F-002
-status: approved
+status: implemented
 owner: "Developer"
-last_updated: "2026-09-19"
+last_updated: "2026-09-24"
 last_verified_commit: unverified
 related:
   - "requirements.md"
   - "design.md"
 ---
 
-# Tasks: F-002 Rekam Medis Ringkas Dokter
-
-## Execution Rules
-
-1. Execute one task at a time.
-2. Read referenced requirements before editing.
-3. Verify type check and lint after each task.
-4. Record progress in the SDD ledger and update checkboxes.
-
----
+# Tasks: F-002 Rekam Medis Ringkas Dokter & Tabbed Clinical Workspace
 
 ## Status Legend
-
 - `[ ]` Not started
 - `[-]` In progress
 - `[x]` Complete
@@ -33,63 +23,109 @@ related:
 ## Dependency Map
 
 ```text
-TASK-001 (ICD-10 Constants & Presets)
+TASK-001 (Linear State Machine & Database Types)
     │
-    ├──► TASK-002 (QueueList Component)
-    ├──► TASK-003 (Icd10QuickPicker Component)
-    └──► TASK-004 (PatientHistoryTimeline Component)
+    ├──► TASK-002 (Fix /pendaftaran Filter Tabs & Prevent Premature Payment Button)
+    └──► TASK-003 (Revamp ExaminationForm to Tabbed Clinical Workspace)
              │
              ▼
-TASK-005 (ExaminationForm Component)
+         TASK-004 (Implement "Selesai Periksa & Kirim ke Kasir" Handover Button)
              │
              ▼
-TASK-006 (Integrate /rekam-medis Master-Detail Page)
+         TASK-005 (Integrate Patient History Timeline Tab/Drawer)
              │
              ▼
-TASK-007 (End-to-End Verification & Quality Gate)
+         TASK-006 (End-to-End Verification & Quality Gate)
 ```
 
 ---
 
 ## Task Checklist
 
-### [ ] TASK-001 — Create ICD-10 Constants & Popular Codes Dictionary
-- **Objective:** Create `src/constants/icd10.ts` with top 8 clinic ICD-10 presets and a searchable catalog of common outpatient diagnoses.
-- **Target File:** `src/constants/icd10.ts`
-- **Requirement References:** FR-003, AC-003.1, AC-003.3
-- **Design Reference:** Section 2
+### [x] TASK-001 — Linear State Machine & Database Types
+- **Objective:** Update `status_pembayaran` in `src/types/database.ts` and set initial registration status to `'Menunggu Dokter'` in `RegisterVisitModal.tsx`.
+- **Target Files:**
+  - `src/types/database.ts`
+  - `src/components/pendaftaran/RegisterVisitModal.tsx`
+- **Requirement References:** FR-001, AC-001.1
+- **Design Reference:** Section 1, Section 4.1
 
-### [ ] TASK-002 — Build QueueList Component
-- **Objective:** Create `src/components/rekam-medis/QueueList.tsx` displaying today's patient queue with status filters (Semua, Menunggu, Selesai) and selection callback.
-- **Target File:** `src/components/rekam-medis/QueueList.tsx`
-- **Requirement References:** FR-001, AC-001.1, AC-001.2, AC-001.3
-- **Design Reference:** Section 1, Section 3.1
+### [x] TASK-002 — Fix `/pendaftaran` Queue Filter Tabs (Eliminate Redundant Cards)
+- **Objective:** Make all queue tab filters mutually exclusive based on `status_pembayaran`. Tab "Menunggu Dokter" ONLY shows `'Menunggu Dokter'`, tab "Menunggu Pembayaran" ONLY shows `'Menunggu Kasir'`, tab "Lunas" ONLY shows `'Lunas'` and `'Ditanggung BPJS'`. Ensure the "Bayar Kasir" button only appears for `'Menunggu Kasir'`.
+- **Target File:**
+  - `src/app/pendaftaran/page.tsx`
+- **Requirement References:** FR-001, AC-001.2, AC-001.4, AC-001.5
+- **Design Reference:** Section 1
 
-### [ ] TASK-003 — Build Icd10QuickPicker Component
-- **Objective:** Create `src/components/rekam-medis/Icd10QuickPicker.tsx` rendering quick-pick chips for the 8 top diagnoses and an instant search input for other ICD-10 codes.
-- **Target File:** `src/components/rekam-medis/Icd10QuickPicker.tsx`
+### [x] TASK-003 — Revamp `ExaminationForm.tsx` to Tabbed Clinical Workspace
+- **Objective:** Restructure the monolithic vertical examination form into 3 ergonomic tabs:
+  1. *Tab 1: Anamnesa & TTV* (Keluhan awal loket, anamnesa lanjutan, Tekanan Darah/TTV, Peringatan Alergi).
+  2. *Tab 2: Diagnosa & Tindakan* (8 Chip ICD-10 terpopuler, Search Autocomplete, Tindakan Medis, Lab Point-of-Care).
+  3. *Tab 3: Resep Obat & Kasir* (Template resep cepat, aturan pakai, estimasi biaya tindakan kasir).
+- **Target File:**
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+- **Requirement References:** FR-002, AC-002.1, AC-002.3
+- **Design Reference:** Section 3
+
+### [x] TASK-004 — Implement Doctor Handover Button ("Selesai Periksa & Kirim ke Kasir")
+- **Objective:** Add sticky bottom docked bar with navigation ("Sebelumnya", "Lanjut"), "Simpan Draft", and the primary handover button **"Selesai Periksa & Kirim ke Kasir"**. When clicked, validate ICD-10, update visit status to `'Menunggu Kasir'`, show toast notification, and advance the queue.
+- **Target File:**
+  - `src/components/rekam-medis/ExaminationForm.tsx`
 - **Requirement References:** FR-003, AC-003.1, AC-003.2, AC-003.3
-- **Design Reference:** Section 2
+- **Design Reference:** Section 3, Section 4.2
 
-### [ ] TASK-004 — Build PatientHistoryTimeline Component
-- **Objective:** Create `src/components/rekam-medis/PatientHistoryTimeline.tsx` displaying past medical visits for the selected patient with past diagnoses, doctors, and medications.
-- **Target File:** `src/components/rekam-medis/PatientHistoryTimeline.tsx`
-- **Requirement References:** FR-006, AC-006.1, AC-006.2
-- **Design Reference:** Section 3.2
+### [x] TASK-005 — Integrate Patient History Timeline into Clinical Workspace
+- **Objective:** Integrate `PatientHistoryTimeline.tsx` as a 4th tab or quick-access panel inside the examination form so doctors can view previous visit records without scrolling down.
+- **Target Files:**
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+  - `src/app/rekam-medis/page.tsx`
+- **Requirement References:** FR-004, AC-004.1, AC-004.2
+- **Design Reference:** Section 3
 
-### [ ] TASK-005 — Build ExaminationForm Component
-- **Objective:** Create `src/components/rekam-medis/ExaminationForm.tsx` containing patient identity header, anamnesis, vital signs, ICD-10 picker, prescription, and procedure inputs.
-- **Target File:** `src/components/rekam-medis/ExaminationForm.tsx`
-- **Requirement References:** FR-002, FR-004, FR-005, AC-005.1, AC-005.2
-- **Design Reference:** Section 1, Section 3.3
+### [x] TASK-006 — End-to-End Verification & Quality Gate
+- **Objective:** Run full verification across the entire workspace.
+- **Status:** Completed.
 
-### [ ] TASK-006 — Integrate Master-Detail Rekam Medis Page
-- **Objective:** Connect `src/app/rekam-medis/page.tsx` with live Supabase queries, real-time queue management, and examination submission.
-- **Target File:** `src/app/rekam-medis/page.tsx`
-- **Requirement References:** All functional requirements FR-001 through FR-006
-- **Design Reference:** Section 1, Section 3
+### [x] TASK-007 — Multi-Diagnosis ICD-10 Selection & Fix Duplicate Inputs
+- **Objective:** Support multiple ICD-10 diagnoses (primary + secondary) with removable badges, eliminate duplicated header and input boxes in Tab 2.
+- **Target Files:**
+  - `src/components/rekam-medis/Icd10QuickPicker.tsx`
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+- **Requirement References:** FR-002, FR-005, AC-005.1-AC-005.4
+- **Status:** Completed.
 
-### [ ] TASK-007 — End-to-End Verification & Quality Gate
-- **Objective:** Run static analysis, type checking (`npx tsc --noEmit`), production build verification (`npm run build`), and context validation (`npm run context:validate`).
-- **Commands:** `npx tsc --noEmit`, `npm run build`, `npm run context:validate`
-- **Requirement References:** All acceptance criteria
+### [x] TASK-008 — Smart Drug Search & Quick Signa Chips
+- **Objective:** Provide instant search across 50+ common outpatient clinic drugs with default signa, plus one-click signa chips for doctors.
+- **Target Files:**
+  - `src/constants/prescriptions.ts`
+  - `src/components/rekam-medis/MedicineQuickSearch.tsx`
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+- **Requirement References:** FR-006, AC-006.1-AC-006.4
+- **Status:** Completed.
+
+### [x] TASK-009 — Step-Scoped Action Bar (Handover Only on Final Tab)
+- **Objective:** Restrict "Selesai Periksa & Kirim ke Kasir" to Tab 3 (Resep & Kasir). Earlier tabs only display navigation buttons to prevent accidental doctor clicks.
+- **Target File:**
+  - `src/components/rekam-medis/ExaminationForm.tsx`
+- **Requirement References:** FR-003, AC-003.1-AC-003.3
+- **Status:** Completed.
+
+### [x] TASK-010 — Fix Workstation Completion State & Queue Auto-Advance
+- **Objective:** Automatically advance to the next waiting patient upon handover, or cleanly close the workstation and show the standby empty state if no patients remain waiting.
+- **Target File:**
+  - `src/app/rekam-medis/page.tsx`
+- **Requirement References:** FR-007, AC-007.1-AC-007.3
+- **Status:** Completed.
+
+### [x] TASK-011 — Kasir & Kuitansi Multi-Diagnosis Display
+- **Objective:** Ensure all selected diagnoses are clearly rendered in the payment modal and printed official receipts.
+- **Target Files:**
+  - `src/components/pendaftaran/PaymentModal.tsx`
+  - `src/components/pendaftaran/ReceiptModal.tsx`
+- **Requirement References:** FR-005, AC-005.5
+- **Status:** Completed.
+
+### [x] TASK-012 — End-to-End Verification & Quality Gate
+- **Objective:** Run type check, context validation, and Next.js production build.
+- **Target Files:** Entire repository.
+- **Status:** Completed (tsc 0 error, validate-context 0 error, build 9/9 routes passed).

@@ -1,12 +1,27 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ClipboardCheck, AlertCircle, ShieldCheck, Stethoscope, User, MapPin } from 'lucide-react';
+import { z } from 'zod';
+import {
+  WarningCircle,
+  ShieldCheck,
+  Stethoscope,
+  User,
+  MapPin,
+  Ticket,
+  Info,
+} from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient, Doctor, Visit } from '@/types/database';
-import { DEFAULT_TARIFFS, METODE_PEMBAYARAN_OPTIONS } from '@/constants/clinic';
-import { Modal, Button, Input, Select, Badge } from '@/components/ui';
-import { formatRupiah } from '@/lib/utils';
+import { DEFAULT_TARIFFS } from '@/constants/clinic';
+import { Modal } from '@/components/ui';
+
+const visitSchema = z.object({
+  dokterId: z.string().trim().min(1, 'Pilih dokter pemeriksa terlebih dahulu.'),
+  nomorAntrian: z.string().trim().min(1, 'Nomor antrean wajib ada.'),
+  jenisPasien: z.enum(['BPJS', 'UMUM']),
+  keluhan: z.string().trim().optional().nullable(),
+});
 
 export interface RegisterVisitModalProps {
   isOpen: boolean;
@@ -26,36 +41,27 @@ export function RegisterVisitModal({
   const [nomorAntrian, setNomorAntrian] = useState<string>('1');
   const [keluhan, setKeluhan] = useState('');
   const [jenisPasien, setJenisPasien] = useState<'BPJS' | 'UMUM'>('UMUM');
-  const [biayaPeriksa, setBiayaPeriksa] = useState<number>(DEFAULT_TARIFFS.umum);
-  const [pendapatanLain, setPendapatanLain] = useState<number>(0);
-  const [keteranganPendapatan, setKeteranganPendapatan] = useState('');
-  const [jenisPembayaran, setJenisPembayaran] = useState<'Tunai' | 'TF'>('Tunai');
-  const [statusPembayaran] = useState<'Lunas' | 'Pending'>('Lunas');
 
   const [isLoadingDoctors, setIsLoadingDoctors] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Initialize form when modal opens with a patient
   useEffect(() => {
     if (!isOpen || !patient) {
       setErrorMessage(null);
+      setFieldErrors({});
       return;
     }
 
     setErrorMessage(null);
+    setFieldErrors({});
     setKeluhan('');
-    setPendapatanLain(0);
-    setKeteranganPendapatan('');
-    setJenisPembayaran('Tunai');
 
-    // Default to BPJS if patient already has BPJS number, otherwise UMUM
     if (patient.no_bpjs && patient.no_bpjs.trim().length > 0) {
       setJenisPasien('BPJS');
-      setBiayaPeriksa(DEFAULT_TARIFFS.bpjs);
     } else {
       setJenisPasien('UMUM');
-      setBiayaPeriksa(DEFAULT_TARIFFS.umum);
     }
 
     const initData = async () => {
@@ -63,7 +69,6 @@ export function RegisterVisitModal({
       try {
         const supabase = createClient();
 
-        // 1. Fetch active doctors
         const { data: docData, error: docError } = await supabase
           .from('doctors')
           .select('id, nama, spesialisasi, aktif')
@@ -71,13 +76,23 @@ export function RegisterVisitModal({
           .order('nama', { ascending: true });
 
         if (docError) throw docError;
-        setDoctors(docData || []);
-        if (docData && docData.length > 0) {
-          setSelectedDoctorId(docData[0].id);
+
+        // Sort physicians (dr.) to the top of the list
+        const sortedDocs = [...(docData || [])].sort((a, b) => {
+          const isADr = a.nama.toLowerCase().startsWith('dr');
+          const isBDr = b.nama.toLowerCase().startsWith('dr');
+          if (isADr && !isBDr) return -1;
+          if (!isADr && isBDr) return 1;
+          return a.nama.localeCompare(b.nama);
+        });
+
+        setDoctors(sortedDocs);
+        if (sortedDocs.length > 0) {
+          setSelectedDoctorId(sortedDocs[0].id);
         }
 
-        // 2. Fetch today's count to compute next queue number
-        const todayStr = new Date().toISOString().split('T')[0];
+        // Canonical Indonesian date (WIB / Asia/Jakarta)
+        const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(new Date());
         const { count, error: countError } = await supabase
           .from('visits')
           .select('*', { count: 'exact', head: true })
@@ -95,26 +110,30 @@ export function RegisterVisitModal({
     initData();
   }, [isOpen, patient]);
 
-  // Handle change of patient type (BPJS vs UMUM)
-  const handleJenisPasienChange = (type: 'BPJS' | 'UMUM') => {
-    setJenisPasien(type);
-    if (type === 'BPJS') {
-      setBiayaPeriksa(DEFAULT_TARIFFS.bpjs);
-    } else {
-      setBiayaPeriksa(DEFAULT_TARIFFS.umum);
-    }
-  };
-
-  const totalBiaya = (jenisPasien === 'BPJS' ? 0 : Number(biayaPeriksa || 0)) + Number(pendapatanLain || 0);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!patient) return;
 
     setErrorMessage(null);
+    setFieldErrors({});
 
-    if (!selectedDoctorId) {
-      setErrorMessage('Pilih dokter pemeriksa terlebih dahulu.');
+    const parseResult = visitSchema.safeParse({
+      dokterId: selectedDoctorId,
+      nomorAntrian,
+      jenisPasien,
+      keluhan: keluhan || null,
+    });
+
+    if (!parseResult.success) {
+      const errors: Record<string, string> = {};
+      parseResult.error.issues.forEach((issue) => {
+        const fieldName = issue.path[0] as string;
+        if (!errors[fieldName]) {
+          errors[fieldName] = issue.message;
+        }
+      });
+      setFieldErrors(errors);
+      setErrorMessage(parseResult.error.issues[0]?.message || 'Periksa kembali formulir pendaftaran.');
       return;
     }
 
@@ -122,25 +141,30 @@ export function RegisterVisitModal({
 
     try {
       const supabase = createClient();
+      const validData = parseResult.data;
       const now = new Date();
-      const todayStr = now.toISOString().split('T')[0];
-      const jamStr = now.toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
-      const bulanStr = now.toLocaleString('id-ID', { month: 'long' });
+      // Ensure WIB local date & time
+      const todayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Jakarta' }).format(now);
+      const jamStr = now.toTimeString().split(' ')[0];
+      const bulanStr = now.toLocaleString('id-ID', { month: 'long', timeZone: 'Asia/Jakarta' });
+
+      const statusAwal = 'Menunggu Dokter';
+      const initialTariff = validData.jenisPasien === 'BPJS' ? 0 : DEFAULT_TARIFFS.umum;
 
       const newVisit = {
-        nomor_antrian: nomorAntrian,
+        nomor_antrian: validData.nomorAntrian,
         pasien_id: patient.id,
-        dokter_id: selectedDoctorId,
+        dokter_id: validData.dokterId,
         tanggal_periksa: todayStr,
         jam_periksa: jamStr,
         bulan: bulanStr,
-        keluhan_anamnesa: keluhan.trim() || null,
-        jenis_pasien: jenisPasien,
-        biaya_periksa: jenisPasien === 'BPJS' ? 0 : Number(biayaPeriksa),
-        pendapatan_lain: Number(pendapatanLain || 0),
-        keterangan_pendapatan: keteranganPendapatan.trim() || null,
-        jenis_pembayaran: jenisPembayaran,
-        status_pembayaran: statusPembayaran,
+        keluhan_anamnesa: validData.keluhan || null,
+        jenis_pasien: validData.jenisPasien,
+        biaya_periksa: initialTariff,
+        pendapatan_lain: 0,
+        keterangan_pendapatan: null,
+        jenis_pembayaran: null,
+        status_pembayaran: statusAwal,
       };
 
       const { data, error } = await supabase
@@ -175,231 +199,169 @@ export function RegisterVisitModal({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Pendaftaran Kunjungan & Kasir"
+      title="Pendaftaran Kunjungan Poli"
       description={
         <span>
-          Nomor Antrian Hari Ini: <span className="font-bold text-blue-600">#{nomorAntrian}</span>
+          Nomor Antrean Hari Ini: <span className="font-bold text-teal-600 font-mono">#{nomorAntrian}</span>
         </span>
       }
-      icon={
-        <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
-          <ClipboardCheck className="w-5 h-5" />
-        </div>
-      }
-      maxWidth="2xl"
+      maxWidth="lg"
     >
-      {/* Selected Patient Identity Banner */}
-      <div className="px-6 py-3 bg-blue-50/70 border-b border-blue-100 flex items-center justify-between flex-wrap gap-2">
-        <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-full bg-blue-600 text-white flex items-center justify-center text-xs font-bold">
-            <User className="w-4 h-4" />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-xs text-slate-900">{patientFullName}</span>
-              <Badge variant="umum" className="font-mono">
-                {patient.no_rm}
-              </Badge>
-            </div>
-            <div className="flex items-center gap-2 text-[11px] text-slate-600 mt-0.5">
-              <span className="flex items-center gap-1">
-                <MapPin className="w-3 h-3 text-slate-400" />
-                {patient.desa}
-              </span>
-              <span>•</span>
-              <span>{patient.jenis_kelamin}</span>
-              {patient.usia !== undefined && patient.usia !== null && (
-                <>
-                  <span>•</span>
-                  <span>{patient.usia} thn</span>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          {patient.no_bpjs ? (
-            <Badge variant="bpjs" size="md">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              BPJS: {patient.no_bpjs}
-            </Badge>
-          ) : (
-            <Badge variant="default" size="md">
-              Pasien Umum
-            </Badge>
-          )}
-        </div>
-      </div>
-
-      {/* Modal Form */}
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 p-4 sm:p-5 space-y-3.5">
         {errorMessage && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="p-2.5 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2 text-rose-700 text-xs">
+            <WarningCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" weight="bold" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Dokter Pemeriksa */}
-          <Select
-            label="Dokter Pemeriksa"
-            requiredIndicator
-            value={selectedDoctorId}
-            onChange={(e) => setSelectedDoctorId(e.target.value)}
-            disabled={isLoadingDoctors}
-            required
-            options={doctors.map((d) => ({
-              value: d.id,
-              label: `${d.nama} ${d.spesialisasi ? `(${d.spesialisasi})` : ''}`,
-            }))}
-          />
+        {/* 1. Patient Info Tactile Card (Double-Bezel concentric design) */}
+        <div className="p-3 sm:p-3.5 bg-slate-50 border border-slate-200/90 rounded-2xl flex items-center justify-between flex-wrap gap-2.5">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-gradient-to-b from-teal-500 to-teal-600 text-white flex items-center justify-center font-bold text-xs shadow-btn-primary shrink-0">
+              <User className="w-4 h-4" weight="bold" />
+            </div>
+            <div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-extrabold text-xs sm:text-sm text-slate-900">{patientFullName}</span>
+                <span className="px-1.5 py-0.2 bg-teal-50 text-teal-800 border border-teal-200 text-[10px] font-mono font-bold rounded-md">
+                  {patient.no_rm}
+                </span>
+              </div>
+              <div className="flex items-center gap-1.5 text-[11px] text-slate-600 mt-0.5 flex-wrap">
+                <span className="flex items-center gap-1 font-medium">
+                  <MapPin className="w-3 h-3 text-slate-400" weight="bold" />
+                  {patient.desa}
+                </span>
+                <span>•</span>
+                <span>{patient.jenis_kelamin}</span>
+                {patient.usia !== undefined && patient.usia !== null && (
+                  <>
+                    <span>•</span>
+                    <span>{patient.usia} thn</span>
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
 
-          {/* Jenis Pasien (BPJS vs UMUM) */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
+            {patient.no_bpjs ? (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-emerald-50 text-emerald-800 border border-emerald-300 rounded-xl text-xs font-bold font-mono">
+                <ShieldCheck className="w-4 h-4 text-emerald-600" weight="bold" />
+                BPJS: {patient.no_bpjs}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 bg-teal-50 text-teal-800 border border-teal-200 rounded-xl text-xs font-bold">
+                Pasien Umum
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* 2. Doctor & Patient Category Grid */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Dokter Pemeriksa <span className="text-rose-500">*</span>
+            </label>
+            <select
+              value={selectedDoctorId}
+              onChange={(e) => {
+                setSelectedDoctorId(e.target.value);
+                if (fieldErrors.dokterId) setFieldErrors((prev) => ({ ...prev, dokterId: '' }));
+              }}
+              disabled={isLoadingDoctors}
+              className="w-full py-2.5 px-3.5 text-xs sm:text-sm min-h-[44px] bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-medium transition-colors focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 focus:bg-white disabled:bg-slate-100 disabled:text-slate-400"
+            >
+              {doctors.map((d) => (
+                <option key={d.id} value={d.id}>
+                  {d.nama} {d.spesialisasi ? `(${d.spesialisasi})` : ''}
+                </option>
+              ))}
+            </select>
+            {fieldErrors.dokterId && (
+              <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.dokterId}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Kategori Pasien <span className="text-rose-500">*</span>
             </label>
             <div className="grid grid-cols-2 gap-2">
               <button
                 type="button"
-                onClick={() => handleJenisPasienChange('BPJS')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                onClick={() => setJenisPasien('BPJS')}
+                className={`py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all tactile-btn ${
                   jenisPasien === 'BPJS'
-                    ? 'bg-teal-600 text-white border-teal-600 shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    ? 'bg-gradient-to-b from-emerald-600 to-emerald-700 text-white border-emerald-700 shadow-btn-primary'
+                    : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
                 }`}
               >
-                <ShieldCheck className="w-4 h-4" />
-                BPJS
+                <ShieldCheck className="w-4 h-4" weight="bold" />
+                <span>BPJS</span>
               </button>
+
               <button
                 type="button"
-                onClick={() => handleJenisPasienChange('UMUM')}
-                className={`py-2 px-3 rounded-lg text-xs font-semibold border flex items-center justify-center gap-1.5 transition ${
+                onClick={() => setJenisPasien('UMUM')}
+                className={`py-2.5 px-3 min-h-[44px] rounded-xl text-xs font-bold border flex items-center justify-center gap-1.5 transition-all tactile-btn ${
                   jenisPasien === 'UMUM'
-                    ? 'bg-blue-600 text-white border-blue-600 shadow-xs'
-                    : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'
+                    ? 'bg-gradient-to-b from-teal-600 to-teal-700 text-white border-teal-700 shadow-btn-primary'
+                    : 'bg-slate-50 text-slate-700 border-slate-300 hover:bg-slate-100'
                 }`}
               >
-                <Stethoscope className="w-4 h-4" />
-                UMUM
+                <Stethoscope className="w-4 h-4" weight="bold" />
+                <span>UMUM</span>
               </button>
             </div>
           </div>
         </div>
 
-        {/* Keluhan / Anamnesa Awal */}
+        {/* 3. Keluhan / Anamnesa Input */}
         <div>
-          <label className="block text-xs font-semibold text-slate-700 mb-1">
+          <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
             Keluhan Utama / Anamnesa Awal
           </label>
           <textarea
             rows={2}
             value={keluhan}
             onChange={(e) => setKeluhan(e.target.value)}
-            placeholder="Contoh: Demam tinggi sejak 2 hari yang lalu disertai batuk kering"
-            className="w-full px-3 py-2 text-xs bg-white border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            placeholder="Contoh: Demam tinggi sejak 2 hari yang lalu disertai batuk kering dan pusing"
+            className="w-full px-3.5 py-2 text-xs sm:text-sm bg-slate-50 border border-slate-300 rounded-xl font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 focus:bg-white transition-colors"
           />
         </div>
 
-        {/* Billing & Kasir Section */}
-        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200 space-y-3">
-          <div className="flex items-center justify-between">
-            <h3 className="text-xs font-bold text-slate-800 uppercase tracking-wider">
-              Rincian Pembayaran & Kasir
-            </h3>
-            {jenisPasien === 'BPJS' && (
-              <Badge variant="bpjs">Ditanggung Kapitasi BPJS (Rp 0)</Badge>
-            )}
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Biaya Pemeriksaan */}
-            <Input
-              type="number"
-              min="0"
-              step="1000"
-              label="Biaya Pemeriksaan Pokok"
-              leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
-              value={biayaPeriksa}
-              onChange={(e) => setBiayaPeriksa(Number(e.target.value))}
-              disabled={jenisPasien === 'BPJS'}
-              className="font-mono font-bold"
-            />
-
-            {/* Pendapatan Lain */}
-            <Input
-              type="number"
-              min="0"
-              step="1000"
-              label="Biaya Tambahan / Tindakan Lain (Opsional)"
-              leftElement={<span className="font-bold text-xs text-slate-500">Rp</span>}
-              value={pendapatanLain}
-              onChange={(e) => setPendapatanLain(Number(e.target.value))}
-              placeholder="0"
-              className="font-mono font-bold"
-            />
-          </div>
-
-          {pendapatanLain > 0 && (
-            <Input
-              label="Keterangan Biaya Tambahan"
-              requiredIndicator
-              value={keteranganPendapatan}
-              onChange={(e) => setKeteranganPendapatan(e.target.value)}
-              placeholder="Contoh: Nebulizer / Perawatan Luka Ringan / Cek Gula Darah"
-              required
-            />
-          )}
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            {/* Metode Pembayaran */}
-            <Select
-              label="Metode Pembayaran"
-              value={jenisPembayaran}
-              onChange={(e) => setJenisPembayaran(e.target.value as 'Tunai' | 'TF')}
-              options={METODE_PEMBAYARAN_OPTIONS.map((m) => ({
-                value: m,
-                label: m === 'Tunai' ? 'Tunai (Cash)' : 'Transfer Bank (TF)',
-              }))}
-            />
-
-            {/* Total Tagihan */}
-            <div className="bg-blue-50/60 p-2.5 rounded-lg border border-blue-100 flex items-center justify-between">
-              <div>
-                <span className="block text-[10px] uppercase font-bold text-blue-700">
-                  Total Yang Harus Dibayar
-                </span>
-                <span className="text-base font-extrabold text-blue-900 font-mono">
-                  {formatRupiah(totalBiaya)}
-                </span>
-              </div>
-              <div className="text-right">
-                <Badge variant="lunas">{statusPembayaran}</Badge>
-              </div>
-            </div>
+        {/* 4. Information Card */}
+        <div className="p-3 bg-teal-50/70 border border-teal-200/70 rounded-2xl flex items-start gap-2.5 text-xs text-teal-900">
+          <Info className="w-4 h-4 shrink-0 mt-0.5 text-teal-600" weight="bold" />
+          <div className="space-y-0.5">
+            <p className="font-extrabold text-teal-950">Alur Pelayanan Antrean Poli:</p>
+            <p className="text-[11px] text-teal-800 leading-relaxed">
+              Setelah terdaftar, karcis antrean diterbitkan untuk pasien. Rincian pemeriksaan, diagnosis ICD-10, tindakan, dan resep obat akan dicatat dokter di ruang periksa sebelum pelunasan di kasir.
+            </p>
           </div>
         </div>
 
-        {/* Modal Footer Actions */}
-        <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">
-          <Button
+        {/* 5. Modal Footer Action */}
+        <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2.5">
+          <button
             type="button"
-            variant="ghost"
             onClick={onClose}
             disabled={isSubmitting}
+            className="px-4 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 tactile-btn min-h-[44px]"
           >
-            Batal
-          </Button>
-          <Button
+            Batal & Tutup
+          </button>
+          <button
             type="submit"
-            variant="primary"
-            isLoading={isSubmitting}
+            disabled={isSubmitting}
+            className="px-5 py-2 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700 tactile-btn flex items-center gap-2 min-h-[44px] disabled:opacity-50"
           >
-            Daftarkan ke Antrian Pasien
-          </Button>
+            <Ticket className="w-4 h-4" weight="bold" />
+            <span>{isSubmitting ? 'Mendaftarkan...' : 'Daftarkan & Ambil Antrean'}</span>
+          </button>
         </div>
       </form>
     </Modal>

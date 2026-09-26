@@ -1,13 +1,22 @@
 'use client';
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Search, Loader2, UserPlus, X, MapPin } from 'lucide-react';
+import {
+  MagnifyingGlass,
+  CircleNotch,
+  UserPlus,
+  X,
+  MapPin,
+  NotePencil,
+  ShieldWarning,
+} from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
 import { cn } from '@/lib/utils';
 
 export interface PatientSearchAutocompleteProps {
   onSelectPatient: (patient: Patient) => void;
+  onEditPatient?: (patient: Patient) => void;
   onAddNewPatient: () => void;
   className?: string;
   placeholder?: string;
@@ -16,6 +25,7 @@ export interface PatientSearchAutocompleteProps {
 
 export function PatientSearchAutocomplete({
   onSelectPatient,
+  onEditPatient,
   onAddNewPatient,
   className,
   placeholder = 'Cari pasien berdasarkan Nama, No RM, atau Desa...',
@@ -30,7 +40,6 @@ export function PatientSearchAutocomplete({
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Debounced search query against public.patients
   useEffect(() => {
     const trimmed = query.trim();
 
@@ -48,12 +57,12 @@ export function PatientSearchAutocomplete({
     const timer = setTimeout(async () => {
       try {
         const supabase = createClient();
-        // Remove special PostgREST syntax characters to prevent query parsing errors
+        // Remove commas and parentheses to prevent PostgREST URI syntax parse errors
         const cleanQuery = trimmed.replace(/[,()]/g, '');
 
         const { data, error } = await supabase
           .from('patients')
-          .select('id, no_rm, gelar, nama, jenis_kelamin, tanggal_lahir, usia, desa, alamat, no_ktp, no_bpjs, created_at')
+          .select('*')
           .or(`nama.ilike.%${cleanQuery}%,no_rm.ilike.%${cleanQuery}%,desa.ilike.%${cleanQuery}%`)
           .order('nama', { ascending: true })
           .limit(10);
@@ -85,7 +94,6 @@ export function PatientSearchAutocomplete({
     };
   }, [query]);
 
-  // Handle click outside to close dropdown
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(event.target as Node)) {
@@ -96,6 +104,23 @@ export function PatientSearchAutocomplete({
     document.addEventListener('mousedown', handleClickOutside);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  useEffect(() => {
+    const handleGlobalKeyDown = (e: KeyboardEvent) => {
+      if (
+        e.key === '/' &&
+        !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)
+      ) {
+        e.preventDefault();
+        inputRef.current?.focus();
+      }
+    };
+
+    window.addEventListener('keydown', handleGlobalKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleGlobalKeyDown);
     };
   }, []);
 
@@ -150,11 +175,10 @@ export function PatientSearchAutocomplete({
   const hasSearchQuery = query.trim().length >= 2;
 
   return (
-    <div ref={containerRef} className={cn('relative w-full', className)}>
-      {/* Search Input Bar */}
-      <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-sm transition-all focus-within:border-blue-500 focus-within:ring-2 focus-within:ring-blue-100">
+    <div ref={containerRef} className={cn('relative w-full', isOpen && hasSearchQuery ? 'z-40' : '', className)}>
+      <div className="relative flex items-center bg-white rounded-xl border border-slate-200 shadow-xs transition-all focus-within:border-teal-600 focus-within:ring-2 focus-within:ring-teal-100 min-h-[44px]">
         <div className="pl-3.5 pr-2 flex items-center justify-center text-slate-400 pointer-events-none">
-          <Search className="w-4 h-4" />
+          <MagnifyingGlass className="w-4 h-4" weight="duotone" />
         </div>
 
         <input
@@ -168,39 +192,51 @@ export function PatientSearchAutocomplete({
           onKeyDown={handleKeyDown}
           placeholder={placeholder}
           autoFocus={autoFocus}
-          className="w-full py-2.5 pr-8 text-xs text-slate-800 placeholder-slate-400 bg-transparent outline-none"
+          aria-label="Pencarian cepat pasien"
+          aria-autocomplete="list"
+          aria-expanded={isOpen && hasSearchQuery}
+          className="w-full py-2.5 pr-8 text-sm sm:text-xs text-slate-900 placeholder-slate-400 bg-transparent outline-none min-h-[44px]"
         />
 
-        <div className="pr-3 flex items-center gap-1.5">
-          {isLoading && (
-            <Loader2 className="w-4 h-4 text-blue-500 animate-spin" />
-          )}
-
-          {query.length > 0 && !isLoading && (
+        <div className="pr-3 flex items-center gap-1.5 shrink-0">
+          {isLoading ? (
+            <CircleNotch className="w-4 h-4 text-teal-600 animate-spin" weight="bold" />
+          ) : query.length === 0 ? (
+            <kbd
+              className="hidden sm:inline-flex items-center justify-center px-1.5 py-0.5 text-[10px] font-mono font-semibold text-slate-400 bg-slate-100 border border-slate-200 rounded select-none cursor-pointer hover:bg-slate-200 hover:text-slate-600 transition"
+              onClick={() => inputRef.current?.focus()}
+              title="Tekan tombol '/' di keyboard untuk mencari pasien"
+            >
+              /
+            </kbd>
+          ) : (
             <button
               type="button"
               onClick={handleClear}
-              className="p-1 rounded-md text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition"
+              className="p-1 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition min-w-[32px] min-h-[32px] flex items-center justify-center"
               title="Hapus pencarian"
+              aria-label="Hapus teks pencarian"
             >
-              <X className="w-3.5 h-3.5" />
+              <X className="w-4 h-4" weight="bold" />
             </button>
           )}
         </div>
       </div>
 
-      {/* Autocomplete Dropdown */}
       {isOpen && hasSearchQuery && (
-        <div className="absolute left-0 right-0 top-full mt-1.5 bg-white border border-slate-200 rounded-xl shadow-xl z-50 overflow-hidden divide-y divide-slate-100">
-          {/* Results List */}
+        <div className="absolute left-0 right-0 top-full mt-2 bg-white/95 backdrop-blur-md border border-slate-200/90 rounded-2xl shadow-card-double z-50 overflow-hidden divide-y divide-slate-100">
           {results.length > 0 ? (
             <div>
-              <div className="px-3 py-1.5 bg-slate-50 text-[11px] font-semibold text-slate-500 flex justify-between items-center">
+              <div className="px-3 py-2 bg-slate-50 text-[11px] font-semibold text-slate-500 flex justify-between items-center">
                 <span>Hasil Pencarian ({results.length} pasien)</span>
                 <span className="text-[10px] text-slate-400 font-normal">Gunakan panah ↑↓ dan Enter</span>
               </div>
 
-              <ul className="max-h-80 overflow-y-auto divide-y divide-slate-100">
+              <ul
+                role="listbox"
+                aria-label="Daftar pasien ditemukan"
+                className="max-h-80 overflow-y-auto divide-y divide-slate-100"
+              >
                 {results.map((patient, index) => {
                   const isSelected = selectedIndex === index;
                   const fullName = [patient.gelar, patient.nama].filter(Boolean).join(' ');
@@ -208,11 +244,13 @@ export function PatientSearchAutocomplete({
                   return (
                     <li
                       key={patient.id}
+                      role="option"
+                      aria-selected={isSelected}
                       onClick={() => handleSelectPatient(patient)}
                       onMouseEnter={() => setSelectedIndex(index)}
                       className={cn(
                         'px-4 py-2.5 flex items-center justify-between gap-3 cursor-pointer transition select-none',
-                        isSelected ? 'bg-blue-50/80 border-l-4 border-l-blue-600 pl-3' : 'hover:bg-slate-50'
+                        isSelected ? 'bg-teal-50/80 border-l-4 border-l-teal-600 pl-3' : 'hover:bg-slate-50'
                       )}
                     >
                       <div className="min-w-0 flex-1">
@@ -220,14 +258,14 @@ export function PatientSearchAutocomplete({
                           <span className="font-semibold text-xs text-slate-900 truncate">
                             {fullName}
                           </span>
-                          <span className="font-mono text-[11px] font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
+                          <span className="font-mono text-[11px] font-bold text-teal-700 bg-teal-50 px-1.5 py-0.5 rounded border border-teal-200 shrink-0">
                             {patient.no_rm}
                           </span>
                         </div>
 
                         <div className="flex items-center gap-3 mt-1 text-[11px] text-slate-500 flex-wrap">
                           <span className="flex items-center gap-1">
-                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
+                            <MapPin className="w-3 h-3 text-slate-400 shrink-0" weight="duotone" />
                             {patient.desa}
                           </span>
                           <span>•</span>
@@ -241,16 +279,42 @@ export function PatientSearchAutocomplete({
                           {patient.no_bpjs && (
                             <>
                               <span>•</span>
-                              <span className="bg-teal-50 text-teal-700 px-1.5 py-0.2 rounded font-medium border border-teal-200 text-[10px]">
+                              <span className="bg-teal-50 text-teal-800 px-1.5 py-0.5 rounded font-medium border border-teal-200 text-[10px]">
                                 BPJS: {patient.no_bpjs}
                               </span>
                             </>
                           )}
+                          {patient.riwayat_alergi &&
+                            patient.riwayat_alergi.trim() !== '' &&
+                            patient.riwayat_alergi.trim().toLowerCase() !== 'tidak ada' && (
+                              <>
+                                <span>•</span>
+                                <span className="bg-red-50 text-red-700 px-1.5 py-0.5 rounded font-bold border border-red-200 text-[10px] inline-flex items-center gap-0.5">
+                                  <ShieldWarning className="w-3 h-3 text-red-600" weight="fill" />
+                                  Alergi: {patient.riwayat_alergi}
+                                </span>
+                              </>
+                            )}
                         </div>
                       </div>
 
-                      <div className="text-right shrink-0">
-                        <span className="text-[11px] font-medium text-blue-600 hover:underline">
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        {onEditPatient && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setIsOpen(false);
+                              onEditPatient(patient);
+                            }}
+                            className="px-2 py-1 rounded text-[11px] font-semibold text-slate-600 hover:text-slate-900 hover:bg-slate-200 border border-slate-200 transition inline-flex items-center gap-1"
+                            title="Edit data pasien"
+                          >
+                            <NotePencil className="w-3 h-3 text-slate-500" weight="bold" />
+                            <span>Edit</span>
+                          </button>
+                        )}
+                        <span className="text-[11px] font-semibold text-teal-600 hover:text-teal-700 px-2 py-1 bg-teal-50 hover:bg-teal-100 rounded border border-teal-200 transition">
                           Pilih
                         </span>
                       </div>
@@ -259,26 +323,25 @@ export function PatientSearchAutocomplete({
                 })}
               </ul>
 
-              <div className="p-2 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-500">
+              <div className="p-3 bg-slate-50 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-[11px] text-slate-600">
                 <span>Pasien tidak terdaftar di hasil?</span>
                 <button
                   type="button"
                   onClick={handleAddNewPatient}
-                  className="text-blue-600 font-semibold hover:underline inline-flex items-center gap-1"
+                  className="text-teal-700 font-semibold hover:underline inline-flex items-center gap-1.5 min-h-[36px]"
                 >
-                  <UserPlus className="w-3 h-3" />
-                  + Daftarkan Sebagai Pasien Baru
+                  <UserPlus className="w-3.5 h-3.5" weight="duotone" />
+                  <span>Daftarkan Sebagai Pasien Baru</span>
                 </button>
               </div>
             </div>
           ) : !isLoading ? (
-            /* Empty State */
             <div className="p-6 text-center space-y-3">
               <div className="w-10 h-10 rounded-full bg-slate-100 text-slate-400 flex items-center justify-center mx-auto">
-                <Search className="w-5 h-5" />
+                <MagnifyingGlass className="w-5 h-5" weight="duotone" />
               </div>
               <div className="space-y-1">
-                <p className="text-xs font-semibold text-slate-700">
+                <p className="text-xs font-semibold text-slate-800">
                   Pasien &quot;{query}&quot; tidak ditemukan
                 </p>
                 <p className="text-[11px] text-slate-500">
@@ -288,10 +351,10 @@ export function PatientSearchAutocomplete({
               <button
                 type="button"
                 onClick={handleAddNewPatient}
-                className="inline-flex items-center gap-1.5 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow-xs transition"
+                className="inline-flex items-center justify-center gap-1.5 px-3.5 py-1.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold shadow-btn-primary transition w-full sm:w-auto min-h-[36px] tactile-btn"
               >
-                <UserPlus className="w-3.5 h-3.5" />
-                + Daftarkan Sebagai Pasien Baru
+                <UserPlus className="w-3.5 h-3.5" weight="duotone" />
+                <span>Daftarkan Sebagai Pasien Baru</span>
               </button>
             </div>
           ) : null}

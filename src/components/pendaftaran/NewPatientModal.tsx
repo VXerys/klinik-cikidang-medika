@@ -1,11 +1,56 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { UserPlus, AlertCircle } from 'lucide-react';
+import { z } from 'zod';
+import {
+  UserPlus,
+  WarningCircle,
+  IdentificationCard,
+  ArrowsClockwise,
+  ShieldCheck,
+  MapPin,
+  Heartbeat,
+} from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
 import { DESA_OPTIONS, GELAR_OPTIONS, JENIS_KELAMIN_OPTIONS } from '@/constants/clinic';
-import { Modal, Button, Input, Select } from '@/components/ui';
+import { Modal } from '@/components/ui';
+
+const patientSchema = z.object({
+  noRm: z.string().trim().min(1, 'Nomor Rekam Medis (No RM) wajib diisi.'),
+  gelar: z.string().trim().default('Tn.'),
+  nama: z.string().trim().min(2, 'Nama pasien minimal 2 karakter.'),
+  jenisKelamin: z.enum(['Laki-laki', 'Perempuan']),
+  tanggalLahir: z.string().optional().nullable(),
+  usia: z
+    .union([
+      z.number().int().min(0, 'Usia tidak boleh negatif.').max(130, 'Usia maksimal 130 tahun.'),
+      z.literal(''),
+    ])
+    .optional()
+    .nullable(),
+  desa: z.string().trim().min(1, 'Desa domisili wajib dipilih.'),
+  alamat: z.string().trim().optional().nullable(),
+  noKtp: z
+    .string()
+    .trim()
+    .refine((val) => !val || /^\d{16}$/.test(val), {
+      message: 'NIK KTP harus tepat 16 digit angka jika diisi.',
+    })
+    .optional()
+    .nullable(),
+  noBpjs: z
+    .string()
+    .trim()
+    .refine((val) => !val || /^\d{13}$/.test(val), {
+      message: 'Nomor Kartu BPJS harus tepat 13 digit angka jika diisi.',
+    })
+    .optional()
+    .nullable(),
+  noTelepon: z.string().trim().optional().nullable(),
+  pekerjaan: z.string().trim().optional().nullable(),
+  riwayatAlergi: z.string().trim().default('Tidak Ada'),
+});
 
 export interface NewPatientModalProps {
   isOpen: boolean;
@@ -30,15 +75,43 @@ export function NewPatientModal({
   const [alamat, setAlamat] = useState('');
   const [noKtp, setNoKtp] = useState('');
   const [noBpjs, setNoBpjs] = useState('');
+  const [noTelepon, setNoTelepon] = useState('');
+  const [pekerjaan, setPekerjaan] = useState('');
+  const [riwayatAlergi, setRiwayatAlergi] = useState('Tidak Ada');
 
   const [isLoading, setIsLoading] = useState(false);
   const [isGeneratingRm, setIsGeneratingRm] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // Initialize or reset form when modal opens
+  const generateNextNoRm = async () => {
+    setIsGeneratingRm(true);
+    try {
+      const supabase = createClient();
+      const { count, error } = await supabase
+        .from('patients')
+        .select('*', { count: 'exact', head: true });
+
+      if (error) throw error;
+
+      const nextNum = (count || 0) + 1;
+      const now = new Date();
+      const yyyy = now.getFullYear();
+      const mm = String(now.getMonth() + 1).padStart(2, '0');
+      const formatted = `RM-${yyyy}${mm}-${String(nextNum).padStart(4, '0')}`;
+      setNoRm(formatted);
+    } catch (err) {
+      console.error('Failed to generate No RM:', err);
+      setNoRm(`RM-${Date.now().toString().slice(-6)}`);
+    } finally {
+      setIsGeneratingRm(false);
+    }
+  };
+
   useEffect(() => {
     if (!isOpen) {
       setErrorMessage(null);
+      setFieldErrors({});
       return;
     }
 
@@ -51,38 +124,15 @@ export function NewPatientModal({
     setAlamat('');
     setNoKtp('');
     setNoBpjs('');
+    setNoTelepon('');
+    setPekerjaan('');
+    setRiwayatAlergi('Tidak Ada');
     setErrorMessage(null);
-
-    // Generate next sequential No RM preview
-    const generateNextNoRm = async () => {
-      setIsGeneratingRm(true);
-      try {
-        const supabase = createClient();
-        const { count, error } = await supabase
-          .from('patients')
-          .select('*', { count: 'exact', head: true });
-
-        if (error) throw error;
-
-        const nextNum = (count || 0) + 1;
-        const now = new Date();
-        const yyyy = now.getFullYear();
-        const mm = String(now.getMonth() + 1).padStart(2, '0');
-        const formatted = `RM-${yyyy}${mm}-${String(nextNum).padStart(4, '0')}`;
-        setNoRm(formatted);
-      } catch (err) {
-        console.error('Failed to generate No RM:', err);
-        const fallback = `RM-${Date.now().toString().slice(-6)}`;
-        setNoRm(fallback);
-      } finally {
-        setIsGeneratingRm(false);
-      }
-    };
+    setFieldErrors({});
 
     generateNextNoRm();
   }, [isOpen, initialQuery]);
 
-  // Automatically calculate age when date of birth changes
   const handleDateOfBirthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dob = e.target.value;
     setTanggalLahir(dob);
@@ -106,19 +156,34 @@ export function NewPatientModal({
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
+    setFieldErrors({});
 
-    if (!nama.trim()) {
-      setErrorMessage('Nama pasien wajib diisi.');
-      return;
-    }
+    const parseResult = patientSchema.safeParse({
+      noRm,
+      gelar,
+      nama,
+      jenisKelamin,
+      tanggalLahir: tanggalLahir || null,
+      usia: usia === '' ? null : Number(usia),
+      desa,
+      alamat: alamat || null,
+      noKtp: noKtp || null,
+      noBpjs: noBpjs || null,
+      noTelepon: noTelepon.trim() || null,
+      pekerjaan: pekerjaan.trim() || null,
+      riwayatAlergi: riwayatAlergi.trim() || 'Tidak Ada',
+    });
 
-    if (!desa) {
-      setErrorMessage('Desa domisili wajib dipilih.');
-      return;
-    }
-
-    if (!noRm.trim()) {
-      setErrorMessage('Nomor Rekam Medis (No RM) wajib diisi.');
+    if (!parseResult.success) {
+      const errors: Record<string, string> = {};
+      parseResult.error.issues.forEach((issue) => {
+        const fieldName = issue.path[0] as string;
+        if (!errors[fieldName]) {
+          errors[fieldName] = issue.message;
+        }
+      });
+      setFieldErrors(errors);
+      setErrorMessage(parseResult.error.issues[0]?.message || 'Periksa kembali kelengkapan formulir.');
       return;
     }
 
@@ -126,18 +191,22 @@ export function NewPatientModal({
 
     try {
       const supabase = createClient();
+      const validData = parseResult.data;
 
       const newRecord = {
-        no_rm: noRm.trim(),
-        gelar: gelar.trim(),
-        nama: nama.trim(),
-        jenis_kelamin: jenisKelamin,
-        tanggal_lahir: tanggalLahir || null,
-        usia: usia === '' ? null : Number(usia),
-        desa: desa.trim(),
-        alamat: alamat.trim() || null,
-        no_ktp: noKtp.trim() || null,
-        no_bpjs: noBpjs.trim() || null,
+        no_rm: validData.noRm,
+        gelar: validData.gelar,
+        nama: validData.nama,
+        jenis_kelamin: validData.jenisKelamin,
+        tanggal_lahir: validData.tanggalLahir || null,
+        usia: validData.usia === '' || validData.usia === null || validData.usia === undefined ? null : validData.usia,
+        desa: validData.desa,
+        alamat: validData.alamat || null,
+        no_ktp: validData.noKtp || null,
+        no_bpjs: validData.noBpjs || null,
+        no_telepon: validData.noTelepon || null,
+        pekerjaan: validData.pekerjaan || null,
+        riwayat_alergi: validData.riwayatAlergi || 'Tidak Ada',
       };
 
       const { data, error } = await supabase
@@ -148,7 +217,7 @@ export function NewPatientModal({
 
       if (error) {
         if (error.code === '23505' || error.message.includes('unique') || error.message.includes('no_rm')) {
-          throw new Error(`Nomor RM "${noRm}" sudah terdaftar dalam sistem. Silakan gunakan nomor lain.`);
+          throw new Error(`Nomor RM "${validData.noRm}" sudah terdaftar dalam sistem. Silakan gunakan nomor lain.`);
         }
         throw new Error(error.message);
       }
@@ -170,138 +239,304 @@ export function NewPatientModal({
       isOpen={isOpen}
       onClose={onClose}
       title="Pendaftaran Pasien Baru"
-      description="Isi data rekam medis dasar untuk pasien baru di Klinik Cikidang Medika"
-      icon={
-        <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
-          <UserPlus className="w-5 h-5" />
-        </div>
-      }
-      maxWidth="2xl"
+      description="Lengkapi data identitas pasien untuk pembuatan No. Rekam Medis resmi"
+      maxWidth="xl"
     >
-      <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto p-6 space-y-4">
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0 p-5 sm:p-6 space-y-4">
         {errorMessage && (
-          <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5 text-rose-700 text-xs">
-            <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+          <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-700 text-xs">
+            <WarningCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" weight="bold" />
             <span>{errorMessage}</span>
           </div>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          {/* No RM */}
-          <Input
-            label="No RM"
-            requiredIndicator
-            value={noRm}
-            onChange={(e) => setNoRm(e.target.value)}
-            placeholder={isGeneratingRm ? 'Membuat...' : 'RM-XXXX'}
-            className="font-mono font-bold bg-slate-50"
-            required
-          />
+        {/* Section 1: Identitas Utama Pasien */}
+        <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+          <div className="flex items-center justify-between pb-2 border-b border-slate-200/70">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <IdentificationCard className="w-4 h-4 text-teal-600" weight="bold" />
+              Identitas Rekam Medis
+            </span>
+            <button
+              type="button"
+              onClick={generateNextNoRm}
+              disabled={isGeneratingRm}
+              className="text-[11px] font-bold text-teal-700 hover:text-teal-900 flex items-center gap-1 tactile-btn"
+              title="Generate ulang No. RM baru"
+            >
+              <ArrowsClockwise className={`w-3.5 h-3.5 ${isGeneratingRm ? 'animate-spin' : ''}`} weight="bold" />
+              <span>No. RM Otomatis</span>
+            </button>
+          </div>
 
-          {/* Gelar */}
-          <Select
-            label="Gelar / Sapaan"
-            value={gelar}
-            onChange={(e) => setGelar(e.target.value)}
-            options={GELAR_OPTIONS}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
+            <div className="sm:col-span-4">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                No. Rekam Medis <span className="text-rose-500">*</span>
+              </label>
+              <input
+                type="text"
+                value={noRm}
+                onChange={(e) => {
+                  setNoRm(e.target.value);
+                  if (fieldErrors.noRm) setFieldErrors((prev) => ({ ...prev, noRm: '' }));
+                }}
+                placeholder={isGeneratingRm ? 'Membuat...' : 'RM-XXXX'}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-bold text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+                required
+              />
+              {fieldErrors.noRm && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.noRm}</p>
+              )}
+            </div>
 
-          {/* Jenis Kelamin */}
-          <Select
-            label="Jenis Kelamin"
-            requiredIndicator
-            value={jenisKelamin}
-            onChange={(e) => setJenisKelamin(e.target.value as 'Laki-laki' | 'Perempuan')}
-            options={JENIS_KELAMIN_OPTIONS}
-          />
+            <div className="sm:col-span-3">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Sapaan / Gelar
+              </label>
+              <select
+                value={gelar}
+                onChange={(e) => setGelar(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              >
+                {GELAR_OPTIONS.map((g) => (
+                  <option key={g} value={g}>{g}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="sm:col-span-5">
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Jenis Kelamin <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={jenisKelamin}
+                onChange={(e) => setJenisKelamin(e.target.value as 'Laki-laki' | 'Perempuan')}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              >
+                {JENIS_KELAMIN_OPTIONS.map((jk) => (
+                  <option key={jk} value={jk}>{jk}</option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Nama Lengkap Pasien <span className="text-rose-500">*</span>
+            </label>
+            <input
+              type="text"
+              value={nama}
+              onChange={(e) => {
+                setNama(e.target.value);
+                if (fieldErrors.nama) setFieldErrors((prev) => ({ ...prev, nama: '' }));
+              }}
+              placeholder="Contoh: Siti Aisyah"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              required
+            />
+            {fieldErrors.nama && (
+              <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.nama}</p>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Tanggal Lahir
+              </label>
+              <input
+                type="date"
+                value={tanggalLahir}
+                onChange={handleDateOfBirthChange}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Usia (Tahun)
+              </label>
+              <input
+                type="number"
+                min="0"
+                max="130"
+                value={usia}
+                onChange={(e) => {
+                  setUsia(e.target.value === '' ? '' : Number(e.target.value));
+                  if (fieldErrors.usia) setFieldErrors((prev) => ({ ...prev, usia: '' }));
+                }}
+                placeholder="Contoh: 32"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+              {fieldErrors.usia && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.usia}</p>
+              )}
+            </div>
+          </div>
         </div>
 
-        {/* Nama Lengkap */}
-        <Input
-          label="Nama Pasien Lengkap"
-          requiredIndicator
-          value={nama}
-          onChange={(e) => setNama(e.target.value)}
-          placeholder="Contoh: Siti Aisyah"
-          required
-        />
+        {/* Section 2: Domisili & BPJS */}
+        <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+          <div className="pb-2 border-b border-slate-200/70">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <MapPin className="w-4 h-4 text-emerald-600" weight="bold" />
+              Domisili & Asuransi
+            </span>
+          </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Tanggal Lahir */}
-          <Input
-            type="date"
-            label="Tanggal Lahir"
-            value={tanggalLahir}
-            onChange={handleDateOfBirthChange}
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Desa Domisili <span className="text-rose-500">*</span>
+              </label>
+              <select
+                value={desa}
+                onChange={(e) => {
+                  setDesa(e.target.value);
+                  if (fieldErrors.desa) setFieldErrors((prev) => ({ ...prev, desa: '' }));
+                }}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              >
+                {DESA_OPTIONS.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              {fieldErrors.desa && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.desa}</p>
+              )}
+            </div>
 
-          {/* Usia (Tahun) */}
-          <Input
-            type="number"
-            min="0"
-            max="130"
-            label="Usia (Tahun)"
-            value={usia}
-            onChange={(e) => setUsia(e.target.value === '' ? '' : Number(e.target.value))}
-            placeholder="Contoh: 32"
-          />
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Nomor Kartu BPJS (Opsional)
+              </label>
+              <input
+                type="text"
+                value={noBpjs}
+                onChange={(e) => {
+                  setNoBpjs(e.target.value);
+                  if (fieldErrors.noBpjs) setFieldErrors((prev) => ({ ...prev, noBpjs: '' }));
+                }}
+                placeholder="13 digit angka kartu BPJS"
+                maxLength={13}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+              {fieldErrors.noBpjs && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.noBpjs}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                NIK KTP (Opsional)
+              </label>
+              <input
+                type="text"
+                value={noKtp}
+                onChange={(e) => {
+                  setNoKtp(e.target.value);
+                  if (fieldErrors.noKtp) setFieldErrors((prev) => ({ ...prev, noKtp: '' }));
+                }}
+                placeholder="16 digit NIK KTP"
+                maxLength={16}
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+              {fieldErrors.noKtp && (
+                <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.noKtp}</p>
+              )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Alamat / Kampung / RT / RW
+              </label>
+              <input
+                type="text"
+                value={alamat}
+                onChange={(e) => setAlamat(e.target.value)}
+                placeholder="Contoh: Kp. Cigadog RT 02/01"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* Desa */}
-          <Select
-            label="Desa Domisili"
-            requiredIndicator
-            value={desa}
-            onChange={(e) => setDesa(e.target.value)}
-            options={DESA_OPTIONS}
-          />
+        {/* Section 3: Kontak & Keamanan Alergi */}
+        <div className="p-4 bg-slate-50 border border-slate-200/90 rounded-2xl space-y-3">
+          <div className="pb-2 border-b border-slate-200/70">
+            <span className="text-xs font-bold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+              <Heartbeat className="w-4 h-4 text-rose-600" weight="bold" />
+              Kontak & Keselamatan Obat
+            </span>
+          </div>
 
-          {/* No BPJS */}
-          <Input
-            label="Nomor Kartu BPJS (Opsional)"
-            value={noBpjs}
-            onChange={(e) => setNoBpjs(e.target.value)}
-            placeholder="Contoh: 0001234567890"
-          />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Nomor Telepon / WA (Opsional)
+              </label>
+              <input
+                type="tel"
+                value={noTelepon}
+                onChange={(e) => setNoTelepon(e.target.value)}
+                placeholder="Contoh: 0812-3456-7890"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+
+            <div>
+              <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+                Pekerjaan Pasien (Opsional)
+              </label>
+              <input
+                type="text"
+                value={pekerjaan}
+                onChange={(e) => setPekerjaan(e.target.value)}
+                placeholder="Contoh: Karyawan Pabrik / Petani"
+                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+              />
+            </div>
+          </div>
+
+          <div>
+            <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
+              Riwayat Alergi Obat
+            </label>
+            <input
+              type="text"
+              value={riwayatAlergi}
+              onChange={(e) => setRiwayatAlergi(e.target.value)}
+              placeholder="Contoh: Amoxicillin, Paracetamol, Penicillin (Default: Tidak Ada)"
+              className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
+            />
+            <p className="text-[11px] text-slate-500 mt-1">
+              Isi &quot;Tidak Ada&quot; jika pasien tidak memiliki riwayat alergi obat tertentu.
+            </p>
+          </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {/* No KTP / NIK */}
-          <Input
-            label="NIK KTP (Opsional)"
-            value={noKtp}
-            onChange={(e) => setNoKtp(e.target.value)}
-            placeholder="16 digit NIK"
-            maxLength={16}
-          />
-
-          {/* Alamat Lengkap */}
-          <Input
-            label="Alamat / Kampung / RT / RW"
-            value={alamat}
-            onChange={(e) => setAlamat(e.target.value)}
-            placeholder="Contoh: Kp. Cigadog RT 02/01"
-          />
-        </div>
-
-        {/* Modal Footer Actions */}
-        <div className="pt-4 border-t border-slate-200 flex items-center justify-end gap-2.5">
-          <Button
+        {/* Modal Footer */}
+        <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-3">
+          <button
             type="button"
-            variant="ghost"
             onClick={onClose}
             disabled={isLoading}
+            className="px-4 py-2.5 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 tactile-btn min-h-[44px]"
           >
-            Batal
-          </Button>
-          <Button
+            Batal & Tutup
+          </button>
+          <button
             type="submit"
-            variant="primary"
-            isLoading={isLoading}
+            disabled={isLoading}
+            className="px-5 py-2.5 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700 tactile-btn flex items-center gap-2 min-h-[44px] disabled:opacity-50"
           >
-            Simpan Pasien Baru
-          </Button>
+            <UserPlus className="w-4 h-4" weight="bold" />
+            <span>{isLoading ? 'Menyimpan...' : 'Simpan Pasien Baru'}</span>
+          </button>
         </div>
       </form>
     </Modal>

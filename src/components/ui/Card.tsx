@@ -8,7 +8,7 @@ export function Card({
 }: React.HTMLAttributes<HTMLDivElement>) {
   return (
     <div
-      className={cn('bg-white rounded-2xl border border-slate-200 shadow-xs overflow-hidden', className)}
+      className={cn('bg-white rounded-2xl border border-slate-200/90 shadow-card-double overflow-hidden', className)}
       {...props}
     >
       {children}

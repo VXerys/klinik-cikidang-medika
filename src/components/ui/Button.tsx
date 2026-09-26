@@ -28,20 +28,20 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
     ref
   ) => {
     const baseStyles =
-      'inline-flex items-center justify-center font-semibold rounded-xl transition duration-150 focus:outline-none focus:ring-2 focus:ring-offset-1 select-none disabled:opacity-50 disabled:cursor-not-allowed';
+      'inline-flex items-center justify-center font-bold rounded-xl transition-all duration-150 focus:outline-none focus:ring-4 focus:ring-teal-500/15 select-none disabled:opacity-50 disabled:cursor-not-allowed tactile-btn';
 
     const variantStyles = {
-      primary: 'bg-blue-600 text-white hover:bg-blue-700 shadow-xs focus:ring-blue-500',
-      secondary: 'bg-slate-100 text-slate-800 hover:bg-slate-200 focus:ring-slate-400',
-      outline: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 focus:ring-blue-500',
-      ghost: 'bg-transparent text-slate-600 hover:bg-slate-100 focus:ring-slate-300',
-      danger: 'bg-rose-600 text-white hover:bg-rose-700 shadow-xs focus:ring-rose-500',
+      primary: 'bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white shadow-btn-primary border border-teal-700/80',
+      secondary: 'bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 shadow-btn-secondary',
+      outline: 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50 shadow-btn-secondary',
+      ghost: 'bg-transparent text-slate-700 hover:bg-slate-100',
+      danger: 'bg-gradient-to-b from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white shadow-xs border border-rose-700',
     };
 
     const sizeStyles = {
-      sm: 'text-xs px-2.5 py-1.5 gap-1.5',
-      md: 'text-xs px-4 py-2.5 gap-2',
-      lg: 'text-sm px-5 py-3 gap-2.5',
+      sm: 'text-xs px-3 py-1 min-h-[32px] gap-1.5',
+      md: 'text-xs px-3.5 py-1.5 min-h-[36px] gap-1.5',
+      lg: 'text-xs sm:text-sm px-4.5 py-2 min-h-[40px] gap-2',
     };
 
     return (
