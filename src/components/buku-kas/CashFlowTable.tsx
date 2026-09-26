@@ -17,6 +17,7 @@ import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Modal } from '@/components/ui/Modal';
+import { Select } from '@/components/ui/Select';
 import { formatRupiah, formatDateIndo, cn } from '@/lib/utils';
 
 export interface CashFlowTableProps {
@@ -142,23 +143,18 @@ export function CashFlowTable({
             />
           </div>
 
-          <div className="sm:col-span-4 relative flex items-center">
-            <Funnel
-              weight="duotone"
-              className="w-4 h-4 text-slate-400 absolute left-3 pointer-events-none"
-            />
-            <select
+          <div className="sm:col-span-4">
+            <Select
               value={categoryFilter}
               onChange={(e) => setCategoryFilter(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 min-h-[44px] text-xs bg-white border border-slate-300 rounded-xl text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition"
-            >
-              <option value="all">Semua Kategori</option>
-              {uniqueCategories.map((cat) => (
-                <option key={cat} value={cat}>
-                  {cat}
-                </option>
-              ))}
-            </select>
+              leftElement={<Funnel weight="duotone" className="w-4 h-4 text-slate-400" />}
+              options={[
+                { value: 'all', label: 'Semua Kategori' },
+                ...uniqueCategories.map((cat) => ({ value: cat, label: cat })),
+              ]}
+              headerTitle="Filter Kategori Kas"
+              placeholder="Semua Kategori"
+            />
           </div>
         </div>
       </div>
