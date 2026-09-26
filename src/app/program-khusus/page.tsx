@@ -9,12 +9,13 @@ import {
   MagnifyingGlass,
   Funnel,
   XCircle,
+  Heartbeat,
 } from '@phosphor-icons/react';
 import { Lungs, BandageAdhesive } from 'healthicons-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { toast } from 'sonner';
 import { createClient } from '@/lib/supabase/client';
-import type { TbcProgram, Circumcision, PostCare } from '@/types/database';
+import type { TbcProgram, Circumcision, PostCare, PublicHealthRecord } from '@/types/database';
 import { ProgramKhususKpis } from '@/components/program-khusus/ProgramKhususKpis';
 import { TbcControlCard } from '@/components/program-khusus/TbcControlCard';
 import { NewTbcModal } from '@/components/program-khusus/NewTbcModal';
@@ -22,8 +23,10 @@ import { CircumcisionList } from '@/components/program-khusus/CircumcisionList';
 import { NewCircumcisionModal } from '@/components/program-khusus/NewCircumcisionModal';
 import { PostCareAgenda } from '@/components/program-khusus/PostCareAgenda';
 import { NewPostCareModal } from '@/components/program-khusus/NewPostCareModal';
+import { PublicHealthRegistry } from '@/components/program-khusus/PublicHealthRegistry';
+import { NewPublicHealthModal } from '@/components/program-khusus/NewPublicHealthModal';
 
-type ProgramTab = 'tbc' | 'circumcision' | 'postcare';
+type ProgramTab = 'tbc' | 'circumcision' | 'postcare' | 'kesehatan';
 type TbcFilter = 'all' | 'intensif' | 'lanjutan' | 'mangkir' | 'selesai';
 type CircumcisionFilter = 'all' | 'laser' | 'klamp' | 'konvensional' | 'pending-photo';
 
@@ -41,11 +44,13 @@ export default function ProgramKhususPage() {
   const [tbcList, setTbcList] = useState<TbcProgram[]>([]);
   const [circumcisionList, setCircumcisionList] = useState<Circumcision[]>([]);
   const [postCareList, setPostCareList] = useState<PostCare[]>([]);
+  const [publicHealthList, setPublicHealthList] = useState<PublicHealthRecord[]>([]);
 
   // Modal open states
   const [isTbcModalOpen, setIsTbcModalOpen] = useState(false);
   const [isCircumcisionModalOpen, setIsCircumcisionModalOpen] = useState(false);
   const [isPostCareModalOpen, setIsPostCareModalOpen] = useState(false);
+  const [isPublicHealthModalOpen, setIsPublicHealthModalOpen] = useState(false);
 
   const fetchData = useCallback(async () => {
     setIsLoading(true);
@@ -77,6 +82,14 @@ export default function ProgramKhususPage() {
         .order('tanggal_kontrol_berikutnya', { ascending: true });
       if (postErr) throw postErr;
       setPostCareList((postData as unknown as PostCare[]) || []);
+
+      // 4. Fetch Public Health Records (PTM, ANC, KB, 3 Eliminasi)
+      const { data: healthData, error: healthErr } = await supabase
+        .from('public_health_records')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (healthErr) throw healthErr;
+      setPublicHealthList((healthData as unknown as PublicHealthRecord[]) || []);
     } catch (err) {
       console.error('Error fetching program khusus data:', err);
       setErrorMessage(
@@ -202,6 +215,16 @@ export default function ProgramKhususPage() {
     });
   }, [postCareList, searchQuery]);
 
+  const filteredPublicHealthList = useMemo(() => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return publicHealthList;
+    return publicHealthList.filter((item) =>
+      [item.nama, item.no_nik, item.alamat, item.diagnosa, item.jenis_kb]
+        .filter(Boolean)
+        .some((field) => String(field).toLowerCase().includes(q))
+    );
+  }, [publicHealthList, searchQuery]);
+
   return (
     <div className="space-y-6 min-w-0 w-full pb-10">
       {/* 1. Master Clinical Header & Integrated Action Ribbon */}
@@ -265,6 +288,17 @@ export default function ProgramKhususPage() {
               <span>Jadwal Pos-Rawat</span>
             </button>
           )}
+
+          {activeTab === 'kesehatan' && (
+            <button
+              type="button"
+              onClick={() => setIsPublicHealthModalOpen(true)}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-rose-600 to-rose-700 hover:from-rose-700 hover:to-rose-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-rose-700/80 tactile-btn transition focus-visible:ring-2 focus-visible:ring-rose-600 focus-visible:outline-none"
+            >
+              <Plus className="w-3.5 h-3.5" weight="bold" />
+              <span>Program Kesehatan Baru</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -304,7 +338,7 @@ export default function ProgramKhususPage() {
 
       {/* 3. Sleek Recessed Track Segmented Sub-Tab Switcher */}
       <div className="w-full bg-slate-100/90 p-1 rounded-xl border border-slate-200/90 shadow-2xs">
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-1 w-full">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-1 w-full">
           <button
             type="button"
             onClick={() => setActiveTab('tbc')}
@@ -357,6 +391,19 @@ export default function ProgramKhususPage() {
                 {todayPostCareCount} Hari Ini
               </span>
             )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => setActiveTab('kesehatan')}
+            className={`h-9 px-3 rounded-lg text-xs font-semibold transition-all tactile-btn flex items-center justify-center gap-2 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none ${
+              activeTab === 'kesehatan'
+                ? 'bg-white text-teal-700 font-bold shadow-xs border border-slate-200/70'
+                : 'text-slate-600 hover:text-slate-900 hover:bg-slate-200/60 border border-transparent'
+            }`}
+          >
+            <Heartbeat className="w-4 h-4 text-rose-600 shrink-0" weight="duotone" />
+            <span className="truncate">Program Kesehatan ({publicHealthList.length})</span>
           </button>
         </div>
       </div>
@@ -450,6 +497,12 @@ export default function ProgramKhususPage() {
           {activeTab === 'postcare' && (
             <span className="text-[11px] text-slate-500 font-medium">
               Kategori diatur pada tab kronologis di bawah
+            </span>
+          )}
+
+          {activeTab === 'kesehatan' && (
+            <span className="text-[11px] text-slate-500 font-medium">
+              Filter program PTM, ANC, KB, dan 3 Eliminasi tersedia pada panel laporan di bawah
             </span>
           )}
         </div>
@@ -560,6 +613,23 @@ export default function ProgramKhususPage() {
               />
             </div>
           )}
+
+          {activeTab === 'kesehatan' && (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between text-xs text-slate-600 px-1">
+                <span className="font-medium">
+                  Register PTM, ANC, KB, dan 3 Eliminasi untuk pemantauan program serta laporan rutin ke Puskesmas
+                </span>
+                <span className="text-[11px] font-bold text-slate-700 font-mono">
+                  {filteredPublicHealthList.length} dari {publicHealthList.length} Data
+                </span>
+              </div>
+              <PublicHealthRegistry
+                records={filteredPublicHealthList}
+                isLoading={isLoading}
+              />
+            </div>
+          )}
         </motion.div>
       </AnimatePresence>
 
@@ -577,6 +647,11 @@ export default function ProgramKhususPage() {
       <NewPostCareModal
         isOpen={isPostCareModalOpen}
         onClose={() => setIsPostCareModalOpen(false)}
+        onSuccess={fetchData}
+      />
+      <NewPublicHealthModal
+        isOpen={isPublicHealthModalOpen}
+        onClose={() => setIsPublicHealthModalOpen(false)}
         onSuccess={fetchData}
       />
     </div>

@@ -25,7 +25,8 @@ export interface CashierPosPanelProps {
     pendapatanLain: number,
     keteranganPendapatan: string,
     uangDiterima: number,
-    jenisPembayaran: 'Tunai' | 'TF'
+    jenisPembayaran: 'Tunai' | 'TF',
+    paymentState: 'Lunas' | 'Piutang' | 'Belum Bayar'
   ) => Promise<void>;
   isSubmitting?: boolean;
 }
@@ -37,10 +38,18 @@ export function CashierPosPanel({
   onSettlePayment,
   isSubmitting = false,
 }: CashierPosPanelProps) {
+  const formatRupiahInput = (value: number) => new Intl.NumberFormat('id-ID').format(Math.max(0, value || 0));
+  const parseRupiahInput = (value: string) => {
+    const digits = value.replace(/\D/g, '');
+    if (!digits) return 0;
+    return Number.parseInt(digits, 10) || 0;
+  };
+
   const [biayaPeriksa, setBiayaPeriksa] = useState<number>(0);
   const [pendapatanLain, setPendapatanLain] = useState<number>(0);
   const [keteranganPendapatan, setKeteranganPendapatan] = useState<string>('');
   const [jenisPembayaran, setJenisPembayaran] = useState<'Tunai' | 'TF'>('Tunai');
+  const [paymentState, setPaymentState] = useState<'Lunas' | 'Piutang' | 'Belum Bayar'>('Lunas');
   const [uangDiterimaStr, setUangDiterimaStr] = useState<string>('');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -51,6 +60,7 @@ export function CashierPosPanel({
       setPendapatanLain(0);
       setKeteranganPendapatan('');
       setJenisPembayaran('Tunai');
+      setPaymentState('Lunas');
       setUangDiterimaStr('');
       setErrorMessage(null);
       return;
@@ -66,10 +76,17 @@ export function CashierPosPanel({
     setPendapatanLain(lain);
     setKeteranganPendapatan(selectedVisit.keterangan_pendapatan || '');
     setJenisPembayaran(selectedVisit.jenis_pembayaran || 'Tunai');
+    setPaymentState(
+      selectedVisit.status_pembayaran === 'Piutang'
+        ? 'Piutang'
+        : selectedVisit.status_pembayaran === 'Belum Bayar'
+          ? 'Belum Bayar'
+          : 'Lunas'
+    );
     setErrorMessage(null);
 
     const total = periksa + lain;
-    setUangDiterimaStr(total > 0 ? String(total) : '0');
+    setUangDiterimaStr(total > 0 ? formatRupiahInput(total) : '0');
   }, [selectedVisit]);
 
   const totalTagihan = useMemo(() => {
@@ -79,10 +96,13 @@ export function CashierPosPanel({
     return periksa + lain;
   }, [selectedVisit, biayaPeriksa, pendapatanLain]);
 
-  const nominalDiterima = Number(uangDiterimaStr) || 0;
+  const nominalDiterima = parseRupiahInput(uangDiterimaStr);
   const uangKembalian = Math.max(0, nominalDiterima - totalTagihan);
   const isKurangBayar =
-    jenisPembayaran === 'Tunai' && totalTagihan > 0 && nominalDiterima < totalTagihan;
+    paymentState === 'Lunas' &&
+    jenisPembayaran === 'Tunai' &&
+    totalTagihan > 0 &&
+    nominalDiterima < totalTagihan;
 
   // Quick cash tender options
   const quickCashOptions = useMemo(() => {
@@ -137,7 +157,7 @@ export function CashierPosPanel({
     }
 
     if (isKurangBayar) {
-      setErrorMessage('Uang tunai yang diterima kurang dari total tagihan.');
+      setErrorMessage('Uang tunai yang diterima kurang dari total tagihan lunas. Pilih status Piutang jika pasien belum membayar penuh.');
       return;
     }
 
@@ -148,7 +168,8 @@ export function CashierPosPanel({
         pendapatanLain,
         keteranganPendapatan,
         nominalDiterima,
-        jenisPembayaran
+        jenisPembayaran,
+        selectedVisit.jenis_pasien === 'BPJS' && totalTagihan === 0 ? 'Lunas' : paymentState
       );
     } catch (err) {
       const msg = err instanceof Error ? err.message : 'Gagal memproses transaksi kasir.';
@@ -544,7 +565,30 @@ export function CashierPosPanel({
                   </div>
                 </div>
 
-                {/* 3. Tender Section (Tunai) */}
+                {/* 3. Status Pembayaran */}
+                {selectedVisit.jenis_pasien !== 'BPJS' && (
+                  <div>
+                    <div className="grid grid-cols-3 gap-2">
+                      {(['Lunas', 'Piutang', 'Belum Bayar'] as const).map((state) => (
+                        <button
+                          key={state}
+                          type="button"
+                          onClick={() => setPaymentState(state)}
+                          className={cn(
+                            'py-1.5 px-2 min-h-[36px] rounded-xl text-[11px] font-bold border flex items-center justify-center transition tactile-btn',
+                            paymentState === state
+                              ? 'bg-gradient-to-b from-teal-600 to-teal-700 text-white border-teal-700/80 shadow-btn-primary'
+                              : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50 shadow-btn-secondary'
+                          )}
+                        >
+                          {state}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* 4. Tender Section (Tunai) */}
                 {jenisPembayaran === 'Tunai' && (
                   <div className="space-y-2.5">
                     {/* Quick Cash Buttons */}
@@ -554,7 +598,10 @@ export function CashierPosPanel({
                           <button
                             key={opt.value}
                             type="button"
-                            onClick={() => setUangDiterimaStr(String(opt.value))}
+                            onClick={() => {
+                              setPaymentState('Lunas');
+                              setUangDiterimaStr(formatRupiahInput(opt.value));
+                            }}
                             className={cn(
                               'px-2.5 py-1.5 bg-white hover:bg-slate-50 border rounded-xl text-xs font-bold font-mono shadow-btn-secondary tactile-btn text-left truncate min-h-[34px]',
                               nominalDiterima === opt.value
@@ -579,12 +626,14 @@ export function CashierPosPanel({
                             <span className="text-xs font-mono font-bold text-teal-700">Rp</span>
                           </div>
                           <input
-                            type="number"
-                            min="0"
-                            step="1000"
+                            type="text"
+                            inputMode="numeric"
                             value={uangDiterimaStr}
-                            onChange={(e) => setUangDiterimaStr(e.target.value)}
-                            placeholder="0"
+                            onChange={(e) => {
+                              const parsed = parseRupiahInput(e.target.value);
+                              setUangDiterimaStr(parsed > 0 ? formatRupiahInput(parsed) : '');
+                            }}
+                            placeholder="200.000"
                             className="w-full pl-8 pr-2.5 py-1.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-bold font-mono text-slate-900 focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[38px]"
                           />
                         </div>
@@ -599,12 +648,12 @@ export function CashierPosPanel({
                         )}
                       >
                         <div className="text-[9px] font-bold uppercase tracking-wider">
-                          {isKurangBayar ? 'Kurang Bayar' : 'Kembalian Pasien'}
+                          {isKurangBayar ? 'Kurang Bayar' : paymentState === 'Piutang' ? 'Sisa Piutang' : 'Kembalian Pasien'}
                         </div>
                         <div className="text-sm font-bold font-mono">
                           {formatRupiah(
-                            isKurangBayar
-                              ? totalTagihan - nominalDiterima
+                            isKurangBayar || paymentState === 'Piutang'
+                              ? Math.max(0, totalTagihan - nominalDiterima)
                               : uangKembalian
                           )}
                         </div>

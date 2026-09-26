@@ -9,6 +9,7 @@ import {
   ArrowClockwise,
 } from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
+import { useAuth } from '@/lib/auth/AuthContext';
 import { normalizeRupiah } from '@/lib/utils';
 import {
   exportVisitsToExcel,
@@ -26,6 +27,7 @@ import {
 import { ReportFilterBar } from '@/components/laporan/ReportFilterBar';
 import { ReportPreviewTable } from '@/components/laporan/ReportPreviewTable';
 import { ReportKpis } from '@/components/laporan/ReportKpis';
+import { ReferralCommissionPanel } from '@/components/laporan/ReferralCommissionPanel';
 
 export default function LaporanPage() {
   const currentDate = new Date();
@@ -39,7 +41,16 @@ export default function LaporanPage() {
     .toISOString()
     .split('T')[0];
 
-  const [activeTab, setActiveTab] = useState<ReportTabType>('kunjungan');
+  const { role } = useAuth();
+  const isDokterAdmin = role === 'dokter_admin';
+  const allowedTabs = useMemo<ReportTabType[]>(
+    () => (isDokterAdmin ? ['morbiditas'] : ['kunjungan', 'morbiditas', 'buku_kas', 'komisi']),
+    [isDokterAdmin]
+  );
+
+  const [activeTab, setActiveTab] = useState<ReportTabType>(
+    isDokterAdmin ? 'morbiditas' : 'kunjungan'
+  );
   const [startDate, setStartDate] = useState(defaultStartDate);
   const [endDate, setEndDate] = useState(defaultEndDate);
   const [jenisPasien, setJenisPasien] = useState('Semua');
@@ -101,25 +112,26 @@ export default function LaporanPage() {
       }
 
       let allFlows: any[] = [];
-      let flowPage = 0;
+      if (!isDokterAdmin) {
+        let flowPage = 0;
+        while (true) {
+          let flowQuery = supabase
+            .from('cash_flows')
+            .select('id, tanggal, jenis, kategori, nominal, keterangan')
+            .order('tanggal', { ascending: false })
+            .range(flowPage * pageSize, (flowPage + 1) * pageSize - 1);
 
-      while (true) {
-        let flowQuery = supabase
-          .from('cash_flows')
-          .select('id, tanggal, jenis, kategori, nominal, keterangan')
-          .order('tanggal', { ascending: false })
-          .range(flowPage * pageSize, (flowPage + 1) * pageSize - 1);
+          if (startDate) flowQuery = flowQuery.gte('tanggal', startDate);
+          if (endDate) flowQuery = flowQuery.lte('tanggal', endDate);
 
-        if (startDate) flowQuery = flowQuery.gte('tanggal', startDate);
-        if (endDate) flowQuery = flowQuery.lte('tanggal', endDate);
+          const { data, error } = await flowQuery;
+          if (error) throw error;
+          if (!data || data.length === 0) break;
 
-        const { data, error } = await flowQuery;
-        if (error) throw error;
-        if (!data || data.length === 0) break;
-
-        allFlows.push(...data);
-        if (data.length < pageSize) break;
-        flowPage++;
+          allFlows.push(...data);
+          if (data.length < pageSize) break;
+          flowPage++;
+        }
       }
 
       const formattedVisits: VisitExportRow[] = allVisits.map((v) => {
@@ -189,11 +201,17 @@ export default function LaporanPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [startDate, endDate, jenisPasien, dokterId]);
+  }, [startDate, endDate, jenisPasien, dokterId, isDokterAdmin]);
 
   useEffect(() => {
     fetchReportData();
   }, [fetchReportData]);
+
+  useEffect(() => {
+    if (!allowedTabs.includes(activeTab)) {
+      setActiveTab(isDokterAdmin ? 'morbiditas' : 'kunjungan');
+    }
+  }, [activeTab, allowedTabs, isDokterAdmin]);
 
   const handlePresetChange = (
     preset: 'today' | 'this_month' | 'last_month' | 'this_year' | 'all'
@@ -303,7 +321,9 @@ export default function LaporanPage() {
             </span>
           </div>
           <p className="text-xs text-slate-600 font-medium mt-0.5">
-            Konsolidasi data operasional rawat jalan, surveilans morbiditas ICD-10, dan mutasi arus kas klinik format .xlsx
+            {isDokterAdmin
+              ? 'Laporan klinis rawat jalan dan surveilans morbiditas ICD-10 untuk kebutuhan pelaporan program kesehatan.'
+              : 'Konsolidasi data operasional rawat jalan, surveilans morbiditas ICD-10, dan mutasi arus kas klinik format .xlsx'}
           </p>
         </div>
 
@@ -329,15 +349,17 @@ export default function LaporanPage() {
             <span>Unduh Tab Ini (.xlsx)</span>
           </button>
 
-          <button
-            type="button"
-            onClick={handleExportFullWorkbook}
-            disabled={isLoading || (visitsData.length === 0 && cashFlowData.length === 0)}
-            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-emerald-700/80 tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
-          >
-            <Stack weight="bold" className="w-3.5 h-3.5" />
-            <span>Rekap Lengkap (3 Sheet)</span>
-          </button>
+          {!isDokterAdmin && (
+            <button
+              type="button"
+              onClick={handleExportFullWorkbook}
+              disabled={isLoading || (visitsData.length === 0 && cashFlowData.length === 0)}
+              className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-emerald-700/80 tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
+            >
+              <Stack weight="bold" className="w-3.5 h-3.5" />
+              <span>Rekap Lengkap (3 Sheet)</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -359,7 +381,7 @@ export default function LaporanPage() {
       )}
 
       {/* 2. Executive Report Summary KPI Row */}
-      <ReportKpis data={kpiSummaryData} isLoading={isLoading} />
+      {!isDokterAdmin && <ReportKpis data={kpiSummaryData} isLoading={isLoading} />}
 
       {/* 3. Filter Parameter Laporan Card */}
       <ReportFilterBar
@@ -382,6 +404,7 @@ export default function LaporanPage() {
       <ReportTabs
         activeTab={activeTab}
         onChangeTab={setActiveTab}
+        allowedTabs={allowedTabs}
         counts={{
           kunjungan: visitsData.length,
           morbiditas: morbidityData.length,
@@ -389,14 +412,18 @@ export default function LaporanPage() {
         }}
       />
 
-      {/* 5. Consolidated Preview Table */}
-      <ReportPreviewTable
-        activeTab={activeTab}
-        visitsData={visitsData}
-        morbidityData={morbidityData}
-        cashFlowData={cashFlowData}
-        isLoading={isLoading}
-      />
+      {/* 5. Consolidated Preview Table or Referral Commission Panel */}
+      {activeTab === 'komisi' ? (
+        <ReferralCommissionPanel isLoading={isLoading} />
+      ) : (
+        <ReportPreviewTable
+          activeTab={activeTab}
+          visitsData={visitsData}
+          morbidityData={morbidityData}
+          cashFlowData={cashFlowData}
+          isLoading={isLoading}
+        />
+      )}
     </div>
   );
 }

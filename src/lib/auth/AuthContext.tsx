@@ -20,14 +20,12 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   owner: ['/', '/pendaftaran', '/rekam-medis', '/program-khusus', '/buku-kas', '/laporan'],
-  dokter: ['/rekam-medis', '/program-khusus'],
-  kasir: ['/pendaftaran'],
+  dokter_admin: ['/rekam-medis', '/program-khusus', '/laporan'],
 };
 
 export const ROLE_DEFAULT_ROUTES: Record<UserRole, string> = {
   owner: '/',
-  dokter: '/rekam-medis',
-  kasir: '/pendaftaran',
+  dokter_admin: '/program-khusus',
 };
 
 export const ROLE_LABELS: Record<UserRole, { label: string; badge: string; color: string }> = {
@@ -36,15 +34,10 @@ export const ROLE_LABELS: Record<UserRole, { label: string; badge: string; color
     badge: 'Owner (Pimpinan)',
     color: 'bg-purple-50 text-purple-700 border-purple-200',
   },
-  dokter: {
-    label: 'Dokter Pemeriksa',
-    badge: 'Dokter Jaga',
+  dokter_admin: {
+    label: 'Dokter / Admin Klinik',
+    badge: 'Dokter Admin',
     color: 'bg-teal-50 text-teal-700 border-teal-200',
-  },
-  kasir: {
-    label: 'Petugas Loket & Kasir',
-    badge: 'Front Office Kasir',
-    color: 'bg-sky-50 text-sky-700 border-sky-200',
   },
 };
 
@@ -57,9 +50,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const parseUserProfile = useCallback((authUser: User | null): UserProfile | null => {
     if (!authUser) return null;
     const rawRole = (authUser.user_metadata?.role as string)?.toLowerCase();
-    const role: UserRole = (rawRole === 'dokter' || rawRole === 'kasir' || rawRole === 'owner')
-      ? rawRole
-      : 'kasir';
+    const role: UserRole =
+      rawRole === 'owner'
+        ? 'owner'
+        : rawRole === 'dokter_admin' || rawRole === 'dokter' || rawRole === 'kasir'
+          ? 'dokter_admin'
+          : 'dokter_admin';
 
     const name = authUser.user_metadata?.name || ROLE_LABELS[role].label;
 

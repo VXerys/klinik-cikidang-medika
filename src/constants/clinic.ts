@@ -17,13 +17,16 @@ export const CLINIC_PROFILE = {
 export const DESA_OPTIONS = [
   'Cikidang',
   'Pangkalan',
-  'Nangerang',
+  'Cicareuh',
+  'Cijambe',
+  'Mekar Nangka',
   'Cikiray',
   'Sampora',
-  'Gunungmalang',
-  'Cicareuh',
-  'Bumiasih',
-  'Tamansari',
+  'Nangka Koneng',
+  'Bumisari',
+  'Taman Sari',
+  'Gunung Malang',
+  'Cikaray Toyibah',
   'Luar Daerah',
 ] as const;
 
@@ -34,6 +37,32 @@ export type GelarOption = typeof GELAR_OPTIONS[number];
 
 export const JENIS_KELAMIN_OPTIONS = ['Laki-laki', 'Perempuan'] as const;
 export type JenisKelaminOption = typeof JENIS_KELAMIN_OPTIONS[number];
+
+export const JENIS_KELAMIN_RM_CODE: Record<JenisKelaminOption, string> = {
+  'Laki-laki': '01',
+  Perempuan: '02',
+} as const;
+
+export const DESA_RM_CODE: Record<string, string> = {
+  Cikidang: '01',
+  Pangkalan: '02',
+  Cicareuh: '03',
+  Cijambe: '04',
+  'Mekar Nangka': '05',
+  Cikiray: '06',
+  Sampora: '07',
+  'Nangka Koneng': '08',
+  Bumisari: '09',
+  'Taman Sari': '10',
+  'Gunung Malang': '11',
+  'Cikaray Toyibah': '12',
+  'Luar Daerah': '13',
+  // Legacy alias compatibility
+  Tamansari: '10',
+  Gunungmalang: '11',
+  Bumiasih: '09',
+  Nangerang: '05',
+} as const;
 
 export const JENIS_PASIEN_OPTIONS = ['BPJS', 'UMUM'] as const;
 export type JenisPasienOption = typeof JENIS_PASIEN_OPTIONS[number];
@@ -81,3 +110,9 @@ export const CASH_FLOW_CATEGORIES = {
 export type CashFlowCategoryMasuk = typeof CASH_FLOW_CATEGORIES.masuk[number];
 export type CashFlowCategoryKeluar = typeof CASH_FLOW_CATEGORIES.keluar[number];
 export type CashFlowCategory = CashFlowCategoryMasuk | CashFlowCategoryKeluar;
+
+export const REFERRAL_SERVICE_OPTIONS = [
+  { id: 'infus', label: 'Infus' },
+  { id: 'usg', label: 'USG' },
+  { id: 'lab', label: 'Cek Lab' },
+] as const;

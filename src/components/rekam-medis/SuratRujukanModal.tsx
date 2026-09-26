@@ -5,6 +5,7 @@ import { Printer, X, ShareNetwork, Hospital, User, Stethoscope } from '@phosphor
 import { CLINIC_PROFILE } from '@/constants/clinic';
 import { Patient, Visit, Doctor } from '@/types/database';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 
 interface SuratRujukanModalProps {
   isOpen: boolean;
@@ -141,17 +142,17 @@ export function SuratRujukanModal({
             <label className="mb-1 block text-xs font-semibold text-slate-600">
               Rumah Sakit / Faskes Tujuan
             </label>
-            <select
+            <Select
               value={faskesTujuan}
               onChange={(e) => setFaskesTujuan(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            >
-              {FASKES_RUJUKAN_DEFAULT.map((faskes) => (
-                <option key={faskes} value={faskes}>
-                  {faskes}
-                </option>
-              ))}
-            </select>
+              size="sm"
+              searchable
+              headerTitle="Faskes Tujuan"
+              options={FASKES_RUJUKAN_DEFAULT.map((faskes) => ({
+                value: faskes,
+                label: faskes,
+              }))}
+            />
             {faskesTujuan === 'Faskes Rujukan Lainnya...' && (
               <input
                 type="text"
@@ -166,33 +167,27 @@ export function SuratRujukanModal({
             <label className="mb-1 block text-xs font-semibold text-slate-600">
               Poli Spesialis / Unit Tujuan
             </label>
-            <select
+            <Select
               value={poliTujuan}
               onChange={(e) => setPoliTujuan(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            >
-              {POLI_SPESIALIS_DEFAULT.map((poli) => (
-                <option key={poli} value={poli}>
-                  {poli}
-                </option>
-              ))}
-            </select>
+              size="sm"
+              searchable
+              headerTitle="Poli Spesialis"
+              options={POLI_SPESIALIS_DEFAULT.map((poli) => ({ value: poli, label: poli }))}
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs font-semibold text-slate-600">
               Dokter Perujuk
             </label>
-            <select
+            <Select
               value={selectedDoctorId}
               onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            >
-              {doctors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nama}
-                </option>
-              ))}
-            </select>
+              size="sm"
+              searchable={false}
+              headerTitle="Dokter Perujuk"
+              options={doctors.map((d) => ({ value: d.id, label: d.nama }))}
+            />
           </div>
           <div className="sm:col-span-3">
             <label className="mb-1 block text-xs font-semibold text-slate-600">

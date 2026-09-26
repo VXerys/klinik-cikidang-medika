@@ -9,6 +9,7 @@ import {
   XCircle,
 } from '@phosphor-icons/react';
 import { formatRupiah } from '@/lib/utils';
+import { Select } from '@/components/ui/Select';
 import type {
   VisitExportRow,
   CashFlowExportRow,
@@ -161,20 +162,27 @@ export function ReportPreviewTable({
         </div>
 
         <div className="flex items-center gap-2 text-xs text-slate-500 justify-between sm:justify-end">
-          <span className="text-[11px] font-medium text-slate-500">Tampilkan per halaman:</span>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="px-3 py-1.5 min-h-[38px] bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-700 shadow-2xs focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none transition cursor-pointer"
-          >
-            <option value={15}>15 baris</option>
-            <option value={25}>25 baris</option>
-            <option value={50}>50 baris</option>
-            <option value={100}>100 baris</option>
-          </select>
+          <span className="text-[11px] font-medium text-slate-500 shrink-0">
+            Tampilkan per halaman:
+          </span>
+          <div className="w-32">
+            <Select
+              size="sm"
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              searchable={false}
+              headerTitle="Jumlah Baris"
+              options={[
+                { value: 15, label: '15 baris' },
+                { value: 25, label: '25 baris' },
+                { value: 50, label: '50 baris' },
+                { value: 100, label: '100 baris' },
+              ]}
+            />
+          </div>
         </div>
       </div>
 

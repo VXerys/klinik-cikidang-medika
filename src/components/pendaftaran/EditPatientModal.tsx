@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { z } from 'zod';
 import {
   NotePencil,
@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
 import { DESA_OPTIONS, GELAR_OPTIONS, JENIS_KELAMIN_OPTIONS } from '@/constants/clinic';
 import { Modal } from '@/components/ui';
+import { Select } from '@/components/ui/Select';
 
 const editPatientSchema = z.object({
   gelar: z.string().trim().default('Tn.'),
@@ -103,6 +104,13 @@ export function EditPatientModal({
     setErrorMessage(null);
     setFieldErrors({});
   }, [isOpen, patient]);
+
+  // Legacy village values are kept selectable so old records are not silently rewritten.
+  const desaOptions = useMemo(() => {
+    const base = DESA_OPTIONS.map((d) => ({ value: d as string, label: d as string }));
+    const isLegacyValue = desa && !DESA_OPTIONS.some((d) => d === desa);
+    return isLegacyValue ? [...base, { value: desa, label: `${desa} (data lama)` }] : base;
+  }, [desa]);
 
   const handleDateChange = (val: string) => {
     setTanggalLahir(val);
@@ -249,30 +257,26 @@ export function EditPatientModal({
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Sapaan / Gelar
               </label>
-              <select
+              <Select
                 value={gelar}
                 onChange={(e) => setGelar(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
-              >
-                {GELAR_OPTIONS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
+                options={GELAR_OPTIONS.map((g) => ({ value: g, label: g }))}
+                searchable={false}
+                headerTitle="Sapaan / Gelar"
+              />
             </div>
 
             <div className="sm:col-span-5">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Jenis Kelamin <span className="text-rose-500">*</span>
               </label>
-              <select
+              <Select
                 value={jenisKelamin}
                 onChange={(e) => setJenisKelamin(e.target.value as 'Laki-laki' | 'Perempuan')}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
-              >
-                {JENIS_KELAMIN_OPTIONS.map((jk) => (
-                  <option key={jk} value={jk}>{jk}</option>
-                ))}
-              </select>
+                options={JENIS_KELAMIN_OPTIONS.map((jk) => ({ value: jk, label: jk }))}
+                searchable={false}
+                headerTitle="Jenis Kelamin"
+              />
             </div>
           </div>
 
@@ -346,18 +350,16 @@ export function EditPatientModal({
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Desa Domisili <span className="text-rose-500">*</span>
               </label>
-              <select
+              <Select
                 value={desa}
                 onChange={(e) => {
                   setDesa(e.target.value);
                   if (fieldErrors.desa) setFieldErrors((prev) => ({ ...prev, desa: '' }));
                 }}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
-              >
-                {DESA_OPTIONS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+                options={desaOptions}
+                searchable
+                headerTitle="Desa Domisili"
+              />
               {fieldErrors.desa && (
                 <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.desa}</p>
               )}

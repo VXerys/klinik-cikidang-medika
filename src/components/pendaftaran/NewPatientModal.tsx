@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { z } from 'zod';
 import {
   UserPlus,
@@ -13,11 +13,21 @@ import {
 } from '@phosphor-icons/react';
 import { createClient } from '@/lib/supabase/client';
 import type { Patient } from '@/types/database';
-import { DESA_OPTIONS, GELAR_OPTIONS, JENIS_KELAMIN_OPTIONS } from '@/constants/clinic';
+import {
+  DESA_OPTIONS,
+  DESA_RM_CODE,
+  GELAR_OPTIONS,
+  JENIS_KELAMIN_OPTIONS,
+  JENIS_KELAMIN_RM_CODE,
+} from '@/constants/clinic';
 import { Modal } from '@/components/ui';
+import { Select } from '@/components/ui/Select';
 
 const patientSchema = z.object({
-  noRm: z.string().trim().min(1, 'Nomor Rekam Medis (No RM) wajib diisi.'),
+  noRm: z
+    .string()
+    .trim()
+    .regex(/^\d{2}-\d{2}-\d{6}$/, 'Format No RM wajib 00-00-000000.'),
   gelar: z.string().trim().default('Tn.'),
   nama: z.string().trim().min(2, 'Nama pasien minimal 2 karakter.'),
   jenisKelamin: z.enum(['Laki-laki', 'Perempuan']),
@@ -84,29 +94,42 @@ export function NewPatientModal({
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  const generateNextNoRm = async () => {
+  const generateNextNoRm = useCallback(async () => {
     setIsGeneratingRm(true);
     try {
       const supabase = createClient();
-      const { count, error } = await supabase
+      const jkCode = JENIS_KELAMIN_RM_CODE[jenisKelamin];
+      const desaCode = DESA_RM_CODE[desa];
+
+      if (!jkCode || !desaCode) {
+        throw new Error('Kode jenis kelamin atau kode desa belum terdaftar.');
+      }
+
+      const prefix = `${jkCode}-${desaCode}`;
+
+      const { data, error } = await supabase
         .from('patients')
-        .select('*', { count: 'exact', head: true });
+        .select('no_rm')
+        .like('no_rm', `${prefix}-%`)
+        .order('no_rm', { ascending: false })
+        .limit(1);
 
       if (error) throw error;
 
-      const nextNum = (count || 0) + 1;
-      const now = new Date();
-      const yyyy = now.getFullYear();
-      const mm = String(now.getMonth() + 1).padStart(2, '0');
-      const formatted = `RM-${yyyy}${mm}-${String(nextNum).padStart(4, '0')}`;
+      const latestRm = data?.[0]?.no_rm || '';
+      const latestSeqRaw = latestRm.split('-')[2] || '000000';
+      const latestSeq = Number.parseInt(latestSeqRaw, 10);
+      const nextSeq = Number.isNaN(latestSeq) ? 1 : latestSeq + 1;
+
+      const formatted = `${prefix}-${String(nextSeq).padStart(6, '0')}`;
       setNoRm(formatted);
     } catch (err) {
       console.error('Failed to generate No RM:', err);
-      setNoRm(`RM-${Date.now().toString().slice(-6)}`);
+      setNoRm('00-00-000001');
     } finally {
       setIsGeneratingRm(false);
     }
-  };
+  }, [jenisKelamin, desa]);
 
   useEffect(() => {
     if (!isOpen) {
@@ -131,7 +154,12 @@ export function NewPatientModal({
     setFieldErrors({});
 
     generateNextNoRm();
-  }, [isOpen, initialQuery]);
+  }, [isOpen, initialQuery, generateNextNoRm]);
+
+  useEffect(() => {
+    if (!isOpen) return;
+    generateNextNoRm();
+  }, [isOpen, jenisKelamin, desa, generateNextNoRm]);
 
   const handleDateOfBirthChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const dob = e.target.value;
@@ -281,7 +309,7 @@ export function NewPatientModal({
                   setNoRm(e.target.value);
                   if (fieldErrors.noRm) setFieldErrors((prev) => ({ ...prev, noRm: '' }));
                 }}
-                placeholder={isGeneratingRm ? 'Membuat...' : 'RM-XXXX'}
+                placeholder={isGeneratingRm ? 'Membuat...' : '00-00-000000'}
                 className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-mono font-bold text-teal-700 focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
                 required
               />
@@ -294,30 +322,26 @@ export function NewPatientModal({
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Sapaan / Gelar
               </label>
-              <select
+              <Select
                 value={gelar}
                 onChange={(e) => setGelar(e.target.value)}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
-              >
-                {GELAR_OPTIONS.map((g) => (
-                  <option key={g} value={g}>{g}</option>
-                ))}
-              </select>
+                options={GELAR_OPTIONS.map((g) => ({ value: g, label: g }))}
+                searchable={false}
+                headerTitle="Sapaan / Gelar"
+              />
             </div>
 
             <div className="sm:col-span-5">
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Jenis Kelamin <span className="text-rose-500">*</span>
               </label>
-              <select
+              <Select
                 value={jenisKelamin}
                 onChange={(e) => setJenisKelamin(e.target.value as 'Laki-laki' | 'Perempuan')}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
-              >
-                {JENIS_KELAMIN_OPTIONS.map((jk) => (
-                  <option key={jk} value={jk}>{jk}</option>
-                ))}
-              </select>
+                options={JENIS_KELAMIN_OPTIONS.map((jk) => ({ value: jk, label: jk }))}
+                searchable={false}
+                headerTitle="Jenis Kelamin"
+              />
             </div>
           </div>
 
@@ -391,18 +415,16 @@ export function NewPatientModal({
               <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
                 Desa Domisili <span className="text-rose-500">*</span>
               </label>
-              <select
+              <Select
                 value={desa}
                 onChange={(e) => {
                   setDesa(e.target.value);
                   if (fieldErrors.desa) setFieldErrors((prev) => ({ ...prev, desa: '' }));
                 }}
-                className="w-full px-3.5 py-2.5 bg-white border border-slate-300 rounded-xl text-xs sm:text-sm font-medium focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 transition-colors min-h-[44px]"
-              >
-                {DESA_OPTIONS.map((d) => (
-                  <option key={d} value={d}>{d}</option>
-                ))}
-              </select>
+                options={DESA_OPTIONS.map((d) => ({ value: d, label: d }))}
+                searchable
+                headerTitle="Desa Domisili"
+              />
               {fieldErrors.desa && (
                 <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.desa}</p>
               )}

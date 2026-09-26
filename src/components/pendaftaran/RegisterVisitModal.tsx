@@ -15,6 +15,7 @@ import { createClient } from '@/lib/supabase/client';
 import type { Patient, Doctor, Visit } from '@/types/database';
 import { DEFAULT_TARIFFS } from '@/constants/clinic';
 import { Modal } from '@/components/ui';
+import { Select } from '@/components/ui/Select';
 
 const visitSchema = z.object({
   dokterId: z.string().trim().min(1, 'Pilih dokter pemeriksa terlebih dahulu.'),
@@ -265,21 +266,21 @@ export function RegisterVisitModal({
             <label className="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1.5">
               Dokter Pemeriksa <span className="text-rose-500">*</span>
             </label>
-            <select
+            <Select
               value={selectedDoctorId}
               onChange={(e) => {
                 setSelectedDoctorId(e.target.value);
                 if (fieldErrors.dokterId) setFieldErrors((prev) => ({ ...prev, dokterId: '' }));
               }}
               disabled={isLoadingDoctors}
-              className="w-full py-2.5 px-3.5 text-xs sm:text-sm min-h-[44px] bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-medium transition-colors focus:outline-none focus:ring-4 focus:ring-teal-500/10 focus:border-teal-600 focus:bg-white disabled:bg-slate-100 disabled:text-slate-400"
-            >
-              {doctors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nama} {d.spesialisasi ? `(${d.spesialisasi})` : ''}
-                </option>
-              ))}
-            </select>
+              placeholder={isLoadingDoctors ? 'Memuat dokter...' : 'Pilih dokter pemeriksa'}
+              headerTitle="Dokter Pemeriksa"
+              options={doctors.map((d) => ({
+                value: d.id,
+                label: d.nama,
+                subtitle: d.spesialisasi || undefined,
+              }))}
+            />
             {fieldErrors.dokterId && (
               <p className="text-[11px] text-rose-600 font-semibold mt-1">{fieldErrors.dokterId}</p>
             )}

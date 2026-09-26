@@ -21,6 +21,7 @@ Mutable execution status, active task, blockers, and commits belong in `docs/con
 | `F-005` | Migrasi 7,493 Data CSV | `docs/specs/F-005-migrasi-data-lama/` | P2 | implemented | MVP |
 | `F-006` | Register Program Khusus | `docs/specs/F-006-program-khusus/` | P2 | implemented | MVP |
 | `F-007` | Fitur Klinis & Administrasi Pasien | `docs/specs/F-007-fitur-klinis-administrasi-pasien/` | P2 | implemented | Post-MVP Extension |
+| `F-008` | RM Baru, RBAC 2 Role, Laporan Kesehatan, Piutang | `docs/specs/F-008-rm-rbac-kesehatan-piutang/` | P1 | implemented | Change Request |
 
 ## Lifecycle gate meaning
 

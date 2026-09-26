@@ -45,7 +45,19 @@ export type Visit = {
   pendapatan_lain: number;
   keterangan_pendapatan?: string;
   jenis_pembayaran?: 'Tunai' | 'TF';
-  status_pembayaran: 'Menunggu Dokter' | 'Menunggu Kasir' | 'Menunggu Pembayaran' | 'Lunas' | 'Ditanggung BPJS' | 'Pending';
+  status_pembayaran:
+    | 'Menunggu Dokter'
+    | 'Menunggu Kasir'
+    | 'Menunggu Pembayaran'
+    | 'Lunas'
+    | 'Ditanggung BPJS'
+    | 'Belum Bayar'
+    | 'Piutang'
+    | 'Pending';
+  payment_state?: 'Menunggu Pembayaran' | 'Lunas' | 'Ditanggung BPJS' | 'Belum Bayar' | 'Piutang';
+  piutang_nominal?: number;
+  piutang_note?: string;
+  piutang_approved_by_owner_at?: string;
   pasien?: Patient;
   dokter?: Doctor;
   created_at: string;
@@ -106,7 +118,50 @@ export type PostCare = {
   created_at: string;
 };
 
-export type UserRole = 'kasir' | 'dokter' | 'owner';
+export type PublicHealthProgramType = 'PTM' | 'ANC' | 'KB' | 'ELIMINASI_3';
+
+export type PublicHealthRecord = {
+  id: string;
+  program_type: PublicHealthProgramType;
+  pasien_id?: string;
+  nama: string;
+  jenis_kelamin?: 'Laki-laki' | 'Perempuan' | string;
+  ttl?: string;
+  alamat?: string;
+  no_nik?: string;
+  diagnosa?: string;
+  lab?: string;
+  terapi?: string;
+  hbsag?: string;
+  jenis_kb?: string;
+  tanggal_kembali?: string;
+  dokter_id?: string;
+  visit_id?: string;
+  created_by_role?: string;
+  created_at: string;
+  updated_at?: string;
+  pasien?: Patient;
+  dokter?: Doctor;
+  visit?: Visit;
+};
+
+export type ReferralCommission = {
+  id: string;
+  pasien_id?: string;
+  visit_id?: string;
+  sumber_rujukan: string;
+  jenis_layanan: 'infus' | 'usg' | 'lab';
+  nominal_komisi: number;
+  tahun_komisi: number;
+  status_pembayaran: 'Belum Dibayar' | 'Dibayar';
+  catatan?: string;
+  created_at: string;
+  updated_at?: string;
+  pasien?: Patient;
+  visit?: Visit;
+};
+
+export type UserRole = 'owner' | 'dokter_admin';
 
 export type UserProfile = {
   id: string;

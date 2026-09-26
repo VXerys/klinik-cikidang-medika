@@ -286,3 +286,155 @@ export function exportFullClinicWorkbook(params: {
   const fileNameDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
   XLSX.writeFile(wb, `Laporan_Lengkap_Klinik_Cikidang_${fileNameDate}.xlsx`);
 }
+
+export interface PublicHealthExportRow {
+  program_type: string;
+  nama: string;
+  jenis_kelamin: string;
+  ttl: string;
+  alamat: string;
+  no_nik: string;
+  diagnosa: string;
+  lab: string;
+  terapi: string;
+  hbsag: string;
+  jenis_kb: string;
+  tanggal_kembali: string;
+}
+
+const PUBLIC_HEALTH_SHEET_CONFIG: Record<
+  string,
+  { sheetName: string; title: string; headers: string[] }
+> = {
+  PTM: {
+    sheetName: 'PTM',
+    title: 'LAPORAN PTM (PENYAKIT TIDAK MENULAR)',
+    headers: ['Nama', 'JK', 'TTL', 'Alamat', 'No NIK', 'Diagnosa', 'Lab'],
+  },
+  ANC: {
+    sheetName: 'ANC',
+    title: 'LAPORAN ANC (ANTENATAL CARE)',
+    headers: ['Nama', 'JK', 'TTL', 'Alamat', 'No NIK', 'Diagnosa', 'Terapi', 'HbSAg'],
+  },
+  KB: {
+    sheetName: 'KB',
+    title: 'LAPORAN KB (KELUARGA BERENCANA)',
+    headers: ['Nama', 'TTL', 'Alamat', 'No NIK', 'Jenis KB', 'Tanggal Kembali'],
+  },
+  ELIMINASI_3: {
+    sheetName: '3 Eliminasi',
+    title: 'LAPORAN 3 ELIMINASI',
+    headers: ['Nama', 'JK', 'TTL', 'Alamat', 'No NIK', 'Diagnosa', 'Lab'],
+  },
+};
+
+function buildPublicHealthRow(row: PublicHealthExportRow, program: string): (string | number)[] {
+  if (program === 'KB') {
+    return [row.nama, row.ttl, row.alamat, row.no_nik, row.jenis_kb, row.tanggal_kembali];
+  }
+  if (program === 'ANC') {
+    return [
+      row.nama,
+      row.jenis_kelamin,
+      row.ttl,
+      row.alamat,
+      row.no_nik,
+      row.diagnosa,
+      row.terapi,
+      row.hbsag,
+    ];
+  }
+  return [row.nama, row.jenis_kelamin, row.ttl, row.alamat, row.no_nik, row.diagnosa, row.lab];
+}
+
+export function exportPublicHealthToExcel(
+  records: PublicHealthExportRow[],
+  dateRange?: DateRange
+) {
+  const wb = XLSX.utils.book_new();
+
+  Object.entries(PUBLIC_HEALTH_SHEET_CONFIG).forEach(([program, config]) => {
+    const rows = records.filter((r) => r.program_type === program);
+    if (rows.length === 0) return;
+
+    const sheetData = [
+      ...createMetadataHeader(config.title, dateRange),
+      config.headers,
+      ...rows.map((row) => buildPublicHealthRow(row, program)),
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws['!cols'] = calculateColumnWidths(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, config.sheetName);
+  });
+
+  if (wb.SheetNames.length === 0) {
+    const sheetData = [
+      ...createMetadataHeader('LAPORAN PROGRAM KESEHATAN', dateRange),
+      ['Belum ada data program kesehatan pada periode ini'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws['!cols'] = calculateColumnWidths(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, 'Program Kesehatan');
+  }
+
+  const fileNameDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
+  XLSX.writeFile(wb, `Laporan_Program_Kesehatan_Cikidang_${fileNameDate}.xlsx`);
+}
+
+export interface ReferralCommissionExportRow {
+  tanggal: string;
+  sumber_rujukan: string;
+  nama_pasien: string;
+  jenis_layanan: string;
+  nominal_komisi: number;
+  status_pembayaran: string;
+  catatan: string;
+}
+
+export function exportReferralCommissionsToExcel(
+  rows: ReferralCommissionExportRow[],
+  year: number
+) {
+  const wb = XLSX.utils.book_new();
+
+  const headers = [
+    'Tanggal',
+    'Sumber Rujukan (Bidan)',
+    'Nama Pasien',
+    'Jenis Layanan',
+    'Nominal Komisi (Rp)',
+    'Status Pembayaran',
+    'Catatan',
+  ];
+
+  const dataRows = rows.map((r) => [
+    r.tanggal,
+    r.sumber_rujukan,
+    r.nama_pasien,
+    r.jenis_layanan,
+    r.nominal_komisi,
+    r.status_pembayaran,
+    r.catatan || '-',
+  ]);
+
+  const totalKomisi = rows.reduce((sum, r) => sum + (r.nominal_komisi || 0), 0);
+
+  const sheetData = [
+    ...createMetadataHeader(
+      `LAPORAN RUJUKAN & KOMISI BIDAN TAHUN ${year}`,
+      { start: `${year}-01-01`, end: `${year}-12-31` }
+    ),
+    headers,
+    ...dataRows,
+    [],
+    ['TOTAL KOMISI', '', '', '', totalKomisi, '', ''],
+  ];
+
+  const ws = XLSX.utils.aoa_to_sheet(sheetData);
+  ws['!cols'] = calculateColumnWidths(sheetData);
+  XLSX.utils.book_append_sheet(wb, ws, `Komisi ${year}`);
+
+  const fileNameDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
+  XLSX.writeFile(wb, `Laporan_Komisi_Rujukan_Cikidang_${year}_${fileNameDate}.xlsx`);
+}

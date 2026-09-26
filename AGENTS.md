@@ -51,7 +51,7 @@ Conversation history and provider memory are never the sole source of truth.
 - Client/application framework: Next.js 16 App Router (Turbopack), React 19, Tailwind CSS 3.4
 - Backend/API: Next.js API Routes (server components) + Supabase client SDK
 - Database/persistence: Supabase Cloud PostgreSQL + Hybrid Storage (Supabase Storage 1GB primary + Cloudinary 25GB fallback for medical photos)
-- Auth: Supabase Auth with RBAC (roles: `kasir`, `dokter`, `owner`)
+- Auth: Supabase Auth with RBAC (roles: `owner`, `dokter_admin`)
 - State management: React component state (no external state library)
 - Package/build tooling: npm, PostCSS, Autoprefixer
 - Testing: Not yet configured (planned: Vitest + React Testing Library)
@@ -179,7 +179,7 @@ This project uses Supabase client SDK instead of custom REST APIs. The SDK calls
 - API ownership: Supabase manages the PostgREST API layer. Custom business logic lives in Next.js server components and server actions.
 - Request validation: Validate in React components before SDK calls. PostgreSQL constraints as fallback.
 - Authentication: Supabase Auth handles session management. JWT tokens passed automatically by the SDK.
-- Authorization: Row Level Security (RLS) policies on PostgreSQL tables enforce role-based access (kasir, dokter, owner).
+- Authorization: Row Level Security (RLS) policies on PostgreSQL tables enforce role-based access (owner, dokter_admin). Legacy `dokter` and `kasir` metadata roles map to `dokter_admin` at runtime.
 - Error contract: Supabase SDK returns `{ data, error }` objects. Always check `error` before using `data`.
 - Versioning/backward compatibility: N/A (no public API).
 - Retry/timeout ownership: Supabase SDK handles retries internally.

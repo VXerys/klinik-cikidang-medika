@@ -5,6 +5,7 @@ import { Printer, X, FileText, Calendar, User, Stethoscope } from '@phosphor-ico
 import { CLINIC_PROFILE } from '@/constants/clinic';
 import { Patient, Visit, Doctor } from '@/types/database';
 import { Button } from '@/components/ui/Button';
+import { Select } from '@/components/ui/Select';
 
 interface SuratSakitModalProps {
   isOpen: boolean;
@@ -171,17 +172,14 @@ export function SuratSakitModal({
             <label className="mb-1 block text-xs font-semibold text-slate-600">
               Dokter Pemeriksa
             </label>
-            <select
+            <Select
               value={selectedDoctorId}
               onChange={(e) => setSelectedDoctorId(e.target.value)}
-              className="w-full rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-medium text-slate-800 focus:border-teal-500 focus:outline-none focus:ring-1 focus:ring-teal-500"
-            >
-              {doctors.map((d) => (
-                <option key={d.id} value={d.id}>
-                  {d.nama}
-                </option>
-              ))}
-            </select>
+              size="sm"
+              searchable={false}
+              headerTitle="Dokter Pemeriksa"
+              options={doctors.map((d) => ({ value: d.id, label: d.nama }))}
+            />
           </div>
         </div>
 

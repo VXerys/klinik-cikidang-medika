@@ -16,13 +16,13 @@ import {
   ArrowRight,
   UserGear,
   Stethoscope,
-  CashRegister,
+
 } from '@phosphor-icons/react';
 import { Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 interface QuickAccount {
-  role: 'owner' | 'dokter' | 'kasir';
+  role: 'owner' | 'dokter_admin';
   title: string;
   name: string;
   email: string;
@@ -42,22 +42,13 @@ const QUICK_ACCOUNTS: QuickAccount[] = [
     description: 'Dashboard Eksekutif, Keuangan, & Laporan',
   },
   {
-    role: 'dokter',
-    title: 'Dokter Pemeriksa',
-    name: 'dr. Ovan / Dokter Jaga',
+    role: 'dokter_admin',
+    title: 'Dokter / Admin',
+    name: 'Dokter Jaga & Admin Klinik',
     email: 'dokter@cikidangmedika.com',
-    badge: 'Klinis & Medis',
+    badge: 'Klinis & Laporan Program',
     icon: Stethoscope,
-    description: 'Antrean Periksa & Program Khusus',
-  },
-  {
-    role: 'kasir',
-    title: 'Loket & Kasir',
-    name: 'Petugas Front Office',
-    email: 'kasir@cikidangmedika.com',
-    badge: 'Operasional',
-    icon: CashRegister,
-    description: 'Registrasi Pasien & Pembayaran',
+    description: 'Rekam Medis, Program Khusus, & Laporan Program',
   },
 ];
 
@@ -159,7 +150,7 @@ export default function LoginPage() {
             <div className="pt-2 space-y-2.5">
               <div className="flex items-start gap-2.5 text-xs text-teal-100">
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" weight="fill" />
-                <span>Otentikasi aman berbasis peran (Kasir, Dokter, & Owner)</span>
+                <span>Otentikasi aman berbasis peran (Dokter/Admin & Owner)</span>
               </div>
               <div className="flex items-start gap-2.5 text-xs text-teal-100">
                 <CheckCircle className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" weight="fill" />
@@ -213,7 +204,7 @@ export default function LoginPage() {
               <label className="block text-[11px] font-bold text-slate-600 uppercase tracking-wider">
                 Pilih Cepat Berdasarkan Peran
               </label>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                 {QUICK_ACCOUNTS.map((acc) => {
                   const Icon = acc.icon;
                   const isSelected = selectedQuickRole === acc.role;

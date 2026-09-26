@@ -187,7 +187,8 @@ export default function PendaftaranKasirPage() {
     pendapatanLain: number,
     keteranganPendapatan: string,
     uangDiterima: number,
-    jenisPembayaran: 'Tunai' | 'TF'
+    jenisPembayaran: 'Tunai' | 'TF',
+    paymentState: 'Lunas' | 'Piutang' | 'Belum Bayar'
   ) => {
     setIsSubmittingPos(true);
 
@@ -197,6 +198,10 @@ export default function PendaftaranKasirPage() {
       const finalPendapatanLain = Number(pendapatanLain || 0);
       const totalTagihan = finalBiayaPeriksa + finalPendapatanLain;
 
+      const finalStatus =
+        visit.jenis_pasien === 'BPJS' && totalTagihan === 0 ? 'Ditanggung BPJS' : paymentState;
+      const remainingPiutang = Math.max(0, totalTagihan - uangDiterima);
+
       const { data, error } = await supabase
         .from('visits')
         .update({
@@ -204,8 +209,10 @@ export default function PendaftaranKasirPage() {
           pendapatan_lain: finalPendapatanLain,
           keterangan_pendapatan: keteranganPendapatan.trim() || null,
           jenis_pembayaran: jenisPembayaran,
-          status_pembayaran:
-            visit.jenis_pasien === 'BPJS' && totalTagihan === 0 ? 'Ditanggung BPJS' : 'Lunas',
+          status_pembayaran: finalStatus,
+          payment_state: finalStatus,
+          piutang_nominal: finalStatus === 'Piutang' ? remainingPiutang : 0,
+          piutang_note: finalStatus === 'Piutang' ? `Sisa piutang ${formatRupiah(remainingPiutang)}` : null,
         })
         .eq('id', visit.id)
         .select(`

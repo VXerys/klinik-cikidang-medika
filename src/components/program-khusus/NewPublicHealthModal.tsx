@@ -1,0 +1,469 @@
+'use client';
+
+import React, { useState, useEffect } from 'react';
+import { z } from 'zod';
+import {
+  WarningCircle,
+  CircleNotch,
+  Heartbeat,
+  User,
+} from '@phosphor-icons/react';
+import { toast } from 'sonner';
+import type { Patient, PublicHealthProgramType } from '@/types/database';
+import { Modal } from '@/components/ui/Modal';
+import { Select } from '@/components/ui/Select';
+import { PatientSearchAutocomplete } from '@/components/pendaftaran/PatientSearchAutocomplete';
+import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
+
+interface NewPublicHealthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSuccess: () => void;
+  defaultProgram?: PublicHealthProgramType;
+}
+
+const PROGRAM_OPTIONS: { id: PublicHealthProgramType; label: string; description: string }[] = [
+  { id: 'PTM', label: 'PTM', description: 'Penyakit Tidak Menular' },
+  { id: 'ANC', label: 'ANC', description: 'Antenatal Care / Ibu Hamil' },
+  { id: 'KB', label: 'KB', description: 'Keluarga Berencana' },
+  { id: 'ELIMINASI_3', label: '3 Eliminasi', description: 'Eliminasi TBC, Malaria, Kusta' },
+];
+
+const baseSchema = z.object({
+  programType: z.enum(['PTM', 'ANC', 'KB', 'ELIMINASI_3']),
+  nama: z.string().trim().min(2, 'Nama pasien minimal 2 karakter.'),
+  jenisKelamin: z.string().trim().optional().nullable(),
+  ttl: z.string().trim().optional().nullable(),
+  alamat: z.string().trim().optional().nullable(),
+  noNik: z
+    .string()
+    .trim()
+    .refine((val) => !val || /^\d{16}$/.test(val), {
+      message: 'NIK harus tepat 16 digit angka jika diisi.',
+    })
+    .optional()
+    .nullable(),
+  diagnosa: z.string().trim().optional().nullable(),
+  lab: z.string().trim().optional().nullable(),
+  terapi: z.string().trim().optional().nullable(),
+  hbsag: z.string().trim().optional().nullable(),
+  jenisKb: z.string().trim().optional().nullable(),
+  tanggalKembali: z.string().trim().optional().nullable(),
+});
+
+export function NewPublicHealthModal({
+  isOpen,
+  onClose,
+  onSuccess,
+  defaultProgram = 'PTM',
+}: NewPublicHealthModalProps) {
+  const [programType, setProgramType] = useState<PublicHealthProgramType>(defaultProgram);
+  const [selectedPatient, setSelectedPatient] = useState<Patient | null>(null);
+
+  const [nama, setNama] = useState('');
+  const [jenisKelamin, setJenisKelamin] = useState('');
+  const [ttl, setTtl] = useState('');
+  const [alamat, setAlamat] = useState('');
+  const [noNik, setNoNik] = useState('');
+
+  const [diagnosa, setDiagnosa] = useState('');
+  const [lab, setLab] = useState('');
+  const [terapi, setTerapi] = useState('');
+  const [hbsag, setHbsag] = useState('');
+  const [jenisKb, setJenisKb] = useState('');
+  const [tanggalKembali, setTanggalKembali] = useState('');
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    if (!isOpen) return;
+    setProgramType(defaultProgram);
+    setSelectedPatient(null);
+    setNama('');
+    setJenisKelamin('');
+    setTtl('');
+    setAlamat('');
+    setNoNik('');
+    setDiagnosa('');
+    setLab('');
+    setTerapi('');
+    setHbsag('');
+    setJenisKb('');
+    setTanggalKembali('');
+    setErrorMsg(null);
+    setFieldErrors({});
+  }, [isOpen, defaultProgram]);
+
+  const handleSelectPatient = (patient: Patient) => {
+    setSelectedPatient(patient);
+    setNama(patient.nama || '');
+    setJenisKelamin(patient.jenis_kelamin || '');
+    setTtl([patient.desa, patient.tanggal_lahir].filter(Boolean).join(', '));
+    setAlamat(patient.alamat || patient.desa || '');
+    setNoNik(patient.no_ktp || '');
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+    setFieldErrors({});
+
+    const parseResult = baseSchema.safeParse({
+      programType,
+      nama,
+      jenisKelamin: jenisKelamin || null,
+      ttl: ttl || null,
+      alamat: alamat || null,
+      noNik: noNik || null,
+      diagnosa: diagnosa || null,
+      lab: lab || null,
+      terapi: terapi || null,
+      hbsag: hbsag || null,
+      jenisKb: jenisKb || null,
+      tanggalKembali: tanggalKembali || null,
+    });
+
+    if (!parseResult.success) {
+      const errors: Record<string, string> = {};
+      parseResult.error.issues.forEach((issue) => {
+        const key = issue.path[0] as string;
+        if (!errors[key]) errors[key] = issue.message;
+      });
+      setFieldErrors(errors);
+      setErrorMsg(parseResult.error.issues[0]?.message || 'Periksa kembali kelengkapan formulir.');
+      return;
+    }
+
+    if (programType === 'KB' && !jenisKb.trim()) {
+      setErrorMsg('Jenis KB wajib diisi untuk program KB.');
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const supabase = createClient();
+      const valid = parseResult.data;
+
+      const { error } = await supabase.from('public_health_records').insert({
+        program_type: valid.programType,
+        pasien_id: selectedPatient?.id || null,
+        nama: valid.nama,
+        jenis_kelamin: valid.jenisKelamin,
+        ttl: valid.ttl,
+        alamat: valid.alamat,
+        no_nik: valid.noNik,
+        diagnosa: valid.diagnosa,
+        lab: valid.lab,
+        terapi: valid.terapi,
+        hbsag: valid.hbsag,
+        jenis_kb: valid.jenisKb,
+        tanggal_kembali: valid.tanggalKembali || null,
+      });
+
+      if (error) throw error;
+
+      toast.success(`Data ${programType} untuk ${valid.nama} berhasil disimpan.`);
+      onSuccess();
+      onClose();
+    } catch (err) {
+      console.error('Error creating public health record:', err);
+      const msg = err instanceof Error ? err.message : 'Gagal menyimpan data program kesehatan.';
+      setErrorMsg(msg);
+      toast.error(msg);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const isAnc = programType === 'ANC';
+  const isKb = programType === 'KB';
+  const showDiagnosa = programType === 'PTM' || isAnc || programType === 'ELIMINASI_3';
+  const showLab = programType === 'PTM' || programType === 'ELIMINASI_3';
+
+  return (
+    <Modal
+      isOpen={isOpen}
+      onClose={onClose}
+      title="Input Data Program Kesehatan"
+      description="Registrasi PTM, ANC, KB, dan 3 Eliminasi untuk pelaporan Puskesmas"
+      icon={
+        <div className="p-2.5 bg-rose-50 text-rose-700 rounded-xl border border-rose-200">
+          <Heartbeat weight="duotone" className="w-5 h-5" />
+        </div>
+      }
+      maxWidth="xl"
+    >
+      <form onSubmit={handleSubmit} className="flex-1 flex flex-col min-h-0">
+        <div className="p-5 sm:p-6 space-y-4 text-xs overflow-y-auto">
+          {errorMsg && (
+            <div className="p-3.5 bg-rose-50 border border-rose-200 text-rose-800 rounded-xl flex items-center gap-2.5">
+              <WarningCircle weight="duotone" className="w-4 h-4 shrink-0 text-rose-600" />
+              <span className="font-medium">{errorMsg}</span>
+            </div>
+          )}
+
+          <div>
+            <label className="block font-bold text-slate-800 mb-1.5">Jenis Program Kesehatan</label>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {PROGRAM_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  type="button"
+                  onClick={() => setProgramType(opt.id)}
+                  className={cn(
+                    'p-3 rounded-xl border text-left transition tactile-btn min-h-[64px]',
+                    programType === opt.id
+                      ? 'bg-teal-50 border-teal-500 ring-2 ring-teal-500/20'
+                      : 'bg-slate-50 border-slate-300 hover:border-teal-400'
+                  )}
+                >
+                  <span className="block font-bold text-slate-900">{opt.label}</span>
+                  <span className="block text-[10px] text-slate-500 mt-0.5 leading-tight">
+                    {opt.description}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-slate-50 border border-slate-200/90 rounded-xl space-y-2.5">
+            <span className="block font-bold text-slate-800 flex items-center gap-1.5">
+              <User weight="duotone" className="w-4 h-4 text-teal-600" />
+              Identitas Pasien
+            </span>
+
+            {selectedPatient ? (
+              <div className="p-3 bg-white border border-emerald-200 rounded-lg flex items-center justify-between">
+                <div>
+                  <div className="font-bold text-slate-900 flex items-center gap-2">
+                    <span>{selectedPatient.nama}</span>
+                    <span className="text-[10px] font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                      {selectedPatient.no_rm}
+                    </span>
+                  </div>
+                  <div className="text-[11px] text-slate-600 mt-0.5">
+                    Desa {selectedPatient.desa} • {selectedPatient.jenis_kelamin}
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPatient(null)}
+                  className="text-[11px] text-emerald-800 font-bold underline p-1"
+                >
+                  Ganti
+                </button>
+              </div>
+            ) : (
+              <PatientSearchAutocomplete
+                onSelectPatient={handleSelectPatient}
+                onAddNewPatient={() =>
+                  toast.info('Pasien belum terdaftar. Isi identitas secara manual di bawah.')
+                }
+                placeholder="Cari pasien terdaftar (opsional), atau isi manual..."
+              />
+            )}
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 pt-1">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Nama Lengkap <span className="text-rose-500">*</span>
+                </label>
+                <input
+                  type="text"
+                  value={nama}
+                  onChange={(e) => setNama(e.target.value)}
+                  placeholder="Nama pasien"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                />
+                {fieldErrors.nama && (
+                  <p className="text-[10px] text-rose-600 font-semibold mt-1">{fieldErrors.nama}</p>
+                )}
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Jenis Kelamin</label>
+                <Select
+                  value={jenisKelamin}
+                  onChange={(e) => setJenisKelamin(e.target.value)}
+                  placeholder="Pilih jenis kelamin"
+                  searchable={false}
+                  headerTitle="Jenis Kelamin"
+                  options={[
+                    { value: 'Laki-laki', label: 'Laki-laki' },
+                    { value: 'Perempuan', label: 'Perempuan' },
+                  ]}
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Tempat, Tanggal Lahir (TTL)</label>
+                <input
+                  type="text"
+                  value={ttl}
+                  onChange={(e) => setTtl(e.target.value)}
+                  placeholder="Cikidang, 12-05-1995"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">No. NIK</label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  value={noNik}
+                  onChange={(e) => setNoNik(e.target.value.replace(/\D/g, '').slice(0, 16))}
+                  placeholder="16 digit NIK"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] font-mono focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                />
+                {fieldErrors.noNik && (
+                  <p className="text-[10px] text-rose-600 font-semibold mt-1">{fieldErrors.noNik}</p>
+                )}
+              </div>
+
+              <div className="sm:col-span-2">
+                <label className="block font-bold text-slate-700 mb-1">Alamat</label>
+                <input
+                  type="text"
+                  value={alamat}
+                  onChange={(e) => setAlamat(e.target.value)}
+                  placeholder="Alamat / desa domisili"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="p-3.5 bg-teal-50/50 border border-teal-200/80 rounded-xl space-y-2.5">
+            <span className="block font-bold text-teal-950">
+              Data Klinis Program {programType}
+            </span>
+
+            {showDiagnosa && (
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Diagnosa</label>
+                <input
+                  type="text"
+                  value={diagnosa}
+                  onChange={(e) => setDiagnosa(e.target.value)}
+                  placeholder={isAnc ? 'Contoh: G1P0A0, kehamilan 20 minggu' : 'Diagnosa klinis'}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                />
+              </div>
+            )}
+
+            {isAnc && (
+              <>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Terapi</label>
+                  <input
+                    type="text"
+                    value={terapi}
+                    onChange={(e) => setTerapi(e.target.value)}
+                    placeholder="Contoh: Fe + Asam Folat 1x1, Kalsium 1x1"
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Lab ANC (HbSAg)
+                  </label>
+                  <Select
+                    value={hbsag}
+                    onChange={(e) => setHbsag(e.target.value)}
+                    placeholder="Belum diperiksa"
+                    searchable={false}
+                    headerTitle="Hasil Lab ANC"
+                    options={[
+                      { value: 'Non Reaktif', label: 'Non Reaktif' },
+                      { value: 'Reaktif', label: 'Reaktif' },
+                    ]}
+                  />
+                </div>
+              </>
+            )}
+
+            {showLab && (
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Hasil Lab</label>
+                <input
+                  type="text"
+                  value={lab}
+                  onChange={(e) => setLab(e.target.value)}
+                  placeholder="Contoh: GDS 142 mg/dL, Asam Urat 6.8"
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                />
+              </div>
+            )}
+
+            {isKb && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Jenis KB <span className="text-rose-500">*</span>
+                  </label>
+                  <Select
+                    value={jenisKb}
+                    onChange={(e) => setJenisKb(e.target.value)}
+                    placeholder="Pilih jenis KB"
+                    searchable
+                    headerTitle="Jenis KB"
+                    options={[
+                      'Suntik 1 Bulan',
+                      'Suntik 3 Bulan',
+                      'Pil KB',
+                      'IUD / Spiral',
+                      'Implan',
+                      'Kondom',
+                      'MOW / MOP',
+                    ].map((kb) => ({ value: kb, label: kb }))}
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Tanggal Kembali</label>
+                  <input
+                    type="date"
+                    value={tanggalKembali}
+                    onChange={(e) => setTanggalKembali(e.target.value)}
+                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg min-h-[40px] focus:ring-2 focus:ring-teal-500/20 focus:border-teal-600 focus:outline-none"
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        <div className="shrink-0 sticky bottom-0 bg-white/95 backdrop-blur-xs border-t border-slate-100 p-4 sm:px-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end gap-2.5 z-10">
+          <button
+            type="button"
+            onClick={onClose}
+            disabled={isSubmitting}
+            className="px-4 py-2 text-xs font-bold text-slate-700 bg-white hover:bg-slate-100 border border-slate-300 rounded-xl transition min-h-[38px] shadow-btn-secondary tactile-btn w-full sm:w-auto"
+          >
+            Batal
+          </button>
+          <button
+            type="submit"
+            disabled={isSubmitting}
+            className="px-4 py-2 text-xs font-bold text-white bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 rounded-xl transition min-h-[38px] flex items-center justify-center gap-1.5 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none shadow-btn-primary tactile-btn border border-teal-700/80 w-full sm:w-auto"
+          >
+            {isSubmitting ? (
+              <>
+                <CircleNotch weight="bold" className="w-4 h-4 animate-spin" />
+                <span>Menyimpan...</span>
+              </>
+            ) : (
+              'Simpan Data Program'
+            )}
+          </button>
+        </div>
+      </form>
+    </Modal>
+  );
+}
+
+export default NewPublicHealthModal;
