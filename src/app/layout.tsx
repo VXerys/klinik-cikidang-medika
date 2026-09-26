@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next';
-import { Plus_Jakarta_Sans, JetBrains_Mono } from 'next/font/google';
+import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 import './globals.css';
 import AppLayout from '@/components/AppLayout';
 import { Toaster } from '@/components/ui/sonner';
@@ -12,11 +12,11 @@ const plusJakartaSans = Plus_Jakarta_Sans({
   fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
-const jetbrainsMono = JetBrains_Mono({
+const inter = Inter({
   subsets: ['latin'],
-  variable: '--font-jetbrains-mono',
+  variable: '--font-inter',
   display: 'swap',
-  fallback: ['monospace'],
+  fallback: ['system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
 });
 
 export const viewport: Viewport = {
@@ -43,7 +43,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="id" className={`${plusJakartaSans.variable} ${jetbrainsMono.variable}`}>
+    <html lang="id" className={`${plusJakartaSans.variable} ${inter.variable}`}>
       <body className="font-sans antialiased text-slate-900 bg-slate-100 selection:bg-teal-100 selection:text-teal-900">
         <AuthProvider>
           <AppLayout>{children}</AppLayout>

@@ -10,7 +10,7 @@ const config: Config = {
     extend: {
       fontFamily: {
         sans: ['var(--font-plus-jakarta)', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        mono: ['var(--font-jetbrains-mono)', 'JetBrains Mono', 'monospace'],
+        mono: ['var(--font-inter)', 'Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
       },
       boxShadow: {
         'btn-primary': 'inset 0 1px 0 0 rgba(255, 255, 255, 0.32), 0 2px 4px -1px rgba(13, 148, 136, 0.35), 0 4px 14px -2px rgba(13, 148, 136, 0.25)',
