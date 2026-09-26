@@ -134,25 +134,15 @@ export default function LoginPage() {
 
           {/* Top Brand Block */}
           <div className="relative z-10 space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-14 h-14 rounded-2xl bg-white/10 backdrop-blur-xs flex items-center justify-center p-2 border border-white/20 shadow-lg shrink-0">
-                <Image
-                  src="/assets/images/logo-square.png"
-                  alt="Logo Klinik Cikidang Medika"
-                  width={48}
-                  height={48}
-                  className="w-full h-full object-contain filter drop-shadow-sm"
-                  priority
-                />
-              </div>
-              <div>
-                <span className="text-[11px] font-bold tracking-widest uppercase text-teal-300 block">
-                  Klinik Pratama
-                </span>
-                <h1 className="text-xl font-extrabold tracking-tight text-white leading-tight">
-                  Cikidang Medika
-                </h1>
-              </div>
+            <div className="inline-flex p-3 sm:p-3.5 rounded-2xl bg-white shadow-xl border border-teal-100/80">
+              <Image
+                src="/assets/images/logo-full.png"
+                alt="Klinik Pratama Cikidang Medika"
+                width={240}
+                height={54}
+                className="w-auto h-12 sm:h-13 object-contain"
+                priority
+              />
             </div>
 
             <div className="space-y-3 pt-2">
@@ -198,24 +188,14 @@ export default function LoginPage() {
         <div className="lg:col-span-7 p-6 sm:p-8 md:p-10 flex flex-col justify-between bg-white">
           <div className="max-w-md w-full mx-auto space-y-6">
             {/* Mobile-only Clinic Logo Header */}
-            <div className="flex items-center gap-2.5 lg:hidden pb-3 border-b border-slate-100">
-              <div className="w-10 h-10 rounded-xl bg-teal-50 border border-teal-200/80 p-1 flex items-center justify-center shrink-0">
-                <Image
-                  src="/assets/images/logo-square.png"
-                  alt="Logo Klinik Cikidang Medika"
-                  width={36}
-                  height={36}
-                  className="w-full h-full object-contain"
-                />
-              </div>
-              <div>
-                <span className="text-[10px] font-bold tracking-wider uppercase text-teal-700 block">
-                  Klinik Pratama
-                </span>
-                <span className="text-xs font-extrabold text-slate-900">
-                  Cikidang Medika
-                </span>
-              </div>
+            <div className="flex items-center justify-start lg:hidden pb-3 border-b border-slate-100">
+              <Image
+                src="/assets/images/logo-full.png"
+                alt="Logo Klinik Pratama Cikidang Medika"
+                width={200}
+                height={46}
+                className="w-auto h-11 object-contain"
+              />
             </div>
 
             {/* Header Form */}

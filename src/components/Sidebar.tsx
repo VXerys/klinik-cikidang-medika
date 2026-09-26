@@ -173,24 +173,26 @@ export default function Sidebar({
       >
         {/* Clinic Branding Container */}
         <div className="p-3.5 border-b border-slate-200/80">
-          <div className="p-3 bg-gradient-to-b from-teal-50/70 to-slate-50 border border-teal-100/80 rounded-2xl shadow-well flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-white p-1 border border-teal-200/90 shadow-xs shrink-0 flex items-center justify-center">
+          <div className="p-3 bg-gradient-to-b from-white via-teal-50/40 to-slate-50 border border-teal-100/80 rounded-2xl shadow-well flex flex-col gap-2.5">
+            {/* Full Horizontal Logo Display */}
+            <div className="w-full py-1 flex items-center justify-center">
               <Image
-                src="/assets/images/logo-square.png"
-                alt="Logo Klinik Cikidang Medika"
-                width={36}
-                height={36}
-                className="w-full h-full object-contain"
+                src="/assets/images/logo-full.png"
+                alt="Klinik Pratama Cikidang Medika"
+                width={215}
+                height={48}
+                className="w-full max-w-[215px] h-auto object-contain filter drop-shadow-xs"
                 priority
               />
             </div>
-            <div className="min-w-0">
-              <div className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Klinik Pratama</div>
-              <div className="text-xs font-extrabold text-slate-900 truncate">Cikidang Medika</div>
-              <div className="text-[10px] text-slate-600 flex items-center gap-1.5 mt-0.5 font-medium">
+
+            {/* Sub-status Indicator Bar */}
+            <div className="flex items-center justify-between pt-2 border-t border-slate-200/70 text-[10px]">
+              <span className="text-slate-500 font-semibold tracking-tight">Sistem Rawat Jalan</span>
+              <span className="flex items-center gap-1.5 font-bold font-mono text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/80 shrink-0">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shrink-0"></span>
-                <span className="truncate">Live Operasional</span>
-              </div>
+                <span>Live</span>
+              </span>
             </div>
           </div>
         </div>
@@ -218,20 +220,14 @@ export default function Sidebar({
           >
             {/* Drawer Header */}
             <div className="p-4 border-b border-slate-200/80 flex items-center justify-between">
-              <div className="flex items-center gap-2.5 min-w-0">
-                <div className="w-9 h-9 rounded-xl bg-white p-1 border border-teal-200/90 shadow-xs shrink-0 flex items-center justify-center">
-                  <Image
-                    src="/assets/images/logo-square.png"
-                    alt="Logo Klinik Cikidang Medika"
-                    width={32}
-                    height={32}
-                    className="w-full h-full object-contain"
-                  />
-                </div>
-                <div className="min-w-0">
-                  <div className="text-[10px] font-bold text-teal-700 uppercase tracking-wider">Klinik Pratama</div>
-                  <div className="text-xs font-extrabold text-slate-900 truncate">Cikidang Medika</div>
-                </div>
+              <div className="flex-1 max-w-[190px] py-1">
+                <Image
+                  src="/assets/images/logo-full.png"
+                  alt="Klinik Pratama Cikidang Medika"
+                  width={180}
+                  height={40}
+                  className="w-full h-auto object-contain"
+                />
               </div>
 
               <button
