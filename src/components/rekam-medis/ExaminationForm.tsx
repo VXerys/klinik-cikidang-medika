@@ -239,7 +239,7 @@ export function ExaminationForm({
 
   return (
     <>
-      <div className={cn('bg-white border border-slate-200/90 rounded-2xl shadow-card-double overflow-hidden flex flex-col', className)}>
+      <div className={cn('bg-white border border-slate-200/90 rounded-2xl shadow-card-double overflow-hidden flex flex-col h-full min-h-0', className)}>
         {/* Banner Status Selesai / Sedang Diperiksa */}
         {isFinished && (
           <div className="bg-emerald-50 border-b border-emerald-200 px-5 py-2.5 flex items-center justify-between text-xs text-emerald-900">
@@ -366,7 +366,7 @@ export function ExaminationForm({
         </div>
 
         {/* Unified Clinical Workstation Stream */}
-        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto max-h-[calc(100vh-280px)]">
+        <div className="p-5 sm:p-6 space-y-6 overflow-y-auto flex-1 min-h-0">
           {errorMessage && (
             <div className="p-3 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-2.5 text-rose-700 text-xs font-medium">
               <WarningCircle className="w-4 h-4 shrink-0 mt-0.5 text-rose-600" weight="fill" />
