@@ -8,12 +8,15 @@ import {
   WarningCircle,
   PlusCircle,
   CheckCircle,
+  ArrowsOut,
+  ArrowsIn,
 } from '@phosphor-icons/react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
 import type { Visit } from '@/types/database';
 import { QueueList } from '@/components/rekam-medis/QueueList';
 import { ExaminationForm } from '@/components/rekam-medis/ExaminationForm';
+import { cn } from '@/lib/utils';
 
 export default function RekamMedisPage() {
   const getTodayString = () => new Date().toISOString().split('T')[0];
@@ -23,6 +26,7 @@ export default function RekamMedisPage() {
   const [selectedVisit, setSelectedVisit] = useState<Visit | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [isExamExpanded, setIsExamExpanded] = useState(false);
 
   const fetchVisits = useCallback(async () => {
     setIsLoading(true);
@@ -175,6 +179,17 @@ export default function RekamMedisPage() {
 
           <button
             type="button"
+            onClick={() => setIsExamExpanded((prev) => !prev)}
+            className="px-3.5 py-1.5 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl text-xs font-bold transition shadow-btn-secondary tactile-btn min-h-[36px] inline-flex items-center gap-1.5"
+            title={isExamExpanded ? 'Kembalikan layout 2 kolom' : 'Perbesar area periksa dokter'}
+            aria-label={isExamExpanded ? 'Kembalikan layout 2 kolom' : 'Perbesar area periksa dokter'}
+          >
+            {isExamExpanded ? <ArrowsIn className="w-4 h-4 text-teal-600" weight="bold" /> : <ArrowsOut className="w-4 h-4 text-teal-600" weight="bold" />}
+            <span>{isExamExpanded ? 'Tampilan Normal' : 'Perbesar Area Periksa'}</span>
+          </button>
+
+          <button
+            type="button"
             onClick={fetchVisits}
             disabled={isLoading}
             className="w-9 h-9 min-h-[36px] bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 rounded-xl transition shadow-btn-secondary tactile-btn flex items-center justify-center shrink-0"
@@ -204,9 +219,9 @@ export default function RekamMedisPage() {
       )}
 
       {/* 2-Column Clinical Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+      <div className={cn('grid grid-cols-1 lg:grid-cols-12 gap-6 items-stretch', isExamExpanded && 'lg:grid-cols-1')}>
         {/* Left Column: Patient Queue Panel */}
-        <div className="lg:col-span-5 xl:col-span-4">
+        <div className={cn('lg:col-span-5 xl:col-span-4 h-full', isExamExpanded && 'hidden')}>
           <QueueList
             visits={visits}
             selectedVisitId={selectedVisit?.id || null}
@@ -217,12 +232,16 @@ export default function RekamMedisPage() {
         </div>
 
         {/* Right Column: Unified Clinical Workstation */}
-        <div id="exam-workstation" className="lg:col-span-7 xl:col-span-8 scroll-mt-6">
+        <div
+          id="exam-workstation"
+          className={cn('lg:col-span-7 xl:col-span-8 scroll-mt-6 h-full', isExamExpanded && 'lg:col-span-1 xl:col-span-1')}
+        >
           {selectedVisit ? (
             <ExaminationForm
               key={selectedVisit.id}
               visit={selectedVisit}
               onSaveSuccess={handleSaveSuccess}
+              className="h-full"
             />
           ) : (
             <div className="bg-white rounded-2xl border border-slate-200/90 p-8 sm:p-14 text-center shadow-card-double space-y-4">

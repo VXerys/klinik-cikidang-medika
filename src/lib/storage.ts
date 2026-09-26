@@ -190,7 +190,11 @@ export async function getSignedMedicalPhotoUrl(
   }
 
   // Cloudinary URL
-  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || 'pzlvn2bl';
+  const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
+  if (!cloudName) {
+    throw new Error('Konfigurasi Cloudinary belum lengkap (NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME belum diset)');
+  }
+
   return `https://res.cloudinary.com/${cloudName}/image/upload/${path}`;
 }
 
