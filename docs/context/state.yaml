@@ -75,6 +75,7 @@ active:
 
 blockers:
   - "Tarif komisi rujukan bidan belum ditetapkan klinik; nominal diinput manual oleh owner."
+  - "F-009: project produksi (aszjzvdmxudmoomdxttx) belum memiliki kolom F-009 (visits.bidan_rujukan, circumcisions.berat_badan, circumcisions.sumber_data, patients.no_rm_lama, patients.sumber_data, public_health_records.gpa/uk/tp/hiv/syphilis). Kode F-009 pada branch feature/f009-kelengkapan-data-pemantauan-bidan JANGAN sampai ke produksi sebelum dua migration F-009 diterapkan ke produksi, karena Vercel men-deploy otomatis dari main dan tab Bidan serta Puskesmas akan gagal memuat."
 risks:
   - "Sebagian besar catatan lama tidak mengisi metode pembayaran (hanya 158 dari 7.493 baris), sehingga sisanya dikategorikan Tunai."
   - "Sebagian besar pasien lama belum memiliki NIK maupun nomor BPJS (2.670 dari 4.238 pasien). Ini keterbatasan data sumber, bukan kehilangan data saat migrasi."

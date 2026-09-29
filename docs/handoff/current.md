@@ -2,9 +2,9 @@
 status: active
 owner: "Developer"
 session_date: "2026-09-30"
-branch: "staging"
+branch: "feature/f009-kelengkapan-data-pemantauan-bidan"
 base_commit: "bfd5cb2"
-current_commit: "uncommitted"
+current_commit: "c79a64f (pushed to origin)"
 active_feature: "F-009"
 active_task: "F-009-TASK-016"
 expires_after: "2026-10-14"
@@ -114,15 +114,28 @@ Puskesmas. Semua dikerjakan di staging dulu; produksi belum disentuh.
 ## Exact next step
 
 ```bash
-# 0. Putuskan dulu 3 baris circumcisions uji di staging (lihat "Residual risk"): hapus atau biarkan.
+# 0. Sudah dilakukan: commit c79a64f di-push ke branch
+#    feature/f009-kelengkapan-data-pemantauan-bidan (belum di-merge ke main).
 
-# 1. Review di local
+# 1. Putuskan dulu 3 baris circumcisions uji di staging (lihat "Residual risk"): hapus atau biarkan.
+
+# 2. Review di local
 npm run dev            # buka /laporan (tab Bidan dan Puskesmas) dan /program-khusus (tab Sunat)
 
-# 2. Setelah review diterima, promosikan rekonsiliasi ke produksi
+# 3. SEBELUM merge ke main, terapkan dua migration F-009 ke produksi (DDL saja, idempoten, tanpa data):
+#    node scripts/apply-sql.mjs --env=.env.production --confirm-prod \
+#      --file=supabase/migrations/20260929_f009_reconciliation_support.sql
+#    node scripts/apply-sql.mjs --env=.env.production --confirm-prod \
+#      --file=supabase/migrations/20260929_f009_circumcision_register.sql
+#    Vercel men-deploy otomatis dari main, dan produksi belum punya kolom F-009
+#    (visits.bidan_rujukan, circumcisions.berat_badan/sumber_data, patients.no_rm_lama/sumber_data,
+#     public_health_records.gpa/uk/tp/hiv/syphilis). Tanpa langkah ini, tab Bidan dan Puskesmas
+#     akan gagal memuat di produksi.
+
+# 4. Setelah review diterima, promosikan rekonsiliasi DATA ke produksi
 node scripts/reconcile-clinic-data.mjs --env=.env.production --confirm-prod-reset
 
-# 3. Commit dan push (belum ada commit untuk sesi ini)
+# 5. Merge branch ke main, lalu hapus branch
 ```
 
 Item yang menunggu keputusan client (lihat `next_tasks` di `docs/context/state.yaml`):
