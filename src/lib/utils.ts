@@ -35,3 +35,13 @@ export function formatDateIndo(dateStr: string): string {
     return dateStr;
   }
 }
+
+// Reports state the period they are showing, so an empty result or a printed copy is
+// never ambiguous about what was searched.
+export function describePeriod(startDate: string, endDate: string): string {
+  if (!startDate && !endDate) return 'Semua Periode Data';
+  if (startDate && endDate && startDate === endDate) return formatDateIndo(startDate);
+  if (startDate && endDate) return `${formatDateIndo(startDate)} sampai ${formatDateIndo(endDate)}`;
+  if (startDate) return `Mulai ${formatDateIndo(startDate)}`;
+  return `Sampai ${formatDateIndo(endDate)}`;
+}

@@ -1,9 +1,15 @@
 'use client';
 
 import React from 'react';
-import { Users, Heartbeat, Wallet, HandHeart } from '@phosphor-icons/react';
+import { Users, Heartbeat, Wallet, HandHeart, Baby, ClipboardText } from '@phosphor-icons/react';
 
-export type ReportTabType = 'kunjungan' | 'morbiditas' | 'buku_kas' | 'komisi';
+export type ReportTabType =
+  | 'kunjungan'
+  | 'morbiditas'
+  | 'buku_kas'
+  | 'komisi'
+  | 'bidan'
+  | 'puskesmas';
 
 interface ReportTabsProps {
   activeTab: ReportTabType;
@@ -14,6 +20,8 @@ interface ReportTabsProps {
     morbiditas: number;
     buku_kas: number;
     komisi: number;
+    bidan: number;
+    puskesmas: number;
   }>;
 }
 
@@ -26,8 +34,10 @@ export function ReportTabs({ activeTab, onChangeTab, allowedTabs, counts }: Repo
   }[] = [
     { id: 'kunjungan', label: 'Rekap Kunjungan Pasien', icon: Users, countKey: 'kunjungan' },
     { id: 'morbiditas', label: '10 Besar Penyakit (ICD-10)', icon: Heartbeat, countKey: 'morbiditas' },
+    { id: 'bidan', label: 'Pemantauan Rujukan Bidan', icon: HandHeart, countKey: 'bidan' },
+    { id: 'puskesmas', label: 'Laporan Puskesmas', icon: ClipboardText, countKey: 'puskesmas' },
     { id: 'buku_kas', label: 'Arus Kas Operasional', icon: Wallet, countKey: 'buku_kas' },
-    { id: 'komisi', label: 'Komisi Rujukan Bidan', icon: HandHeart, countKey: 'komisi' },
+    { id: 'komisi', label: 'Komisi Rujukan Bidan', icon: Baby, countKey: 'komisi' },
   ];
 
   const visibleTabs = allowedTabs?.length

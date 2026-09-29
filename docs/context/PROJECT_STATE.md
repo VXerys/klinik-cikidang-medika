@@ -18,20 +18,51 @@ Until then, verify project state directly from approved specs, Git, and `docs/ha
 <!-- GENERATED:GIT_FACTS:START -->
 ## Generated Git Facts
 
-- Refreshed at: 2026-09-23T05:30:40.771Z
-- Branch: `staging`
-- HEAD: `7777bb2`
+- Refreshed at: 2026-09-29T18:15:29.407Z
+- Branch: `main`
+- HEAD: `bfd5cb2`
 - Worktree:
 
 ```text
-M scripts/run-dev.mjs
+M docs/context/PROJECT_STATE.md
+ M docs/context/state.yaml
+ M docs/handoff/current.md
+ M docs/specs/_index.md
+ M scripts/audit-clinic-csv.mjs
+ D scripts/migrate_csv_to_supabase.py
+ M src/app/laporan/page.tsx
+ M src/app/page.tsx
+ M src/app/program-khusus/page.tsx
+ M src/components/dashboard/DashboardPeriodSelector.tsx
+ M src/components/laporan/ReportFilterBar.tsx
+ M src/components/laporan/ReportPreviewTable.tsx
+ M src/components/laporan/ReportTabs.tsx
+ M src/components/program-khusus/CircumcisionList.tsx
+ M src/constants/clinic.ts
+ M src/lib/excel.ts
+ M src/lib/utils.ts
+ M src/types/database.ts
+?? docs/product/Laporan_Pembaruan_Sistem_F009.pdf
+?? docs/specs/F-009-kelengkapan-data-pemantauan-bidan/
+?? scripts/apply-sql.mjs
+?? scripts/audit-clinic-sheets.mjs
+?? scripts/generate_f009_update_report_pdf.py
+?? scripts/inspect-db-state.mjs
+?? scripts/lib/
+?? scripts/reconcile-clinic-data.mjs
+?? src/components/laporan/BidanReferralPanel.tsx
+?? src/components/laporan/PuskesmasReportPanel.tsx
+?? src/components/program-khusus/EditCircumcisionModal.tsx
+?? src/components/ui/DateRangePicker.tsx
+?? supabase/migrations/20260929_f009_circumcision_register.sql
+?? supabase/migrations/20260929_f009_reconciliation_support.sql
 ```
 
 Recent commits:
 
-- `7777bb2` feat(env): add dual staging and production dev runner scripts
-- `bbc95e7` feat(F-006): upgrade program khusus photo ecosystem and expand dashboard charts
-- `d46d2a6` docs(context): refresh project state, sync verified commit 81829a8, and archive handoff
-- `81829a8` feat(dashboard-laporan): standardize dashboard charts and report center with Phosphor duotone icons and Sonner toast
-- `161d9d3` feat(buku-kas): standardize financial UI with Zod validation, Sonner toast, and Phosphor duotone icons
+- `bfd5cb2` Migrate clinic CSV data into dev and production
+- `4b6687c` F-008: add RM format, dual roles, health registers
+- `594fbbb` Switch numeric mono font to Inter
+- `21ebb23` Match exam card height with queue panel
+- `054f447` Align rekam medis panels to same height
 <!-- GENERATED:GIT_FACTS:END -->

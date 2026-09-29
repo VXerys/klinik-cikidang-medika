@@ -28,6 +28,8 @@ import { ReportFilterBar } from '@/components/laporan/ReportFilterBar';
 import { ReportPreviewTable } from '@/components/laporan/ReportPreviewTable';
 import { ReportKpis } from '@/components/laporan/ReportKpis';
 import { ReferralCommissionPanel } from '@/components/laporan/ReferralCommissionPanel';
+import { BidanReferralPanel } from '@/components/laporan/BidanReferralPanel';
+import { PuskesmasReportPanel } from '@/components/laporan/PuskesmasReportPanel';
 
 export default function LaporanPage() {
   const currentDate = new Date();
@@ -40,11 +42,15 @@ export default function LaporanPage() {
   const defaultEndDate = new Date(currentYear, currentMonth + 1, 0)
     .toISOString()
     .split('T')[0];
-
   const { role } = useAuth();
   const isDokterAdmin = role === 'dokter_admin';
+  // The bidan and Puskesmas views are clinical, so both roles read them; only the
+  // financial tabs stay owner-only.
   const allowedTabs = useMemo<ReportTabType[]>(
-    () => (isDokterAdmin ? ['morbiditas'] : ['kunjungan', 'morbiditas', 'buku_kas', 'komisi']),
+    () =>
+      isDokterAdmin
+        ? ['morbiditas', 'bidan', 'puskesmas']
+        : ['kunjungan', 'morbiditas', 'bidan', 'puskesmas', 'buku_kas', 'komisi'],
     [isDokterAdmin]
   );
 
@@ -56,6 +62,9 @@ export default function LaporanPage() {
   const [jenisPasien, setJenisPasien] = useState('Semua');
   const [dokterId, setDokterId] = useState('Semua');
   const [doctorsList, setDoctorsList] = useState<{ id: string; nama: string }[]>([]);
+
+  // These tabs own their own period filter and workbook export.
+  const isSelfContainedTab = activeTab === 'bidan' || activeTab === 'puskesmas';
 
   const [visitsData, setVisitsData] = useState<VisitExportRow[]>([]);
   const [morbidityData, setMorbidityData] = useState<MorbidityExportRow[]>([]);
@@ -342,14 +351,16 @@ export default function LaporanPage() {
           <button
             type="button"
             onClick={handleExportActiveTab}
-            disabled={isLoading || (activeTab === 'kunjungan' && visitsData.length === 0)}
+            disabled={
+              isLoading || isSelfContainedTab || (activeTab === 'kunjungan' && visitsData.length === 0)
+            }
             className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 bg-gradient-to-b from-teal-600 to-teal-700 hover:from-teal-700 hover:to-teal-800 text-white px-3.5 py-2 min-h-[40px] sm:min-h-[38px] rounded-xl text-xs font-bold shadow-btn-primary border border-teal-700/80 tactile-btn transition disabled:opacity-50 focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none"
           >
             <DownloadSimple weight="bold" className="w-3.5 h-3.5" />
             <span>Unduh Tab Ini (.xlsx)</span>
           </button>
 
-          {!isDokterAdmin && (
+          {!isDokterAdmin && !isSelfContainedTab && (
             <button
               type="button"
               onClick={handleExportFullWorkbook}
@@ -396,7 +407,6 @@ export default function LaporanPage() {
         doctorsList={doctorsList}
         onApplyFilter={fetchReportData}
         onResetFilter={handleReset}
-        onPresetChange={handlePresetChange}
         isLoading={isLoading}
       />
 
@@ -412,9 +422,13 @@ export default function LaporanPage() {
         }}
       />
 
-      {/* 5. Consolidated Preview Table or Referral Commission Panel */}
+      {/* 5. Consolidated Preview Table, Referral Commission, Bidan, or Puskesmas View */}
       {activeTab === 'komisi' ? (
         <ReferralCommissionPanel isLoading={isLoading} />
+      ) : activeTab === 'bidan' ? (
+        <BidanReferralPanel startDate={startDate} endDate={endDate} isLoading={isLoading} />
+      ) : activeTab === 'puskesmas' ? (
+        <PuskesmasReportPanel startDate={startDate} endDate={endDate} isLoading={isLoading} />
       ) : (
         <ReportPreviewTable
           activeTab={activeTab}

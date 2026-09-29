@@ -382,6 +382,144 @@ export function exportPublicHealthToExcel(
   XLSX.writeFile(wb, `Laporan_Program_Kesehatan_Cikidang_${fileNameDate}.xlsx`);
 }
 
+export interface PuskesmasRegisterExportRow {
+  program_type: string;
+  no_rm: string;
+  gelar_jk: string;
+  nama: string;
+  jenis_kelamin: string;
+  tanggal_lahir: string;
+  usia: string;
+  desa: string;
+  alamat: string;
+  no_ktp: string;
+  no_bpjs: string;
+  tanggal_periksa: string;
+  bulan: string;
+  kode_icd10: string;
+  petugas: string;
+  anamnesa: string;
+  diagnosa: string;
+  gpa: string;
+  uk: string;
+  tp: string;
+  terapi: string;
+  hiv: string;
+  syphilis: string;
+  hbsag: string;
+}
+
+// Column order and labels follow the clinic's LAPORAN DPP sheets, so the export can be
+// handed to the Puskesmas without being rebuilt in a spreadsheet.
+const PUSKESMAS_BASE_COLUMNS: { key: keyof PuskesmasRegisterExportRow; label: string }[] = [
+  { key: 'no_rm', label: 'No RM' },
+  { key: 'gelar_jk', label: 'GK' },
+  { key: 'nama', label: 'Nama Pasien' },
+  { key: 'jenis_kelamin', label: 'JK' },
+  { key: 'tanggal_lahir', label: 'Tgl Lahir' },
+  { key: 'usia', label: 'Usia' },
+  { key: 'desa', label: 'CodeAlamat' },
+  { key: 'alamat', label: 'Alamat' },
+  { key: 'no_ktp', label: 'KTP' },
+  { key: 'no_bpjs', label: 'BPJS' },
+  { key: 'tanggal_periksa', label: 'Tgl Pmrksan' },
+  { key: 'bulan', label: 'Bulan' },
+  { key: 'kode_icd10', label: 'Kode ICD' },
+  { key: 'petugas', label: 'Dokter / Petugas' },
+  { key: 'anamnesa', label: 'Hasil Anamnesa' },
+];
+
+const PUSKESMAS_PROGRAM_COLUMNS: Record<
+  string,
+  { sheetName: string; title: string; extra: { key: keyof PuskesmasRegisterExportRow; label: string }[] }
+> = {
+  PTM: {
+    sheetName: 'PTM',
+    title: 'LAPORAN PTM (PENYAKIT TIDAK MENULAR)',
+    extra: [
+      { key: 'diagnosa', label: 'Diagnosa' },
+      { key: 'terapi', label: 'Terapi' },
+    ],
+  },
+  ANC: {
+    sheetName: 'ANC',
+    title: 'LAPORAN ANC (ANTENATAL CARE)',
+    extra: [
+      { key: 'diagnosa', label: 'Diagnosa' },
+      { key: 'gpa', label: 'GPA' },
+      { key: 'uk', label: 'UK' },
+      { key: 'tp', label: 'TP' },
+      { key: 'terapi', label: 'Terapi' },
+      { key: 'hbsag', label: 'HbSAg' },
+    ],
+  },
+  KB: {
+    sheetName: 'KB',
+    title: 'LAPORAN KB (KELUARGA BERENCANA)',
+    extra: [],
+  },
+  ELIMINASI_3: {
+    sheetName: '3 Eliminasi',
+    title: 'LAPORAN 3 ELIMINASI',
+    extra: [
+      { key: 'diagnosa', label: 'Diagnosa' },
+      { key: 'gpa', label: 'GPA' },
+      { key: 'uk', label: 'UK' },
+      { key: 'tp', label: 'TP' },
+      { key: 'terapi', label: 'Terapi' },
+      { key: 'hiv', label: 'HIV' },
+      { key: 'syphilis', label: 'SYPHILIS' },
+      { key: 'hbsag', label: 'HbSAg' },
+    ],
+  },
+};
+
+export function puskesmasColumnsFor(program: string) {
+  const config = PUSKESMAS_PROGRAM_COLUMNS[program];
+  const columns = [...PUSKESMAS_BASE_COLUMNS, ...(config?.extra ?? [])];
+  return columns.map((column) => ({ key: column.key, label: column.label }));
+}
+
+export function exportPuskesmasRegisterToExcel(
+  records: PuskesmasRegisterExportRow[],
+  dateRange?: DateRange
+) {
+  const wb = XLSX.utils.book_new();
+
+  Object.entries(PUSKESMAS_PROGRAM_COLUMNS).forEach(([program, config]) => {
+    const rows = records.filter((record) => record.program_type === program);
+    if (rows.length === 0) return;
+
+    const columns = [...PUSKESMAS_BASE_COLUMNS, ...config.extra];
+    const sheetData = [
+      ...createMetadataHeader(config.title, dateRange),
+      columns.map((column) => column.label),
+      ...rows.map((row) => columns.map((column) => row[column.key] ?? '-')),
+    ];
+
+    const ws = XLSX.utils.aoa_to_sheet(sheetData);
+    ws['!cols'] = calculateColumnWidths(sheetData);
+    XLSX.utils.book_append_sheet(wb, ws, config.sheetName);
+  });
+
+  const recapData = [
+    ...createMetadataHeader('REKAP REGISTER PROGRAM KESEHATAN', dateRange),
+    ['Program', 'Jumlah Catatan'],
+    ...Object.keys(PUSKESMAS_PROGRAM_COLUMNS).map((program) => [
+      program,
+      records.filter((record) => record.program_type === program).length,
+    ]),
+    [],
+    ['TOTAL', records.length],
+  ];
+  const recapSheet = XLSX.utils.aoa_to_sheet(recapData);
+  recapSheet['!cols'] = calculateColumnWidths(recapData);
+  XLSX.utils.book_append_sheet(wb, recapSheet, 'Rekap');
+
+  const fileNameDate = new Date().toISOString().split('T')[0].replace(/-/g, '');
+  XLSX.writeFile(wb, `Laporan_Puskesmas_Cikidang_${fileNameDate}.xlsx`);
+}
+
 export interface ReferralCommissionExportRow {
   tanggal: string;
   sumber_rujukan: string;

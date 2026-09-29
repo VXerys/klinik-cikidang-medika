@@ -4,12 +4,20 @@
  * Reports row counts, doctor/payment value variants, and every field whose
  * length exceeds the target PostgreSQL column limit. Patient identifiers are
  * never printed; only lengths and row numbers are reported.
+ *
+ * Defaults to the current source of truth, REKAMMEDIS.csv. Pass a file name under
+ * docs/data to check another export.
+ *
+ * Usage:
+ *   node scripts/audit-clinic-csv.mjs
+ *   node scripts/audit-clinic-csv.mjs "DASHBOARD - DATAUTAMA.csv"
  */
 
 import fs from 'fs';
 import path from 'path';
 
-const CSV_PATH = path.resolve(process.cwd(), 'docs/data/DASHBOARD - DATAUTAMA.csv');
+const DEFAULT_CSV = '[DATA] Klinik Cikidang Medika  - REKAMMEDIS.csv';
+const CSV_PATH = path.resolve(process.cwd(), 'docs/data', process.argv[2] || DEFAULT_CSV);
 
 function parseCSV(text) {
   const lines = text.split(/\r?\n/).filter((line) => line.trim().length > 0);

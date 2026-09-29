@@ -116,3 +116,36 @@ export const REFERRAL_SERVICE_OPTIONS = [
   { id: 'usg', label: 'USG' },
   { id: 'lab', label: 'Cek Lab' },
 ] as const;
+
+// Midwife referral sources are stored in visits.bidan_rujukan exactly as the clinic
+// wrote them in the register ("Bdn.Tari"). The list exists for display only; a new
+// value from the register still renders through bidanDisplayName.
+export const BIDAN_REFERRAL_SOURCES = [
+  { id: 'Bdn.Ai', label: 'Bidan Ai' },
+  { id: 'Bdn.Desi', label: 'Bidan Desi' },
+  { id: 'Bdn.Dewi', label: 'Bidan Dewi' },
+  { id: 'Bdn.Nida', label: 'Bidan Nida' },
+  { id: 'Bdn.Novi', label: 'Bidan Novi' },
+  { id: 'Bdn.Rila', label: 'Bidan Rila' },
+  { id: 'Bdn.Tari', label: 'Bidan Tari' },
+  { id: 'Bdn.Trie', label: 'Bidan Trie' },
+  { id: 'Bdn.Ulfah', label: 'Bidan Ulfah' },
+] as const;
+
+export function bidanDisplayName(stored: string | null | undefined): string {
+  const raw = (stored || '').trim();
+  if (!raw) return '-';
+  const known = BIDAN_REFERRAL_SOURCES.find((entry) => entry.id.toLowerCase() === raw.toLowerCase());
+  return known ? known.label : raw.replace(/^bdn\.\s*/i, 'Bidan ');
+}
+
+// Mirrors the MONITOR column of the visit log, which is what the Puskesmas register
+// reports are built from.
+export const PUBLIC_HEALTH_PROGRAM_LABELS: Record<string, string> = {
+  PTM: 'PTM (Penyakit Tidak Menular)',
+  ANC: 'ANC (Antenatal Care)',
+  KB: 'KB (Keluarga Berencana)',
+  ELIMINASI_3: '3 Eliminasi (HIV, Sifilis, Hepatitis B)',
+};
+
+export const PUBLIC_HEALTH_PROGRAM_ORDER = ['PTM', 'ANC', 'KB', 'ELIMINASI_3'] as const;

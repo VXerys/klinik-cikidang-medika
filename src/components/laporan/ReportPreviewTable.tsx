@@ -186,8 +186,9 @@ export function ReportPreviewTable({
         </div>
       </div>
 
-      {/* Table Matrix */}
-      <div className="overflow-x-auto w-full">
+      {/* Bounded scroll container so the header row stays visible while the body scrolls,
+          and wide tables scroll here instead of pushing the page sideways. */}
+      <div className="overflow-x-auto overflow-y-auto max-h-[70vh] w-full">
         {pageRows.length === 0 ? (
           <div className="py-16 text-center text-slate-400 space-y-2">
             <WarningCircle weight="duotone" className="w-10 h-10 mx-auto text-slate-300" />
@@ -199,7 +200,7 @@ export function ReportPreviewTable({
         ) : (
           <table className="w-full text-left text-xs text-slate-600">
             {activeTab === 'kunjungan' && (
-              <thead className="bg-slate-50/90 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
+              <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
                 <tr>
                   <th className="py-3 px-3.5">No RM</th>
                   <th className="py-3 px-3.5">Nama Pasien</th>
@@ -215,7 +216,7 @@ export function ReportPreviewTable({
             )}
 
             {activeTab === 'morbiditas' && (
-              <thead className="bg-slate-50/90 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
+              <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
                 <tr>
                   <th className="py-3 px-3.5 w-16 text-center">Peringkat</th>
                   <th className="py-3 px-3.5">Kode ICD-10</th>
@@ -227,7 +228,7 @@ export function ReportPreviewTable({
             )}
 
             {activeTab === 'buku_kas' && (
-              <thead className="bg-slate-50/90 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
+              <thead className="sticky top-0 z-10 bg-slate-50 text-slate-500 font-bold text-[11px] uppercase tracking-wider border-b border-slate-200/90 select-none whitespace-nowrap">
                 <tr>
                   <th className="py-3 px-3.5">Tanggal</th>
                   <th className="py-3 px-3.5">Jenis</th>
