@@ -64,18 +64,16 @@ features:
   - id: F-009
     name: Kelengkapan Data, Pemantauan Rujukan Bidan, Filter Periode, Laporan Puskesmas
     track: engineering
-    status: in_progress
+    status: completed
     spec_path: docs/specs/F-009-kelengkapan-data-pemantauan-bidan
-    active_phase: staging-verified
+    active_phase: production-migrated
 
 active:
   feature_id: "F-009"
-  task_id: "F-009-TASK-016"
-  branch: "staging"
+  task_id: null
+  branch: "main"
 
-blockers:
-  - "Tarif komisi rujukan bidan belum ditetapkan klinik; nominal diinput manual oleh owner."
-  - "F-009: project produksi (aszjzvdmxudmoomdxttx) belum memiliki kolom F-009 (visits.bidan_rujukan, circumcisions.berat_badan, circumcisions.sumber_data, patients.no_rm_lama, patients.sumber_data, public_health_records.gpa/uk/tp/hiv/syphilis). Kode F-009 pada branch feature/f009-kelengkapan-data-pemantauan-bidan JANGAN sampai ke produksi sebelum dua migration F-009 diterapkan ke produksi, karena Vercel men-deploy otomatis dari main dan tab Bidan serta Puskesmas akan gagal memuat."
+blockers: []
 risks:
   - "Sebagian besar catatan lama tidak mengisi metode pembayaran (hanya 158 dari 7.493 baris), sehingga sisanya dikategorikan Tunai."
   - "Sebagian besar pasien lama belum memiliki NIK maupun nomor BPJS (2.670 dari 4.238 pasien). Ini keterbatasan data sumber, bukan kehilangan data saat migrasi."
@@ -92,10 +90,12 @@ risks:
   - "F-009: dari 287 nomor RM tidak beraturan, 280 adalah nomor 10 digit asli klinik dan bukan kesalahan migrasi. Enam nomor pendek (4 berisi 7 digit, 2 berisi 5 digit) dapat dipadankan ke 9 digit tanpa bentrok, dan satu nilai berisi teks 'gatal gatal'."
   - "F-009: 9 baris sirkumsisi membawa catatan verifikasi (4 nama berbeda dari nama pasien, 5 bentrok tanggal lahir). Satu pasien baru dibuat untuk baris yang tanggal lahirnya sudah dipakai pasien bernama lain, agar tidak menempelkan tindakan ke anak yang salah."
   - "F-009: ditemukan satu pasien dengan nama literal 'J00' (kode ICD-10 masuk ke kolom nama). Dibiarkan apa adanya dan dilaporkan; klinik yang memutuskan perbaikan atau penggabungan."
-  - "F-009: 3 baris circumcisions tanpa sumber_data hanya ada di staging, dibuat serentak 2026-09-26 17:02 dari pemulihan data program F-006, biaya dan metode identik (Rp750.000, Laser/Kauter), dan memakai No RM berformat aplikasi. Produksi memiliki 0 baris circumcisions. Baris ini tidak ikut terbawa oleh reconcile-clinic-data.mjs, tetapi tampil di UI staging dan sebaiknya dihapus sebelum review klinik. Identitas pasien pada baris ini tidak ditulis di dokumen repo karena bersifat PII."
+  - "F-009: 3 baris circumcisions tanpa sumber_data hanya ada di staging, dibuat serentak 2026-09-26 17:02 dari pemulihan data program F-006, biaya dan metode identik (Rp750.000, Laser/Kauter), dan memakai No RM berformat aplikasi. Produksi memiliki 0 baris circumcisions. Baris ini tidak ikut terbawa oleh reconcile-clinic-data.mjs, tetapi tampil di UI staging. Identitas pasien pada baris ini tidak ditulis di dokumen repo karena bersifat PII."
+  - "F-009: register sirkumsisi mengandung nama ganda di sumber. Satu baris register punya dua pasien bernama sama dan bertanggal lahir identik, satu baris lain punya tiga pasien bernama sama. Baris register hanya tercatat pada satu pasien. Penggabungan identitas pasien kembar ini menunggu keputusan klinik, karena normalisasi No RM tidak dapat membuktikan keduanya orang yang sama."
+  - "F-009: rekonsiliasi sempat tidak idempoten. Pencocokan nama pada register sirkumsisi memakai elemen pertama dari daftar pasien yang dikembalikan PostgREST tanpa ORDER BY, sehingga urutan baris menentukan pasien mana yang dipilih. Produksi merencanakan baris sirkumsisi ke-44 saat dijalankan ulang. Sudah diperbaiki pada commit 5a0e0ef dengan kunci deterministik (pasien terdaftar, lalu tanggal lahir, lalu No RM terkecil); staging dan produksi kini melaporkan 0 rencana perubahan."
 
 migration:
-  last_run: "2026-09-29"
+  last_run: "2026-10-01"
   command_dev: "node scripts/reconcile-clinic-data.mjs --confirm-dev-reset"
   command_prod: "node scripts/reconcile-clinic-data.mjs --env=.env.production --confirm-prod-reset"
   source_of_truth_csv: "docs/data/[DATA] Klinik Cikidang Medika  - REKAMMEDIS.csv"
@@ -111,9 +111,14 @@ migration:
         - supabase/migrations/20260929_f009_circumcision_register.sql
     - name: production
       project_ref: aszjzvdmxudmoomdxttx
-      backup: docs/data/prod-backup-2026-09-26T17-10-47-246Z.json
+      backup: docs/data/prod-pref009-2026-10-01T09-31-10-869Z.json
       schema_aligned: true
-      reconciled: false
+      reconciled: true
+      reconciled_at: "2026-10-01"
+      report: docs/data/reconciliation-report-2026-10-01T09-37-31-928Z.json
+      migrations_applied:
+        - supabase/migrations/20260929_f009_reconciliation_support.sql
+        - supabase/migrations/20260929_f009_circumcision_register.sql
   result:
     patients: 4703
     visits: 7671
@@ -129,12 +134,16 @@ migration:
     non_uniform_village: 0
     out_of_range_age: 0
     idempotent_second_run: true
+    verified_in: "dev dan produksi"
 
 next_tasks:
   - id: F-009-TASK-016
     task: "Promosikan rekonsiliasi ke produksi setelah review staging diterima"
     command: "node scripts/reconcile-clinic-data.mjs --env=.env.production --confirm-prod-reset"
-    blocked_by: "Review developer atas hasil staging"
+    status: "Selesai 2026-10-01 - dua migration F-009 diterapkan ke produksi, data direkonsiliasi, dan hasilnya diverifikasi ulang lewat query langsung"
+  - id: F-009-OPEN-005
+    task: "Klinik memutuskan penggabungan pasien kembar pada register sirkumsisi"
+    detail: "Satu baris register punya dua pasien bernama sama dan bertanggal lahir identik, satu baris lain punya tiga pasien bernama sama. Baris register hanya tercatat pada satu pasien, sehingga pasien kembarnya tidak dianggap pernah sunat. Perlu keputusan klinik."
   - id: F-009-DOC-001
     task: "Dokumen laporan pembaruan klien (PDF) berisi seluruh item terbuka"
     artifact: "docs/product/Laporan_Pembaruan_Sistem_F009.pdf"
@@ -157,8 +166,8 @@ handoff:
   current: "docs/handoff/current.md"
   generated_views: "PROJECT_STATE.md dan PROGRESS.md belum memiliki renderer otomatis; state.yaml adalah sumber kanonik dan PROJECT_STATE.md mengarahkan pembaca ke handoff serta Git."
 
-last_updated: "2026-09-30"
-last_verified_commit: "9a59997"
+last_updated: "2026-10-01"
+last_verified_commit: "5a0e0ef"
 client_confirmations:
   - date: "2026-09-30"
     item: "Layout Laporan Puskesmas mengikuti sheet LAPORAN DPP sudah benar"
