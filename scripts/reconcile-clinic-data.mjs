@@ -733,6 +733,24 @@ if (csvExists(FILES.sunat)) {
 
   const birthDateOf = (patient) => (patient.tanggal_lahir ? normalizeDate(patient.tanggal_lahir) : '');
 
+  // PostgREST returns rows unordered, and two children can share a name and a birth date,
+  // so an exact-name match is resolved by a stable key: registered, then birth date, then No RM.
+  const existingCircumcisions = await selectAll('circumcisions', 'id, pasien_id, sumber_data');
+  const registeredPatientIds = new Set(
+    existingCircumcisions.filter((row) => row.sumber_data === 'SUNAT').map((row) => row.pasien_id)
+  );
+
+  const pickExactMatch = (name, birthDate) => {
+    const matches = patients.filter((patient) => normalizeName(patient.nama) === name);
+    if (matches.length <= 1) return matches[0] || null;
+
+    const registered = matches.filter((patient) => registeredPatientIds.has(patient.id));
+    const pool = registered.length > 0 ? registered : matches;
+    const sameBirthDate = pool.filter((patient) => birthDate && birthDateOf(patient) === birthDate);
+    const narrowed = sameBirthDate.length > 0 ? sameBirthDate : pool;
+    return [...narrowed].sort((a, b) => String(a.no_rm).localeCompare(String(b.no_rm)))[0];
+  };
+
   // Matching order: exact name, then birth date plus a shared name token, then a unique
   // birth date when the name differs. The last step is a spelling variant more often than
   // a second child, so it is attached and flagged for the clinic to verify.
@@ -741,7 +759,7 @@ if (csvExists(FILES.sunat)) {
     const birthDate = normalizeDate(row[1]);
     const tokens = name.split(' ').filter((token) => token.length >= 4);
 
-    const exact = patients.find((patient) => normalizeName(patient.nama) === name);
+    const exact = pickExactMatch(name, birthDate);
     if (exact) return exact;
 
     if (!birthDate) return null;
@@ -813,11 +831,6 @@ if (csvExists(FILES.sunat)) {
     patients = await selectAll('patients');
   }
   reindex();
-
-  const existingCircumcisions = await selectAll('circumcisions', 'id, pasien_id, sumber_data');
-  const registeredPatientIds = new Set(
-    existingCircumcisions.filter((row) => row.sumber_data === 'SUNAT').map((row) => row.pasien_id)
-  );
 
   const circumcisionsToInsert = [];
 
