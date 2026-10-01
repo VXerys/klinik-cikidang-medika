@@ -18,9 +18,9 @@ Until then, verify project state directly from approved specs, Git, and `docs/ha
 <!-- GENERATED:GIT_FACTS:START -->
 ## Generated Git Facts
 
-- Refreshed at: 2026-10-01T09:43:13.784Z
-- Branch: `feature/f009-kelengkapan-data-pemantauan-bidan`
-- HEAD: `5a0e0ef`
+- Refreshed at: 2026-10-01T11:05:33.100Z
+- Branch: `main`
+- HEAD: `d8a0aeb`
 - Worktree:
 
 ```text
@@ -30,9 +30,9 @@ M docs/context/state.yaml
 
 Recent commits:
 
+- `d8a0aeb` Give each auth account its own password
+- `02c4cbc` Require an explicit password on the login screen
+- `d6f6884` Merge branch 'feature/f009-kelengkapan-data-pemantauan-bidan'
+- `7e09e91` F-009: record production migration in context
 - `5a0e0ef` F-009: make circumcision matching deterministic
-- `34e0088` F-009: record production schema gap as a merge blocker
-- `c79a64f` F-009: reconcile clinic data and add reporting views
-- `bfd5cb2` Migrate clinic CSV data into dev and production
-- `4b6687c` F-008: add RM format, dual roles, health registers
 <!-- GENERATED:GIT_FACTS:END -->

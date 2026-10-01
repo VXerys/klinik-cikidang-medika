@@ -136,6 +136,28 @@ migration:
     idempotent_second_run: true
     verified_in: "dev dan produksi"
 
+deployment:
+  platform: Vercel
+  production_url: https://klinik-cikidang-medika.vercel.app
+  repository: https://github.com/klinik-medika-cikidang/klinik-cikidang-medika
+  visibility: public
+  last_successful_commit: d8a0aeb
+  note: "Deployment produksi gagal dari 27 Sep sampai 1 Okt pagi (domain masih menyajikan kode era F-004) dan kembali berhasil setelah repo dipindahkan ke organisasi klinik-medika-cikidang."
+  verified_routes: ["/", "/login", "/pendaftaran", "/rekam-medis", "/program-khusus", "/buku-kas", "/laporan"]
+
+auth:
+  accounts_production:
+    - "owner@cikidangmedika.com (owner)"
+    - "dokter@cikidangmedika.com (dokter_admin)"
+  accounts_staging:
+    - "owner@cikidangmedika.com (owner)"
+    - "dokter@cikidangmedika.com (dokter_admin)"
+    - "kasir@cikidangmedika.com (sisa peran lama, perlu ditinjau)"
+  password_source: "SEED_PASSWORD_OWNER dan SEED_PASSWORD_DOKTER di .env.staging, .env.production, dan .env.local; semuanya gitignored"
+  password_policy: "satu kata sandi per akun, minimal 12 karakter, skrip menolak jika ada dua akun bernilai sama"
+  reset_path: "node scripts/seed-auth-users.mjs --env=.env.production --confirm-prod --rotate, atau Supabase Dashboard"
+  email_reset_available: false
+
 next_tasks:
   - id: F-009-TASK-016
     task: "Promosikan rekonsiliasi ke produksi setelah review staging diterima"
@@ -144,6 +166,9 @@ next_tasks:
   - id: F-009-OPEN-005
     task: "Klinik memutuskan penggabungan pasien kembar pada register sirkumsisi"
     detail: "Satu baris register punya dua pasien bernama sama dan bertanggal lahir identik, satu baris lain punya tiga pasien bernama sama. Baris register hanya tercatat pada satu pasien, sehingga pasien kembarnya tidak dianggap pernah sunat. Perlu keputusan klinik."
+  - id: AUTH-001
+    task: "Hapus akun kasir@cikidangmedika.com yang tersisa di staging"
+    detail: "Peran kasir sudah dihapus F-008, dan AuthContext memetakan kasir ke dokter_admin sehingga akun itu dapat membuka rekam medis pasien. Kata sandinya sudah dirotasi, akunnya menunggu keputusan penghapusan."
   - id: F-009-DOC-001
     task: "Dokumen laporan pembaruan klien (PDF) berisi seluruh item terbuka"
     artifact: "docs/product/Laporan_Pembaruan_Sistem_F009.pdf"

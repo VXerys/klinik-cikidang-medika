@@ -32,6 +32,23 @@ ke produksi setelah hasil staging disetujui klien.
 
 Baseline produksi sebelum: 4.238 pasien, 7.493 kunjungan, 1.486 kas, data sampai 18 September 2026.
 
+### Deployment produksi dan akun auth (2026-10-01)
+
+- Deployment produksi **berhasil** untuk commit `d8a0aeb`. Sebelumnya deployment `bfd5cb2` (27 Sep) dan
+  `d6f6884` (1 Okt pagi) berstatus gagal, dan domain produksi masih menyajikan kode era F-004
+  (`/login` dan `/program-khusus` mengembalikan 404). Setelah repo dipindahkan ke organisasi
+  `klinik-medika-cikidang`, deployment berikutnya sukses.
+- Terverifikasi di domain produksi: `/login`, `/program-khusus`, `/laporan`, `/pendaftaran` semuanya HTTP 200.
+- Aplikasi produksi menunjuk ke Supabase produksi (`aszjzvdmxudmoomdxttx`), dan kunci anon pada bundel
+  live identik dengan yang ada di `.env.production`.
+- Akun auth: produksi sebelumnya **0 akun**. Kini ada 2, yaitu `owner@` (owner) dan `dokter@`
+  (dokter_admin), masing-masing dengan kata sandi sendiri. Staging punya 3, termasuk `kasir@` sisa
+  peran lama yang sudah dirotasi tetapi perlu ditinjau.
+- Kata sandi dibaca dari `SEED_PASSWORD_OWNER`, `SEED_PASSWORD_DOKTER`, dan `SEED_DEFAULT_PASSWORD`
+  di `.env.staging`, `.env.production`, dan `.env.local` (semuanya gitignored). Tidak ada kata sandi
+  di berkas tracked mana pun.
+- Halaman login tidak lagi mengisi atau mencetak kata sandi; tombol cepat hanya mengisi email.
+
 Hasil produksi sesudah (diverifikasi lewat `scripts/apply-sql.mjs`):
 
 | Metrik | Sebelum | Sesudah |
@@ -84,6 +101,9 @@ Solusi tanpa mengubah kode: token sekarang disimpan di `.env.staging` **dan** `.
 | `scripts/audit-clinic-sheets.mjs`, `scripts/inspect-db-state.mjs`, `scripts/audit-clinic-csv.mjs` | Alat audit | Complete |
 | `scripts/generate_f009_update_report_pdf.py` | Generator laporan klien | Complete |
 | `docs/product/Laporan_Pembaruan_Sistem_F009.pdf` | Laporan pembaruan klien, 6 halaman | Complete |
+| `src/app/login/page.tsx` | Tombol cepat hanya mengisi email; bocoran kata sandi dihapus | Complete |
+| `scripts/seed-auth-users.mjs` | Satu kata sandi per akun, rotasi, pengaman produksi | Complete |
+| `scripts/generate_handbook_pdf.py` + `docs/product/Buku_Panduan_SIM_Klinik_Cikidang_Medika.pdf` | Handbook tanpa kata sandi, matriks 2 peran | Complete |
 | `src/components/ui/DateRangePicker.tsx` | Kontrol periode bersama | Complete |
 | `src/components/laporan/BidanReferralPanel.tsx`, `PuskesmasReportPanel.tsx` | Dua tab baru | Complete |
 | `src/components/program-khusus/EditCircumcisionModal.tsx`, `CircumcisionList.tsx` | Edit sirkumsisi + antrean data | Complete |
@@ -121,3 +141,10 @@ node scripts/reconcile-clinic-data.mjs --env=.env.production --confirm-prod-rese
 - Nilai `pekerjaan` berasal dari sumber apa adanya sehingga penulisannya belum seragam.
 - `.gitattributes` belum ada, sehingga Git bisa memberi peringatan LF/CRLF pada berkas PDF. Hash blob
   sudah diverifikasi identik dengan berkas kerja, jadi belum ada korupsi.
+- Akun `kasir@cikidangmedika.com` masih ada di staging. Metadatanya `kasir` dan `AuthContext` memetakan
+  `kasir` ke `dokter_admin`, sehingga akun itu dapat membuka rekam medis pasien, padahal F-008 sudah
+  menghapus peran kasir. Kata sandinya sudah dirotasi, tetapi akunnya sebaiknya dihapus.
+- Kata sandi lama yang dipakai bersama sebelumnya masih dapat ditemukan di riwayat Git repo publik. Kata
+  sandi itu sudah tidak berlaku di akun mana pun, tetapi pembersihan riwayat butuh persetujuan eksplisit.
+- Akun memakai alamat email fiktif, sehingga fitur lupa kata sandi dan tautan email tidak berfungsi.
+  Penggantian kata sandi harus lewat pengembang atau Supabase Dashboard.
