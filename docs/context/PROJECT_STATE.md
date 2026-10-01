@@ -18,20 +18,21 @@ Until then, verify project state directly from approved specs, Git, and `docs/ha
 <!-- GENERATED:GIT_FACTS:START -->
 ## Generated Git Facts
 
-- Refreshed at: 2026-09-23T05:30:40.771Z
-- Branch: `staging`
-- HEAD: `7777bb2`
+- Refreshed at: 2026-10-01T09:43:13.784Z
+- Branch: `feature/f009-kelengkapan-data-pemantauan-bidan`
+- HEAD: `5a0e0ef`
 - Worktree:
 
 ```text
-M scripts/run-dev.mjs
+M docs/context/state.yaml
+ M docs/handoff/current.md
 ```
 
 Recent commits:
 
-- `7777bb2` feat(env): add dual staging and production dev runner scripts
-- `bbc95e7` feat(F-006): upgrade program khusus photo ecosystem and expand dashboard charts
-- `d46d2a6` docs(context): refresh project state, sync verified commit 81829a8, and archive handoff
-- `81829a8` feat(dashboard-laporan): standardize dashboard charts and report center with Phosphor duotone icons and Sonner toast
-- `161d9d3` feat(buku-kas): standardize financial UI with Zod validation, Sonner toast, and Phosphor duotone icons
+- `5a0e0ef` F-009: make circumcision matching deterministic
+- `34e0088` F-009: record production schema gap as a merge blocker
+- `c79a64f` F-009: reconcile clinic data and add reporting views
+- `bfd5cb2` Migrate clinic CSV data into dev and production
+- `4b6687c` F-008: add RM format, dual roles, health registers
 <!-- GENERATED:GIT_FACTS:END -->

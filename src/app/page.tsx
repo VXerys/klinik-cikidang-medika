@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import Link from 'next/link';
 import { toast } from 'sonner';
 import {
@@ -56,6 +56,8 @@ import type { CashFlow } from '@/types/database';
 
 export default function DashboardPage() {
   const [selectedPeriod, setSelectedPeriod] = useState<DashboardPeriod>('all');
+  const [customStart, setCustomStart] = useState('');
+  const [customEnd, setCustomEnd] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -110,6 +112,36 @@ export default function DashboardPage() {
     recentMutations: [],
   });
 
+  // The effective date bounds are derived once. Depending on the resolved bounds rather
+  // than on the selected preset means switching preset to an equivalent range (for
+  // example "Semua Periode" to an empty custom range) does not refetch, so the dashboard
+  // does not flash when the user opens the custom picker.
+  const periodRange = useMemo(() => {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth();
+
+    if (selectedPeriod === 'this_month') {
+      return {
+        start: new Date(currentYear, currentMonth, 1).toISOString().split('T')[0],
+        end: new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0],
+      };
+    }
+    if (selectedPeriod === 'last_month') {
+      return {
+        start: new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0],
+        end: new Date(currentYear, currentMonth, 0).toISOString().split('T')[0],
+      };
+    }
+    if (selectedPeriod === 'this_year') {
+      return { start: `${currentYear}-01-01`, end: `${currentYear}-12-31` };
+    }
+    if (selectedPeriod === 'custom') {
+      return { start: customStart, end: customEnd };
+    }
+    return { start: '', end: '' };
+  }, [selectedPeriod, customStart, customEnd]);
+
   const fetchDashboardData = useCallback(async () => {
     setIsLoading(true);
     setErrorMessage(null);
@@ -118,23 +150,8 @@ export default function DashboardPage() {
       const supabase = createClient();
       const todayStr = new Date().toISOString().split('T')[0];
 
-      const now = new Date();
-      const currentYear = now.getFullYear();
-      const currentMonth = now.getMonth();
-
-      let startDate: string | null = null;
-      let endDate: string | null = null;
-
-      if (selectedPeriod === 'this_month') {
-        startDate = new Date(currentYear, currentMonth, 1).toISOString().split('T')[0];
-        endDate = new Date(currentYear, currentMonth + 1, 0).toISOString().split('T')[0];
-      } else if (selectedPeriod === 'last_month') {
-        startDate = new Date(currentYear, currentMonth - 1, 1).toISOString().split('T')[0];
-        endDate = new Date(currentYear, currentMonth, 0).toISOString().split('T')[0];
-      } else if (selectedPeriod === 'this_year') {
-        startDate = `${currentYear}-01-01`;
-        endDate = `${currentYear}-12-31`;
-      }
+      let startDate: string | null = periodRange.start || null;
+      let endDate: string | null = periodRange.end || null;
 
       // 1. Fetch total unique registered patients
       const { count: patientCount } = await supabase
@@ -208,14 +225,15 @@ export default function DashboardPage() {
 
       let mangkirTbc = 0;
       if (tbcData) {
+        const referenceDate = new Date();
         tbcData.forEach((t) => {
           if (t.status_tbc === 'Mangkir') {
             mangkirTbc++;
           } else if (t.status_tbc === 'Dalam Pengobatan' && t.tanggal_mulai) {
             const startD = new Date(t.tanggal_mulai);
             const monthsPassed =
-              (now.getFullYear() - startD.getFullYear()) * 12 +
-              (now.getMonth() - startD.getMonth());
+              (referenceDate.getFullYear() - startD.getFullYear()) * 12 +
+              (referenceDate.getMonth() - startD.getMonth());
             if (monthsPassed > (t.bulan_ke || 1)) {
               mangkirTbc++;
             }
@@ -510,7 +528,7 @@ export default function DashboardPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [selectedPeriod]);
+  }, [periodRange]);
 
   useEffect(() => {
     fetchDashboardData();
@@ -544,6 +562,12 @@ export default function DashboardPage() {
             <DashboardPeriodSelector
               selectedPeriod={selectedPeriod}
               onChangePeriod={setSelectedPeriod}
+              customStart={customStart}
+              customEnd={customEnd}
+              onCustomRangeChange={(start, end) => {
+                setCustomStart(start);
+                setCustomEnd(end);
+              }}
               isLoading={isLoading}
             />
           </div>

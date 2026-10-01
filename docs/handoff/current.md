@@ -1,68 +1,123 @@
 ---
 status: active
 owner: "Developer"
-session_date: "2026-09-23"
-branch: "staging"
-base_commit: "dfd87a5"
-current_commit: "81829a8"
-active_feature: "F-004"
-active_task: "TASK-008"
-expires_after: "2026-09-30"
+session_date: "2026-10-01"
+branch: "main"
+base_commit: "bfd5cb2"
+current_commit: "pending merge to main"
+active_feature: "F-009"
+active_task: null
+expires_after: "2026-10-15"
 ---
 
-# Session Handoff: Standardisasi UI/UX & Pusat Laporan Keuangan (F-001 s/d F-004)
+# Session Handoff: F-009 delivered to production
 
 ## Session objective
 
-Menuntaskan standarisasi visual, interaksi modern (Phosphor Duotone 2026, Sonner Toast), kepatuhan touch target aksesibilitas (minimum 44x44px), zero horizontal page overflow, validasi schema Zod, dan anti-slop code hygiene pada seluruh modul operasional klinik:
-1. Loket Pendaftaran & Billing Kasir (F-001)
-2. Rekam Medis Ringkas Dokter & Quick Resep (F-002)
-3. Buku Kas Operasional & Rekonsiliasi Kasir (F-003)
-4. Dashboard Eksekutif & Pusat Laporan Ekspor Excel (F-004)
+Menutup sisa celah data antara Google Sheets dan aplikasi, menambahkan pemantauan rujukan bidan,
+filter periode (satu tanggal atau rentang), dan laporan Puskesmas, lalu mempromosikan seluruhnya
+ke produksi setelah hasil staging disetujui klien.
 
-## Context used
+## Completed in this session
 
-- `docs/product/prd.md`
-- `docs/context/state.yaml`
-- `docs/specs/F-001-master-pasien-kasir/`
-- `docs/specs/F-002-rekam-medis-dokter/`
-- `docs/specs/F-003-buku-kas-operasional/`
-- `docs/specs/F-004-dashboard-laporan/`
-- `AGENTS.md` (Operating Contract)
+### Produksi sudah dimigrasikan (2026-10-01)
 
-## Completed
+| Tahap | Hasil |
+|---|---|
+| Backup sebelum perubahan | `docs/data/prod-pref009-2026-10-01T09-31-10-869Z.json` (13.220 baris, 7,16 MB) |
+| DDL F-009 | Dua migration diterapkan ke produksi, idempoten |
+| Rekonsiliasi data | Lolos semua 9 pemeriksaan internal |
+| Verifikasi ulang | Query langsung ke produksi, angka cocok dengan staging |
+| Idempotensi | Dry-run ulang: 0 rencana perubahan di staging maupun produksi |
 
-- **F-001 (Master Pasien & Loket Kasir)**: Validasi Zod schema, pesan error inline, struk cetak kasir via `react-to-print`, migrasi Phosphor Duotone.
-- **Optimasi Font Global**: Optimasi `Plus_Jakarta_Sans` variable font di `src/app/layout.tsx` dengan system-ui fallback tanpa timeout font Google.
-- **F-002 (Rekam Medis Dokter)**: Input TTV terstruktur, badge otomatis klasifikasi tensi darah (Normal, Pre-Hipertensi, Hipertensi) & kalkulasi IMT, 12 chip resep terapi obat populer, ICD-10 autocomplete & quick-picker, Sonner toast feedback.
-- **F-003 (Buku Kas Operasional & Keuangan)**: Validasi Zod transaksi kas masuk/keluar, format Rupiah interaktif, rekonsiliasi kasir harian dengan saldo fisik laci vs mutasi bank, Sonner toast konfirmasi tambah/hapus transaksi.
-- **F-004 (Dashboard Eksekutif & Pusat Laporan)**: Migrasi seluruh ikon grafik dan laporan ke Phosphor Duotone (`weight="duotone"`), tooltip kustom Recharts bertema gelap dengan angka tabular mono, unduh 1-click Excel single report maupun full 3-sheet consolidated workbook via SheetJS (`xlsx`) dengan feedback Sonner toast, dan pembersihan komentar AI generik.
-- **Verifikasi Kualitas**:
-  - `npx tsc --noEmit` lolos 100% (0 error).
-  - `npm run context:validate` lolos (105 file, 33 ID unik).
-  - `npm run build` lolos prerendering seluruh 9 rute Next.js 14.
-  - Remote sync: Seluruh commit terdorong rapi ke branch `staging` ([commit `81829a8`](https://github.com/VXerys/klinik-cikidang-medika/commit/81829a8)).
+Baseline produksi sebelum: 4.238 pasien, 7.493 kunjungan, 1.486 kas, data sampai 18 September 2026.
 
-## Changed files (Recent Commits)
+Hasil produksi sesudah (diverifikasi lewat `scripts/apply-sql.mjs`):
+
+| Metrik | Sebelum | Sesudah |
+|---|---|---|
+| Pasien | 4.238 | 4.703 |
+| Identitas ganda | 254 kelompok | 0 |
+| Kunjungan | 7.493 | 7.671 (sampai 29 September 2026) |
+| Kas | 1.486 | 1.552 |
+| Register program | 0 | 810 (ANC 594, PTM 139, KB 36, 3-Eliminasi 41) |
+| Register sirkumsisi | 0 | 43 (semua tanpa tanggal, sesuai sumber) |
+| Rujukan bidan | 0 | 82 baris, 9 bidan |
+
+Skema produksi diverifikasi: seluruh kolom F-009 ada, 3 check constraint aktif, 5 index valid dan
+ready (semuanya partial index), `tanggal_tindakan` nullable, dan RLS aktif pada keempat tabel.
+
+### Bug yang ditemukan dan diperbaiki (commit `5a0e0ef`)
+
+Rekonsiliasi sempat **tidak idempoten di produksi**. Pencocokan nama pada register sirkumsisi memakai
+`patients.find()` atas daftar pasien yang dikembalikan PostgREST **tanpa `ORDER BY`**, sehingga urutan
+baris fisik menentukan pasien mana yang dipilih. Produksi dan staging menghasilkan pilihan berbeda,
+dan produksi merencanakan baris sirkumsisi ke-44 saat dijalankan ulang.
+
+Perbaikan: kunci deterministik, yaitu pasien yang sudah punya baris register lebih dulu, lalu tanggal
+lahir yang cocok, lalu No RM terkecil. Setelah perbaikan, staging dan produksi sama-sama melaporkan
+0 rencana perubahan.
+
+### Akar masalah token Supabase yang sering hilang
+
+`scripts/prepare-env.mjs` menjalankan `fs.copyFileSync` dari `.env.staging`/`.env.production` ke
+`.env.local`, sehingga `SUPABASE_ACCESS_TOKEN` yang ditambahkan manual ke `.env.local` selalu terhapus
+setiap `npm run dev` atau pemanggilan `prepare-env`.
+
+Solusi tanpa mengubah kode: token sekarang disimpan di `.env.staging` **dan** `.env.production`, jadi
+`prepare-env` ikut membawanya. Semua berkas tersebut gitignored.
+
+### Di staging saja, menunggu keputusan
+
+- 3 baris `circumcisions` tanpa `sumber_data` (buatan 2026-09-26 17:02 dari pemulihan data program
+  F-006, biaya dan metode identik). Produksi bersih dari baris ini.
+- Identitas pasien tidak ditulis di dokumen repo karena PII.
+
+## Changed files
 
 | File | Change | State |
 |---|---|---|
-| `src/app/layout.tsx` | Next.js Font optimization Plus Jakarta Sans | Complete |
-| `src/constants/prescriptions.ts` | 12 template resep obat rawat jalan | Complete |
-| `src/components/rekam-medis/*` | Vital signs, ICD-10 picker, resep chip, Sonner toast | Complete |
-| `src/components/buku-kas/*` | Zod validation, Phosphor Duotone, rekonsiliasi kas | Complete |
-| `src/app/buku-kas/page.tsx` | Halaman utama mutasi kas operasional | Complete |
-| `src/components/dashboard/VisitTrendChart.tsx` | Recharts custom tooltip, Phosphor Duotone, touch targets | Complete |
-| `src/components/laporan/*` | Report filter bar, tabs, preview table dengan font mono | Complete |
-| `src/app/laporan/page.tsx` | Ekspor Excel 1-click dengan feedback Sonner toast | Complete |
-| `src/app/page.tsx` | Dashboard eksekutif refresh dengan Sonner toast | Complete |
-| `docs/specs/*` | Penambahan tasks TASK-008 per spesifikasi modul | Complete |
+| `docs/specs/F-009-kelengkapan-data-pemantauan-bidan/*` | Spec: 12 FR, 50+ AC, design, tasks | Complete |
+| `supabase/migrations/20260929_f009_*.sql` | Dua migration F-009 | Applied (staging dan produksi) |
+| `scripts/reconcile-clinic-data.mjs`, `scripts/apply-sql.mjs` | Script operator | Complete |
+| `scripts/lib/clinic-csv.mjs`, `scripts/lib/clinic-map.mjs` | Modul bersama | Complete |
+| `scripts/audit-clinic-sheets.mjs`, `scripts/inspect-db-state.mjs`, `scripts/audit-clinic-csv.mjs` | Alat audit | Complete |
+| `scripts/generate_f009_update_report_pdf.py` | Generator laporan klien | Complete |
+| `docs/product/Laporan_Pembaruan_Sistem_F009.pdf` | Laporan pembaruan klien, 6 halaman | Complete |
+| `src/components/ui/DateRangePicker.tsx` | Kontrol periode bersama | Complete |
+| `src/components/laporan/BidanReferralPanel.tsx`, `PuskesmasReportPanel.tsx` | Dua tab baru | Complete |
+| `src/components/program-khusus/EditCircumcisionModal.tsx`, `CircumcisionList.tsx` | Edit sirkumsisi + antrean data | Complete |
+| `src/components/dashboard/DashboardPeriodSelector.tsx`, `src/components/laporan/ReportTabs.tsx`, `ReportFilterBar.tsx`, `ReportPreviewTable.tsx` | Mode Kustom, tab baru, header sticky | Complete |
+| `src/app/laporan/page.tsx`, `src/app/page.tsx`, `src/app/program-khusus/page.tsx` | Wiring | Complete |
+| `src/constants/clinic.ts`, `src/lib/excel.ts`, `src/lib/utils.ts`, `src/types/database.ts` | Konstanta, ekspor, tipe | Complete |
+| `docs/context/state.yaml`, `docs/handoff/current.md`, `docs/specs/_index.md` | Status dan konteks | Complete |
 
 ## Exact next step
 
+Kerja developer untuk F-009 sudah selesai. Yang tersisa adalah tindakan klinik:
+
+1. Klinik melengkapi tanggal tindakan dan foto pada 43 baris register sirkumsisi
+   (`/program-khusus` -> tab Sunat -> tombol Edit).
+2. Klinik memutuskan pemulihan 12 tanggal tindakan dari log kunjungan (`F-009-OPEN-004`).
+3. Klinik mengonfirmasi 287 nomor RM tidak beraturan dan nama pasien berisi kode ICD `J00`
+   (`F-009-OPEN-002`); rekomendasi developer ada di `state.yaml` dan PDF Bagian 4.2.
+4. Klinik memutuskan penggabungan pasien kembar pada register sirkumsisi (`F-009-OPEN-005`).
+
 ```bash
-# Lanjutkan ke Modul Program Khusus (F-006):
-# 1. Kohor Pengobatan TBC (fase intensif vs lanjutan, tracking kepatuhan OAT)
-# 2. Modul Khitanan Anak & Kompresi Foto Post-Op WebP (< 300KB) dengan hybrid storage (Supabase + Cloudinary)
-# 3. Agenda kontrol pasien pasca-rawat / home care
+# Kalau ada perubahan data baru dari klinik, cukup jalankan ulang:
+node scripts/reconcile-clinic-data.mjs --env=.env.production --dry-run   # lihat rencana
+node scripts/reconcile-clinic-data.mjs --env=.env.production --confirm-prod-reset
 ```
+
+## Residual risk
+
+- Verifikasi responsif 360/768/1024 px dan navigasi keyboard pada tab baru dilakukan lewat inspeksi
+  kode dan build, belum lewat peramban.
+- Dua baris register 3-Eliminasi ditulis ulang setiap kali skrip dijalankan dengan nilai identik.
+- `PROJECT_STATE.md` dan `PROGRESS.md` belum punya renderer otomatis; `state.yaml` tetap kanonik.
+- Register sirkumsisi memuat nama ganda pada sumbernya. Satu baris punya dua pasien bernama sama dan
+  bertanggal lahir identik, satu baris lain punya tiga pasien bernama sama. Baris register hanya
+  tercatat pada satu pasien, sehingga pasien kembarnya tidak tercatat pernah sunat.
+- Nilai `pekerjaan` berasal dari sumber apa adanya sehingga penulisannya belum seragam.
+- `.gitattributes` belum ada, sehingga Git bisa memberi peringatan LF/CRLF pada berkas PDF. Hash blob
+  sudah diverifikasi identik dengan berkas kerja, jadi belum ada korupsi.

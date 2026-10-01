@@ -1,6 +1,10 @@
+export type PatientSumberData = 'REKAMMEDIS' | 'DATAPASIEN';
+
 export type Patient = {
   id: string;
   no_rm: string;
+  no_rm_lama?: string;
+  sumber_data?: PatientSumberData;
   gelar: string;
   nama: string;
   jenis_kelamin: 'Laki-laki' | 'Perempuan';
@@ -38,6 +42,7 @@ export type Visit = {
   terapi_obat?: string;
   tindakan?: string;
   keterangan_tindakan?: string;
+  bidan_rujukan?: string;
   lab?: string;
   lab_hasil?: string;
   jenis_pasien: 'BPJS' | 'UMUM';
@@ -92,13 +97,17 @@ export type Circumcision = {
   id: string;
   pasien_id: string;
   dokter_id?: string;
-  tanggal_tindakan: string;
+  // Null means the clinic has not recorded the procedure date yet, which is the state of
+  // every row imported from the SUNAT register.
+  tanggal_tindakan: string | null;
   metode: string;
   kondisi_luka?: string;
   foto_1_url?: string;
   foto_2_url?: string;
   storage_provider: 'supabase' | 'cloudinary';
   biaya: number;
+  berat_badan?: string;
+  sumber_data?: string;
   catatan?: string;
   pasien?: Patient;
   dokter?: Doctor;
@@ -133,6 +142,11 @@ export type PublicHealthRecord = {
   lab?: string;
   terapi?: string;
   hbsag?: string;
+  gpa?: string;
+  uk?: string;
+  tp?: string;
+  hiv?: string;
+  syphilis?: string;
   jenis_kb?: string;
   tanggal_kembali?: string;
   dokter_id?: string;

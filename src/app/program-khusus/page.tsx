@@ -71,7 +71,8 @@ export default function ProgramKhususPage() {
       const { data: circData, error: circErr } = await supabase
         .from('circumcisions')
         .select('*, pasien:patients(id, no_rm, nama, desa, usia, no_telepon), dokter:doctors(id, nama)')
-        .order('tanggal_tindakan', { ascending: false });
+        // Rows still missing a procedure date come first: they are the clinic's work queue.
+        .order('tanggal_tindakan', { ascending: false, nullsFirst: true });
       if (circErr) throw circErr;
       setCircumcisionList((circData as unknown as Circumcision[]) || []);
 

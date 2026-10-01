@@ -21,7 +21,9 @@ import {
   ChatCircleText,
   Clock,
   Sparkle,
+  PencilSimple,
   Trash,
+  WarningCircle,
 } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import type { Circumcision } from '@/types/database';
@@ -29,6 +31,7 @@ import { formatRupiah } from '@/lib/utils';
 import { getSignedMedicalPhotoUrl, uploadMedicalPhoto, compressImageToWebP } from '@/lib/storage';
 import { createClient } from '@/lib/supabase/client';
 import { Modal } from '@/components/ui/Modal';
+import { EditCircumcisionModal } from '@/components/program-khusus/EditCircumcisionModal';
 
 interface CircumcisionListProps {
   records: Circumcision[];
@@ -128,6 +131,7 @@ export function CircumcisionList({ records, onRefresh, isLoading }: Circumcision
 
   // Quick follow-up photo upload modal state
   const [targetFollowUp, setTargetFollowUp] = useState<Circumcision | null>(null);
+  const [editTarget, setEditTarget] = useState<Circumcision | null>(null);
   const [followUpFile, setFollowUpFile] = useState<File | null>(null);
   const [compressedBlob, setCompressedBlob] = useState<Blob | null>(null);
   const [compressionRatio, setCompressionRatio] = useState<string | null>(null);
@@ -154,11 +158,13 @@ export function CircumcisionList({ records, onRefresh, isLoading }: Circumcision
       title,
       patientName: record.pasien?.nama || 'Pasien',
       noRm: record.pasien?.no_rm || '-',
-      tanggal: new Date(record.tanggal_tindakan).toLocaleDateString('id-ID', {
-        day: 'numeric',
-        month: 'short',
-        year: 'numeric',
-      }),
+      tanggal: record.tanggal_tindakan
+        ? new Date(record.tanggal_tindakan).toLocaleDateString('id-ID', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+          })
+        : 'Belum tercatat',
       metode: record.metode || 'Sirkumsisi',
       doctorName: record.dokter?.nama || 'dr. Ovan',
     });
@@ -252,6 +258,8 @@ export function CircumcisionList({ records, onRefresh, isLoading }: Circumcision
     }
   };
 
+  const missingDateCount = records.filter((record) => !record.tanggal_tindakan).length;
+
   if (isLoading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -288,6 +296,17 @@ export function CircumcisionList({ records, onRefresh, isLoading }: Circumcision
 
   return (
     <div className="space-y-4">
+      {missingDateCount > 0 && (
+        <div className="p-3.5 rounded-2xl bg-amber-50 border border-amber-200 flex items-start gap-2.5">
+          <WarningCircle weight="duotone" className="w-4 h-4 text-amber-700 shrink-0 mt-0.5" />
+          <p className="text-xs text-amber-900 leading-relaxed">
+            <strong className="font-bold">{missingDateCount} data sunat belum punya tanggal tindakan</strong> atau
+            foto medis. Data ini berasal dari register SUNAT dan ditampilkan paling atas. Klik{' '}
+            <strong className="font-bold">Edit</strong> pada kartu untuk melengkapinya.
+          </p>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {records.map((item) => {
           const methodLower = (item.metode || '').toLowerCase();
@@ -337,11 +356,15 @@ export function CircumcisionList({ records, onRefresh, isLoading }: Circumcision
                     </span>
                     <span className="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
                       <CalendarBlank weight="duotone" className="w-3.5 h-3.5 text-teal-600" />
-                      {new Date(item.tanggal_tindakan).toLocaleDateString('id-ID', {
-                        day: 'numeric',
-                        month: 'short',
-                        year: 'numeric',
-                      })}
+                      {item.tanggal_tindakan ? (
+                        new Date(item.tanggal_tindakan).toLocaleDateString('id-ID', {
+                          day: 'numeric',
+                          month: 'short',
+                          year: 'numeric',
+                        })
+                      ) : (
+                        <span className="text-amber-700">Belum tercatat</span>
+                      )}
                     </span>
                   </div>
 
@@ -429,23 +452,43 @@ export function CircumcisionList({ records, onRefresh, isLoading }: Circumcision
                   )}
                 </div>
 
-                {/* Right Action: WhatsApp Follow-Up */}
-                {item.pasien?.no_telepon && (
+                {/* Right Actions: Edit Record + WhatsApp Follow-Up */}
+                <div className="flex items-center gap-2 shrink-0 self-start sm:self-auto">
                   <button
                     type="button"
-                    onClick={() => handleWhatsAppContact(item)}
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold tactile-btn transition shrink-0 self-start sm:self-auto"
-                    title="Kirim pengingat kontrol pelepasan klamp / evaluasi luka via WhatsApp"
+                    onClick={() => setEditTarget(item)}
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] bg-slate-50 hover:bg-slate-100 border border-slate-200 text-slate-700 rounded-xl text-xs font-bold tactile-btn transition focus-visible:ring-2 focus-visible:ring-teal-600 focus-visible:outline-none"
+                    title="Lengkapi tanggal tindakan dan foto medis"
                   >
-                    <ChatCircleText className="w-3.5 h-3.5 text-emerald-600" weight="fill" />
-                    <span>Kontrol (WA)</span>
+                    <PencilSimple className="w-3.5 h-3.5 text-slate-600" weight="duotone" />
+                    <span>Edit</span>
                   </button>
-                )}
+
+                  {item.pasien?.no_telepon && (
+                    <button
+                      type="button"
+                      onClick={() => handleWhatsAppContact(item)}
+                      className="inline-flex items-center justify-center gap-1.5 px-3 py-2 min-h-[44px] bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-emerald-800 rounded-xl text-xs font-bold tactile-btn transition focus-visible:ring-2 focus-visible:ring-emerald-600 focus-visible:outline-none"
+                      title="Kirim pengingat kontrol pelepasan klamp / evaluasi luka via WhatsApp"
+                    >
+                      <ChatCircleText className="w-3.5 h-3.5 text-emerald-600" weight="fill" />
+                      <span>Kontrol (WA)</span>
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           );
         })}
       </div>
+
+      {/* Full Edit Modal: procedure date, weight, method, and both photo slots */}
+      <EditCircumcisionModal
+        isOpen={!!editTarget}
+        record={editTarget}
+        onClose={() => setEditTarget(null)}
+        onSuccess={onRefresh}
+      />
 
       {/* Quick Upload Follow-Up Modal */}
       {targetFollowUp && (
