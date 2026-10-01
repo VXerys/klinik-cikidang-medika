@@ -73,10 +73,9 @@ export default function LoginPage() {
 
   const handleSelectQuickAccount = (acc: QuickAccount) => {
     setEmail(acc.email);
-    setPassword('CikidangMedika2026!');
     setSelectedQuickRole(acc.role);
     setErrorMessage(null);
-    toast.info(`Akun ${acc.title} dipilih. Klik "Masuk ke Sistem" untuk melanjutkan.`, {
+    toast.info(`Email ${acc.title} terisi. Masukkan kata sandi akun untuk melanjutkan.`, {
       duration: 2500,
     });
   };
@@ -293,15 +292,12 @@ export default function LoginPage() {
 
               {/* Password Input */}
               <div className="space-y-1">
-                <div className="flex items-center justify-between">
-                  <label
-                    htmlFor="login-password"
-                    className="block text-xs font-bold text-slate-700 uppercase tracking-wider"
-                  >
-                    Kata Sandi <span className="text-rose-500">*</span>
-                  </label>
-                  <span className="text-[11px] text-slate-400">Default: CikidangMedika2026!</span>
-                </div>
+                <label
+                  htmlFor="login-password"
+                  className="block text-xs font-bold text-slate-700 uppercase tracking-wider"
+                >
+                  Kata Sandi <span className="text-rose-500">*</span>
+                </label>
                 <div className="relative flex items-center">
                   <div className="absolute left-3.5 flex items-center pointer-events-none text-slate-400">
                     <LockKey className="w-4 h-4" weight="bold" />

@@ -243,22 +243,16 @@ def build_handbook_pdf(output_paths):
             Paragraph("Batasan Hak Akses", table_header)
         ],
         [
-            Paragraph("<b>Petugas Loket / Kasir</b><br/><font color='#0284C7'>Front Office</font>", table_cell),
-            Paragraph("<b>Email:</b><br/>kasir@cikidangmedika.com<br/><b>Sandi:</b><br/>CikidangMedika2026!", table_cell),
-            Paragraph("• Pendaftaran & Loket Kasir (/pendaftaran)<br/>• Input Pasien Baru & Pencarian Pasien<br/>• Billing Pasien Umum & Cetak Kuitansi<br/>• Cetak Karcis Antrean", table_cell),
-            Paragraph("Tidak dapat melihat catatan rekam medis rahasia dokter, tidak dapat mengubah diagnosa ICD-10, dan tidak dapat membuka buku kas rekonsiliasi pemilik.", table_cell)
-        ],
-        [
-            Paragraph("<b>Dokter Pemeriksa</b><br/><font color='#0D9488'>Clinical Office</font>", table_cell),
-            Paragraph("<b>Email:</b><br/>dokter@cikidangmedika.com<br/><b>Sandi:</b><br/>CikidangMedika2026!", table_cell),
-            Paragraph("• Pemeriksaan Dokter (/rekam-medis)<br/>• Antrean Pasien Hari Berjalan<br/>• Anamnesa & Tanda Vital Pasien<br/>• Diagnosa ICD-10 & Resep Terapi<br/>• Program Khusus TBC, Sunat, & Pos-Rawat", table_cell),
-            Paragraph("Fokus murni pada penanganan klinis pasien, tidak menangani penerimaan uang fisik kasir atau pembukuan keuangan umum klinik.", table_cell)
-        ],
-        [
             Paragraph("<b>Owner / Pimpinan</b><br/><font color='#7C3AED'>dr. Ovan & dr. Neneng</font>", table_cell),
-            Paragraph("<b>Email:</b><br/>owner@cikidangmedika.com<br/><b>Sandi:</b><br/>CikidangMedika2026!", table_cell),
-            Paragraph("• Hak akses penuh ke seluruh 6 modul<br/>• Dashboard Eksekutif & Omzet Realtime<br/>• Buku Kas Operasional & Rekonsiliasi<br/>• Pusat Laporan & Ekspor 3-Sheet Excel", table_cell),
-            Paragraph("Memegang kendali manajerial penuh, pengawasan omzet laci kasir vs bank, serta ekspor berkas akuntansi untuk arsip dinas kesehatan.", table_cell)
+            Paragraph("<b>Email:</b><br/>owner@cikidangmedika.com", table_cell),
+            Paragraph("• Dashboard Eksekutif & Omzet Realtime<br/>• Loket & Kasir (/pendaftaran)<br/>• Rekam Medis Dokter (/rekam-medis)<br/>• Program Khusus TBC, Sunat, & Pos-Rawat<br/>• Buku Kas Operasional & Rekonsiliasi<br/>• Pusat Laporan & Ekspor Excel", table_cell),
+            Paragraph("Akses penuh ke seluruh modul. Memegang kendali manajerial, pengawasan omzet laci kasir vs bank, serta ekspor berkas akuntansi untuk arsip dinas kesehatan.", table_cell)
+        ],
+        [
+            Paragraph("<b>Dokter / Admin Klinik</b><br/><font color='#0D9488'>Clinical Office</font>", table_cell),
+            Paragraph("<b>Email:</b><br/>dokter@cikidangmedika.com", table_cell),
+            Paragraph("• Rekam Medis Dokter (/rekam-medis)<br/>• Antrean Pasien Hari Berjalan<br/>• Anamnesa & Tanda Vital Pasien<br/>• Diagnosa ICD-10 & Resep Terapi<br/>• Program Khusus & Laporan Program Kesehatan", table_cell),
+            Paragraph("Tidak dapat membuka Dashboard, Loket &amp; Kasir, dan Buku Kas. Pembatasan berlaku otomatis di sistem, bukan sekadar menyembunyikan tombol.", table_cell)
         ]
     ]
     t_rbac = Table(rbac_data, colWidths=[3.6*cm, 4.4*cm, 5.4*cm, 4.6*cm])
@@ -276,7 +270,7 @@ def build_handbook_pdf(output_paths):
 
     story.append(Paragraph("Panduan Masuk Sistem & Pengoperasian Layar Login", h2_style))
     story.append(Paragraph(
-        "Layar login sistem dirancang dengan antarmuka modern dua sisi (Split-Screen) yang ramah pengguna. Terdapat fitur <b>Quick-Role Switcher (Tombol Cepat 1-Klik)</b> di bagian bawah formulir login untuk memilih peran Kasir, Dokter, atau Owner tanpa perlu mengetik ulang email dan kata sandi saat uji coba atau pergantian shift harian.",
+        "Layar login sistem dirancang dengan antarmuka modern dua sisi (Split-Screen) yang ramah pengguna. Terdapat fitur <b>Quick-Role Switcher (Tombol Cepat 1-Klik)</b> di bagian atas formulir login untuk mengisi alamat email sesuai peran (Owner atau Dokter/Admin). Kata sandi <b>tidak</b> diisikan otomatis dan tetap harus dimasukkan sendiri oleh pengguna.",
         body_style
     ))
 
@@ -292,7 +286,7 @@ def build_handbook_pdf(output_paths):
     story.append(Spacer(1, 6))
     callout_p2 = [
         [
-            Paragraph("<b>Keamanan Kata Sandi:</b> Kata sandi bawaan <code>CikidangMedika2026!</code> telah didaftarkan langsung di database otentikasi Supabase terenkripsi. Seluruh transmisi data dilindungi protokol SSL/TLS.", callout_style)
+            Paragraph("<b>Keamanan Kata Sandi:</b> Kata sandi akun tidak dicetak di dokumen ini dan tidak disimpan di dalam kode program. Kata sandi ditetapkan langsung oleh pengembang pada database otentikasi Supabase terenkripsi, lalu diserahkan kepada pimpinan klinik secara terpisah saat serah terima. Seluruh transmisi data dilindungi protokol SSL/TLS.", callout_style)
         ]
     ]
     t_callout_p2 = Table(callout_p2, colWidths=[18*cm])
@@ -371,7 +365,7 @@ def build_handbook_pdf(output_paths):
         [
             Paragraph("<b>Sistem Keamanan & RBAC</b>", table_cell_bold),
             Paragraph("<font color='#059669'><b>100% Selesai & Teruji</b></font>", table_cell),
-            Paragraph("3 akun auth (owner, dokter, kasir) aktif di database, proteksi rute halaman, dan navigasi adaptif wewenang.", table_cell)
+            Paragraph("2 peran pengguna (Owner dan Dokter/Admin) dengan proteksi rute halaman dan navigasi adaptif sesuai wewenang.", table_cell)
         ],
         [
             Paragraph("<b>Logo & Favicon Resmi</b>", table_cell_bold),
