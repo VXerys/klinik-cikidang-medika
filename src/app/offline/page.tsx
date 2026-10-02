@@ -39,7 +39,7 @@ export default function OfflinePage() {
             even when its scripts were never cached. */}
         <Link
           href="/"
-          className="mt-6 inline-flex w-full min-h-[44px] items-center justify-center rounded-xl bg-gradient-to-b from-teal-600 to-teal-700 border border-teal-700/80 px-4 py-2.5 text-sm font-bold text-white shadow-btn-primary transition-colors hover:from-teal-700 hover:to-teal-800 focus:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/20"
+          className="mt-6 inline-flex w-full min-h-[44px] items-center justify-center rounded-xl bg-gradient-to-b from-teal-700 to-teal-800 border border-teal-800/80 px-4 py-2.5 text-sm font-bold text-white shadow-btn-primary transition-colors hover:from-teal-800 hover:to-teal-900 focus:outline-none focus-visible:ring-4 focus-visible:ring-teal-500/20"
         >
           Muat Ulang Aplikasi
         </Link>

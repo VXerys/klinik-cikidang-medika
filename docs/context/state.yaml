@@ -183,6 +183,9 @@ next_tasks:
   - id: A11Y-001
     task: "Tinjau maximumScale: 1 pada viewport di src/app/layout.tsx"
     detail: "Menonaktifkan zoom cubit menghalangi pengguna memperbesar teks sampai 200 persen, yang diminta WCAG 1.4.4. Nilai ini sudah ada sebelum pekerjaan PWA."
+  - id: A11Y-002
+    task: "Tinjau kontras tombol utama gradien teal-600 ke teal-700 dengan teks putih"
+    detail: "Putih di atas teal-600 hanya 3,75:1, di bawah ambang WCAG AA 4,5:1 untuk teks normal 14 px. Pola ini dipakai di banyak layar, termasuk tombol masuk. Tombol pada halaman offline sudah memakai teal-700 ke teal-800 agar lolos."
   - id: F-009-DOC-001
     task: "Dokumen laporan pembaruan klien (PDF) berisi seluruh item terbuka"
     artifact: "docs/product/Laporan_Pembaruan_Sistem_F009.pdf"
