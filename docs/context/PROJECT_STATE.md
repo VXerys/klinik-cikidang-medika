@@ -18,21 +18,22 @@ Until then, verify project state directly from approved specs, Git, and `docs/ha
 <!-- GENERATED:GIT_FACTS:START -->
 ## Generated Git Facts
 
-- Refreshed at: 2026-10-01T11:05:33.100Z
+- Refreshed at: 2026-10-02T00:18:58.742Z
 - Branch: `main`
-- HEAD: `d8a0aeb`
+- HEAD: `277ccf9`
 - Worktree:
 
 ```text
 M docs/context/state.yaml
  M docs/handoff/current.md
+ M public/sw.js
 ```
 
 Recent commits:
 
+- `277ccf9` Make the dashboard installable as a PWA
+- `293d442` Record the production deploy and auth accounts
 - `d8a0aeb` Give each auth account its own password
 - `02c4cbc` Require an explicit password on the login screen
 - `d6f6884` Merge branch 'feature/f009-kelengkapan-data-pemantauan-bidan'
-- `7e09e91` F-009: record production migration in context
-- `5a0e0ef` F-009: make circumcision matching deterministic
 <!-- GENERATED:GIT_FACTS:END -->

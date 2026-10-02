@@ -65,6 +65,17 @@ self.addEventListener('fetch', (event) => {
   }
 
   if (request.mode === 'navigate') {
-    event.respondWith(fetch(request).catch(() => caches.match(OFFLINE_URL)));
+    event.respondWith(
+      fetch(request).catch(() =>
+        caches.match(OFFLINE_URL).then(
+          (cached) =>
+            cached ||
+            new Response('Tidak ada koneksi internet.', {
+              status: 503,
+              headers: { 'Content-Type': 'text/plain; charset=utf-8' },
+            })
+        )
+      )
+    );
   }
 });

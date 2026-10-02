@@ -158,6 +158,14 @@ auth:
   reset_path: "node scripts/seed-auth-users.mjs --env=.env.production --confirm-prod --rotate, atau Supabase Dashboard"
   email_reset_available: false
 
+pwa:
+  manifest: src/app/manifest.ts
+  service_worker: public/sw.js
+  offline_page: src/app/offline/page.tsx
+  icons_generated_by: scripts/generate_pwa_icons.py
+  cache_policy: "Hanya /_next/static/ dan /assets/ yang di-cache. Halaman HTML dan respons Supabase sengaja tidak pernah di-cache, karena halaman berisi data pasien yang tersimpan bisa terbaca pengguna perangkat berikutnya."
+  note: "Tidak ada berkas emblem terpisah di repositori, sehingga mark daun diekstrak dari lockup berdasarkan hue. Ada cacat kecil di ujung daun kanan bawah karena wordmark menempel di sana; ganti PWA_ICON_SOURCE bila klinik menyediakan berkas emblem resmi."
+
 next_tasks:
   - id: F-009-TASK-016
     task: "Promosikan rekonsiliasi ke produksi setelah review staging diterima"
@@ -169,6 +177,12 @@ next_tasks:
   - id: AUTH-001
     task: "Hapus akun kasir@cikidangmedika.com yang tersisa di staging"
     detail: "Peran kasir sudah dihapus F-008, dan AuthContext memetakan kasir ke dokter_admin sehingga akun itu dapat membuka rekam medis pasien. Kata sandinya sudah dirotasi, akunnya menunggu keputusan penghapusan."
+  - id: PWA-001
+    task: "Ganti ikon PWA dengan berkas emblem resmi klinik bila tersedia"
+    detail: "Jalankan PWA_ICON_SOURCE=<berkas> python scripts/generate_pwa_icons.py setelah berkas emblem tersedia."
+  - id: A11Y-001
+    task: "Tinjau maximumScale: 1 pada viewport di src/app/layout.tsx"
+    detail: "Menonaktifkan zoom cubit menghalangi pengguna memperbesar teks sampai 200 persen, yang diminta WCAG 1.4.4. Nilai ini sudah ada sebelum pekerjaan PWA."
   - id: F-009-DOC-001
     task: "Dokumen laporan pembaruan klien (PDF) berisi seluruh item terbuka"
     artifact: "docs/product/Laporan_Pembaruan_Sistem_F009.pdf"

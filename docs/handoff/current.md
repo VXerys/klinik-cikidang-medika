@@ -90,6 +90,20 @@ Solusi tanpa mengubah kode: token sekarang disimpan di `.env.staging` **dan** `.
   F-006, biaya dan metode identik). Produksi bersih dari baris ini.
 - Identitas pasien tidak ditulis di dokumen repo karena PII.
 
+### PWA: dashboard dapat dipasang di laptop, komputer, dan ponsel (2026-10-02)
+
+- `src/app/manifest.ts` menerbitkan `/manifest.webmanifest` dengan nama, warna tema, dan tiga ikon.
+- `public/sw.js` men-cache hanya `/_next/static/` dan `/assets/`. Halaman HTML dan respons Supabase
+  sengaja tidak pernah di-cache, karena halaman berisi data pasien yang tersimpan bisa terbaca
+  pengguna perangkat berikutnya. Bila offline, navigasi diarahkan ke `/offline`.
+- `src/app/offline/page.tsx` adalah halaman offline, memakai tautan biasa bukan tombol ber-JS supaya
+  tetap tampil walau berkas skripnya belum pernah ter-cache.
+- `src/components/AppLayout.tsx`: `/offline` ikut melewati shell ber-autentikasi, seperti `/login`.
+- Ikon dibuat oleh `scripts/generate_pwa_icons.py` dari artwork yang ada. Repositori tidak punya
+  berkas emblem terpisah, jadi mark daun diekstrak dari lockup berdasarkan hue.
+- Terverifikasi langsung di produksi: `/manifest.webmanifest`, `/sw.js`, `/offline`, dan keempat
+  berkas ikon semuanya HTTP 200 dengan tipe konten yang benar.
+
 ## Changed files
 
 | File | Change | State |
@@ -104,6 +118,9 @@ Solusi tanpa mengubah kode: token sekarang disimpan di `.env.staging` **dan** `.
 | `src/app/login/page.tsx` | Tombol cepat hanya mengisi email; bocoran kata sandi dihapus | Complete |
 | `scripts/seed-auth-users.mjs` | Satu kata sandi per akun, rotasi, pengaman produksi | Complete |
 | `scripts/generate_handbook_pdf.py` + `docs/product/Buku_Panduan_SIM_Klinik_Cikidang_Medika.pdf` | Handbook tanpa kata sandi, matriks 2 peran | Complete |
+| `src/app/manifest.ts`, `public/sw.js`, `src/app/offline/page.tsx`, `src/components/PwaRegistration.tsx` | Dukungan PWA | Complete |
+| `scripts/generate_pwa_icons.py`, `public/assets/icons/`, `public/apple-touch-icon.png`, `public/assets/images/logo-mark.png` | Ikon PWA | Complete |
+| `src/app/layout.tsx`, `src/components/AppLayout.tsx` | Metadata PWA dan bypass shell untuk `/offline` | Complete |
 | `src/components/ui/DateRangePicker.tsx` | Kontrol periode bersama | Complete |
 | `src/components/laporan/BidanReferralPanel.tsx`, `PuskesmasReportPanel.tsx` | Dua tab baru | Complete |
 | `src/components/program-khusus/EditCircumcisionModal.tsx`, `CircumcisionList.tsx` | Edit sirkumsisi + antrean data | Complete |
@@ -148,3 +165,9 @@ node scripts/reconcile-clinic-data.mjs --env=.env.production --confirm-prod-rese
   sandi itu sudah tidak berlaku di akun mana pun, tetapi pembersihan riwayat butuh persetujuan eksplisit.
 - Akun memakai alamat email fiktif, sehingga fitur lupa kata sandi dan tautan email tidak berfungsi.
   Penggantian kata sandi harus lewat pengembang atau Supabase Dashboard.
+- PWA: pemasangan dan alur offline belum diuji di peramban sungguhan. Yang sudah diverifikasi adalah
+  keberhasilan build, sintaks service worker, dan seluruh endpoint produksi menjawab HTTP 200.
+- PWA: tidak ada berkas emblem terpisah di repositori, sehingga mark daun diekstrak dari lockup dan
+  menyisakan cacat kecil di ujung daun kanan bawah. Ganti dengan berkas emblem resmi klinik bila ada.
+- `maximumScale: 1` pada viewport sudah ada sebelum pekerjaan PWA dan menghalangi pengguna
+  memperbesar teks sampai 200 persen sesuai WCAG 1.4.4.
