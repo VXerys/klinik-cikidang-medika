@@ -155,6 +155,7 @@ auth:
     - "kasir@cikidangmedika.com (sisa peran lama, perlu ditinjau)"
   password_source: "SEED_PASSWORD_OWNER dan SEED_PASSWORD_DOKTER di .env.staging, .env.production, dan .env.local; semuanya gitignored"
   password_policy: "satu kata sandi per akun, minimal 12 karakter, skrip menolak jika ada dua akun bernilai sama"
+  password_style: "Pola kata yang mudah diketik staf klinik, dipilih atas permintaan pemilik setelah kata sandi acak dikeluhkan. Ketahanan terhadap tebakan menurun, dan alamat email akun juga mudah ditebak; jangan pernah menuliskan nilainya ke berkas tracked karena repo ini publik."
   reset_path: "node scripts/seed-auth-users.mjs --env=.env.production --confirm-prod --rotate, atau Supabase Dashboard"
   email_reset_available: false
 
@@ -186,6 +187,9 @@ next_tasks:
   - id: A11Y-002
     task: "Tinjau kontras tombol utama gradien teal-600 ke teal-700 dengan teks putih"
     detail: "Putih di atas teal-600 hanya 3,75:1, di bawah ambang WCAG AA 4,5:1 untuk teks normal 14 px. Pola ini dipakai di banyak layar, termasuk tombol masuk. Tombol pada halaman offline sudah memakai teal-700 ke teal-800 agar lolos."
+  - id: AUTH-002
+    task: "Aktifkan proteksi kata sandi bocor di pengaturan Supabase Auth"
+    detail: "Kata sandi akun kini memakai pola kata yang mudah diketik, sehingga pemeriksaan terhadap basis data kebocoran menambah satu lapis pengaman tanpa mengubah pengalaman staf."
   - id: F-009-DOC-001
     task: "Dokumen laporan pembaruan klien (PDF) berisi seluruh item terbuka"
     artifact: "docs/product/Laporan_Pembaruan_Sistem_F009.pdf"

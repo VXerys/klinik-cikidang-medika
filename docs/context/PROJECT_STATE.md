@@ -18,22 +18,21 @@ Until then, verify project state directly from approved specs, Git, and `docs/ha
 <!-- GENERATED:GIT_FACTS:START -->
 ## Generated Git Facts
 
-- Refreshed at: 2026-10-02T00:18:58.742Z
+- Refreshed at: 2026-10-02T00:44:17.653Z
 - Branch: `main`
-- HEAD: `277ccf9`
+- HEAD: `36e18da`
 - Worktree:
 
 ```text
 M docs/context/state.yaml
  M docs/handoff/current.md
- M public/sw.js
 ```
 
 Recent commits:
 
+- `36e18da` Fix the offline button contrast to meet WCAG AA
+- `afce90e` Harden the offline fallback and record the PWA work
 - `277ccf9` Make the dashboard installable as a PWA
 - `293d442` Record the production deploy and auth accounts
 - `d8a0aeb` Give each auth account its own password
-- `02c4cbc` Require an explicit password on the login screen
-- `d6f6884` Merge branch 'feature/f009-kelengkapan-data-pemantauan-bidan'
 <!-- GENERATED:GIT_FACTS:END -->

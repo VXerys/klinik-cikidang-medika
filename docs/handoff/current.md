@@ -47,6 +47,10 @@ Baseline produksi sebelum: 4.238 pasien, 7.493 kunjungan, 1.486 kas, data sampai
 - Kata sandi dibaca dari `SEED_PASSWORD_OWNER`, `SEED_PASSWORD_DOKTER`, dan `SEED_DEFAULT_PASSWORD`
   di `.env.staging`, `.env.production`, dan `.env.local` (semuanya gitignored). Tidak ada kata sandi
   di berkas tracked mana pun.
+- Kata sandi memakai pola kata yang mudah diketik staf klinik, atas permintaan pemilik setelah kata
+  sandi acak dikeluhkan. Ini menurunkan ketahanan terhadap tebakan, dan alamat email akun juga mudah
+  ditebak, jadi jangan pernah menuliskan nilainya ke berkas tracked. Seluruh akun sudah dirotasi ulang
+  di staging dan produksi pada 2026-10-02, dan login sudah diuji ulang di kedua lingkungan.
 - Halaman login tidak lagi mengisi atau mencetak kata sandi; tombol cepat hanya mengisi email.
 
 Hasil produksi sesudah (diverifikasi lewat `scripts/apply-sql.mjs`):
