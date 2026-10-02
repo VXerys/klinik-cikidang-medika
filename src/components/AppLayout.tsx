@@ -23,7 +23,8 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   const { user, profile, role, isLoading, canAccessRoute, getDefaultRoute } = useAuth();
 
-  const isLoginPage = pathname === '/login';
+  // Pages that render outside the authenticated shell.
+  const isPublicRoute = pathname === '/login' || pathname === '/offline';
 
   // Automatically close mobile drawer whenever route navigation occurs
   useEffect(() => {
@@ -54,7 +55,7 @@ export default function AppLayout({ children }: AppLayoutProps) {
 
   // Route Guard Effect: Handles unauthenticated users and role-restricted routes
   useEffect(() => {
-    if (isLoading || isLoginPage) return;
+    if (isLoading || isPublicRoute) return;
 
     if (!user) {
       router.replace('/login');
@@ -69,10 +70,10 @@ export default function AppLayout({ children }: AppLayoutProps) {
       });
       router.replace(targetRoute);
     }
-  }, [isLoading, isLoginPage, user, pathname, canAccessRoute, getDefaultRoute, role, router]);
+  }, [isLoading, isPublicRoute, user, pathname, canAccessRoute, getDefaultRoute, role, router]);
 
-  // If on login page, render login page directly without shell
-  if (isLoginPage) {
+  // The login and offline screens render without the sidebar shell
+  if (isPublicRoute) {
     return <>{children}</>;
   }
 

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next';
 import { Plus_Jakarta_Sans, Inter } from 'next/font/google';
 import './globals.css';
 import AppLayout from '@/components/AppLayout';
+import PwaRegistration from '@/components/PwaRegistration';
 import { Toaster } from '@/components/ui/sonner';
 import { AuthProvider } from '@/lib/auth/AuthContext';
 
@@ -23,17 +24,29 @@ export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
   maximumScale: 1,
+  themeColor: '#134e4a',
 };
 
 export const metadata: Metadata = {
   title: 'Klinik Cikidang Medika - SIM & Keuangan',
-  description: 'Sistem Informasi Manajemen Pasien & Laporan Keuangan Klinik Cikidang Medika',
+  description: 'Sistem Informasi Manajemen Pasien & Laporan Keuangan Klinik Pratama Cikidang Medika',
+  applicationName: 'Klinik Cikidang Medika',
+  appleWebApp: {
+    capable: true,
+    title: 'Cikidang Medika',
+    statusBarStyle: 'default',
+  },
+  // Next emits the standard mobile-web-app-capable tag; iOS before 16.4 only
+  // honours the Apple-prefixed one.
+  other: {
+    'apple-mobile-web-app-capable': 'yes',
+  },
   icons: {
     icon: [
       { url: '/favicon.ico', sizes: 'any' },
       { url: '/icon.png', type: 'image/png' },
     ],
-    apple: [{ url: '/icon.png' }],
+    apple: [{ url: '/apple-touch-icon.png', sizes: '180x180', type: 'image/png' }],
   },
 };
 
@@ -49,6 +62,7 @@ export default function RootLayout({
           <AppLayout>{children}</AppLayout>
           <Toaster richColors position="top-right" closeButton />
         </AuthProvider>
+        <PwaRegistration />
       </body>
     </html>
   );
